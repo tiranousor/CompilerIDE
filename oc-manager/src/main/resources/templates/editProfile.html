@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <title>Edit Account</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(70deg, #fff, #fff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #fff;
+            border-radius: 30px;
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.35);
+            width: 600px;
+            max-width: 100%;
+            padding: 30px;
+        }
+
+        .container h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .container form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container input {
+            background-color: #eee;
+            border: none;
+            margin: 8px 0;
+            padding: 10px 15px;
+            font-size: 13px;
+            border-radius: 8px;
+            width: 100%;
+            outline: none;
+        }
+
+        .container button {
+            background-color: #000;
+            color: #fff;
+            font-size: 12px;
+            padding: 10px 45px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .form-error {
+            color: red;
+            font-size: 12px;
+            margin-top: -5px;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Редактировать аккаунт</h1>
+<!--    <form th:action="@{/edit}" th:method="PATH" th:object="${client}">-->
+        <form th:action="@{/edit/{id}(id=${client.id})}" th:method="post" th:object="${client}" enctype="multipart/form-data">
+<!--        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>-->
+            <label for="avatarUrl">Аватарка:</label>
+            <input type="file" id="avatarUrl" name="avatarUrl" accept="image/*" />
+            <div th:if="${client.avatarUrl != null}">
+                <div class="avatar-preview">
+                    <p>Текущая аватарка:</p>
+                    <img th:src="@{${client.avatarUrl}}" alt="Аватарка пользователя" />
+                </div>
+            </div>
+            <!-- Сообщение об ошибке при загрузке аватара -->
+            <div class="form-error" th:if="${error}" th:text="${error}"></div>
+
+            <!--            <label for="avatar_url">Аватарка</label>-->
+            <input class="form-input" type="text" th:field="*{avatar_url}" id="avatar_url"/>
+<!--            <label for="username">Никнейм</label>-->
+        <input type="text" th:field="*{username}" id="username" placeholder="Username" th:classappend="${#fields.hasErrors('username')} ? 'error' : 'form-input'"/>
+<!--        <div class="form-error" th:if="${#fields.hasErrors('username')}" th:text="*{username}"></div>-->
+<!--            <label for="email">Email</label>-->
+        <input type="text" th:field="*{email}" id="email" placeholder="Email" th:classappend="${#fields.hasErrors('email')} ? 'error' : 'form-input'"/>
+<!--        <div class="form-error" th:if="${#fields.hasErrors('email')}" th:text="*{email}"></div>-->
+<!--            <label for="githubProfile">GitHub профиль</label>-->
+
+        <input type="text" th:field="*{githubProfile}" id="githubProfile" placeholder="GitHub URL" th:classappend="${#fields.hasErrors('githubProfile')} ? 'error' : 'form-input'"/>
+<!--        <div class="form-error" th:if="${#fields.hasErrors('githubProfile')}" th:text="*{githubProfile}"></div>-->
+<!--            <label for="about">О себе</label>-->
+
+            <input type="text" th:field="*{about}" id="about" placeholder="About" th:classappend="${#fields.hasErrors('about')} ? 'error' : 'form-input'"/>
+
+        <input type="text" th:field="*{password}" id="password" placeholder="New Password" th:classappend="${#fields.hasErrors('password')} ? 'error' : 'form-input'"/>
+<!--        <div class="form-error" th:if="${#fields.hasErrors('password')}" th:text="*{password}"></div>-->
+
+            <button type="submit" value="Добавить измения"></button>
+    </form>
+</div>
+
+</body>
+
+</html>

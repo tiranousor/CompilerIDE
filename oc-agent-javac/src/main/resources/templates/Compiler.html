@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Compiler</title>
+    <!-- Подключение Bootstrap CSS -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="icon" type="image/png" href="/favicon.png" sizes="180x180">
+    <!-- Стиль для Monaco Editor и дополнительных элементов -->
+    <style>
+        #editor-container {
+            height: 500px;
+            border: 1px solid grey;
+        }
+        #files-container {
+            height: 500px;
+            background-color: #f1f1f1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        #output {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            background-color: #f1f1f1;
+            padding: 10px;
+        }
+        .top-buttons .btn {
+            margin-left: 5px;
+        }
+        body {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <!-- Верхняя панель с кнопками и выбором языка -->
+    <div class="row align-items-center mb-3">
+        <div class="col">
+            <!-- Место для логотипа или названия -->
+            <h3>Online Compiler</h3>
+        </div>
+        <div class="col text-right">
+            <!-- Кнопки в верхней части страницы -->
+            <div class="btn-group top-buttons" role="group">
+                <button class="btn btn-secondary" onclick="downloadFile()">
+                    <i class="fas fa-download"></i> Скачать файл
+                </button>
+                <button class="btn btn-secondary" onclick="uploadFile()">
+                    <i class="fas fa-upload"></i> Выгрузить файл
+                </button>
+                <button class="btn btn-success" onclick="submitCode()">
+                    <i class="fas fa-play"></i> Компилировать
+                </button>
+                <button class="btn btn-secondary" onclick="uploadFolder()">
+                    <i class="fas fa-folder-open"></i> Выгрузить папку
+                </button>
+
+            </div>
+            <!-- Выбор языка программирования -->
+            <select id="languageSelect" class="form-control d-inline-block" style="width: auto;" onchange="setLanguage(this.value)">
+                <option value="java">Java</option>
+                <option value="python3">Python3</option>
+                <option value="cpp">C++</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="row">
+        <!-- Контейнер с файлами пользователя -->
+        <div class="col-md-3">
+            <div id="files-container">
+                <!-- Здесь будут отображаться файлы пользователя -->
+                <p></p>
+                <!-- Добавьте динамическое отображение файлов по необходимости -->
+            </div>
+        </div>
+        <!-- Контейнер с редактором кода -->
+        <div class="col-md-9">
+            <div id="editor-container"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div id="output" class="output-container"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<!--<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.28.1/min/vs/loader.min.js"></script>
+<script src="scripts.js"></script>
+</body>
+</html>
