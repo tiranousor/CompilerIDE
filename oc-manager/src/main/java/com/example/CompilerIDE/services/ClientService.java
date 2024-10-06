@@ -27,14 +27,17 @@ public class ClientService {
     public Optional<Client> getPerson(String username) {
         return clientRepository.findByUsername(username);
     }
+
     @Transactional
     public void save(Client client){
         client.setPassword(passwordEncoder.encode(client.getPassword()));
         clientRepository.save(client);
     }
+
     public Optional<Client> findByUsername(String username) {
         return clientRepository.findByUsername(username);
     }
+
     public Client findOne(int id) {
         Optional<Client> foundClient = clientRepository.findById(id);
         return foundClient.orElse(null);
@@ -42,6 +45,7 @@ public class ClientService {
     public Optional<Client> getClient(String username) {
         return clientRepository.findByUsername(username);
     }
+
     public void updateResetPasswordToken(String token, String email) {
         Client client = clientRepository.findByEmail(email);
         if (client != null) {
@@ -65,6 +69,7 @@ public class ClientService {
         client.setResetPasswordToken(null);
         clientRepository.save(client);
     }
+
     @Transactional
     public void update(int id, Client updateClient){
         updateClient.setId(id);

@@ -28,18 +28,26 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Controller
-@RequiredArgsConstructor
 public class UserController {
     private final ClientService clientService;
     private final ProjectService projectService;
     private final ClientValidator clientValidator;
+    private final PasswordEncoder passwordEncoder;
 
-//    @Autowired
-    private PasswordEncoder passwordEncoder;
+    @Autowired
+    public UserController(ClientService clientService, ProjectService projectService, ClientValidator clientValidator,
+                          PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+        this.clientService = clientService;
+        this.clientValidator = clientValidator;
+        this.projectService = projectService;
+    }
+
     @GetMapping("/")
     public String home() {
         return "Compiler";
     }
+
     @GetMapping("/login")
     public String showLoginPage() {
         return "loginAndRegistration";
@@ -64,8 +72,7 @@ public class UserController {
 
     @GetMapping("/userProfile")
     public String ClientProfile(Model model, Authentication authentication) {
-        Client client = clientService.findByUsername(authentication.getName())
-                .orElseThrow(() -> new NoSuchElementException("Client not found with username: " + authentication.getName()));
+        Client client = clientService.findByUsername(authentication.getName()).get();
 
         List<Project> project = projectService.findByClient(client);
         model.addAttribute("client", client);
@@ -93,50 +100,55 @@ public class UserController {
 //
 //        return "redirect:/userProfile";
 //    }
-@PostMapping("/edit/{id}")
-public String updateProfile(Authentication authentication, @PathVariable("id") int id,
-                            @Valid Client clientForm, BindingResult bindingResult,
-                            @RequestParam("avatarFile") MultipartFile avatarFile) {
-    if (bindingResult.hasErrors()) {
-        return "editProfile";
-    }
-
-    Client existingClient = clientService.findOne(id);
-
-    if (existingClient == null) {
-        return "redirect:/error";
-    }
-
-    existingClient.setUsername(clientForm.getUsername());
-    existingClient.setEmail(clientForm.getEmail());
-    existingClient.setGithubProfile(clientForm.getGithubProfile());
-    existingClient.setAbout(clientForm.getAbout());
-
-    if (!clientForm.getPassword().isEmpty()) {
-        existingClient.setPassword(passwordEncoder.encode(clientForm.getPassword()));
-    }
-
-    if (!avatarFile.isEmpty()) {
-        String fileName = StringUtils.cleanPath(avatarFile.getOriginalFilename());
-        String uploadDir = "user-photos/" + existingClient.getId();
-
-        try {
-            FileUploadUtil.saveFile(uploadDir, fileName, avatarFile);
-            existingClient.setAvatarUrl("/" + uploadDir + "/" + fileName);
-        } catch (IOException e) {
-            e.printStackTrace();
+    @PostMapping("/edit/{id}")
+    public String updateProfile(Authentication authentication, @PathVariable("id") int id,
+                                @Valid Client clientForm, BindingResult bindingResult,
+                                @RequestParam("avatarFile") MultipartFile avatarFile) {
+        if (bindingResult.hasErrors()) {
+            return "editProfile";
         }
+
+        Client existingClient = clientService.findOne(id);
+
+        if (!avatarFile.isEmpty()) {
+            String originalFileName = avatarFile.getOriginalFilename();
+            String extension = "";
+
+            if (originalFileName != null) {
+                extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+            }
+
+            String fileName = existingClient.getId() + extension;
+            String uploadDir = "user-photos/";
+            try {
+                FileUploadUtil.saveFile(uploadDir, fileName, avatarFile);
+                existingClient.setAvatarUrl("/" + uploadDir + fileName);
+            } catch (IOException e) {
+                bindingResult.rejectValue("avatarUrl","error.avatarUrl", e.getMessage());
+                return "editProfile";
+            }
+        }
+
+        existingClient.setUsername(clientForm.getUsername());
+        existingClient.setEmail(clientForm.getEmail());
+        existingClient.setGithubProfile(clientForm.getGithubProfile());
+        existingClient.setAbout(clientForm.getAbout());
+
+//        if (!clientForm.getPassword().isEmpty()) {
+//            existingClient.setPassword(passwordEncoder.encode(clientForm.getPassword()));
+//        }
+
+
+        clientService.update(id, existingClient);
+
+        if (!authentication.getName().equals(existingClient.getUsername())) {
+            Authentication newAuth = new UsernamePasswordAuthenticationToken(existingClient.getUsername(),
+                    authentication.getCredentials(), authentication.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(newAuth);
+        }
+
+        return "redirect:/userProfile";
     }
-
-    clientService.update(id, existingClient);
-
-    if (!authentication.getName().equals(existingClient.getUsername())) {
-        Authentication newAuth = new UsernamePasswordAuthenticationToken(existingClient.getUsername(), authentication.getCredentials(), authentication.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(newAuth);
-    }
-
-    return "redirect:/userProfile";
-}
 
 //    @PostMapping("/edit/{id}")
 //    public String updateProfile(Authentication authentication, @PathVariable("id") int id,@ModelAttribute("client") @Valid ClientDto clientDto, BindingResult bindingResult) {

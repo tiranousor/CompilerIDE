@@ -4,48 +4,32 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a5331ade-1bce-405c-9284-d88e6267b941" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/Dto/ClientRegistrationDto.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/Dto/ClientUpdateDto.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/util/OnCreate.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/util/OnUpdate.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-photos/1/IMG_0571.JPG" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-photos/9/IMG_0587.JPG" afterDir="false" />
+    <list default="true" id="70f2642a-e058-49d2-95ff-6108bca20757" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/dbnavigator.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dbnavigator.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/controller/UserController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/services/ClientService.java" beforeDir="false" afterPath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/services/ClientService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/util/FileUploadUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/util/FileUploadUtil.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/oc-manager/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/oc-manager/src/main/resources/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/oc-manager/src/main/resources/templates/editProfile.html" beforeDir="false" afterPath="$PROJECT_DIR$/oc-manager/src/main/resources/templates/editProfile.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oc-manager/src/main/resources/templates/userProfile.html" beforeDir="false" afterPath="$PROJECT_DIR$/oc-manager/src/main/resources/templates/userProfile.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-photos/1/IMG_0571.JPG" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-photos/9/IMG_0571.JPG" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-photos/9/IMG_0587.JPG" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="Class" />
-        <option value="Interface" />
-      </list>
-    </option>
-  </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory">{
-  &quot;lastFilter&quot;: {
-    &quot;state&quot;: &quot;OPEN&quot;,
-    &quot;assignee&quot;: &quot;tiranousor&quot;
-  }
-}</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/tiranousor/CompilerIDE.git&quot;,
-    &quot;accountId&quot;: &quot;57c052e3-2a8f-432a-8eb4-59dbcc67b92c&quot;
-  }
-}</component>
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
@@ -53,26 +37,22 @@
       </MavenGeneralSettings>
     </option>
   </component>
-  <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 6
-}</component>
-  <component name="ProjectId" id="2msifIpEcpOI2bQao2TzRjs00AM" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
-    <ConfirmationsSetting value="2" id="Add" />
-  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 8
+}]]></component>
+  <component name="ProjectId" id="2n4EbPd9rZgMWufevYrR8gYHDpU" />
   <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "ASKED_ADD_EXTERNAL_FILES": "true",
     "Application.CompilerIdeApplication.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/Катя/IdeaProjects/compiler",
-    "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable"
+    "last_opened_file_path": "C:/Users/Ta1dhen1/IdeaProjects/CompilerIDE"
   }
 }]]></component>
   <component name="RunManager">
@@ -98,51 +78,12 @@
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="a5331ade-1bce-405c-9284-d88e6267b941" name="Changes" comment="" />
-      <created>1727871785605</created>
+      <changelist id="70f2642a-e058-49d2-95ff-6108bca20757" name="Changes" comment="" />
+      <created>1728224018985</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1727871785605</updated>
+      <updated>1728224018985</updated>
     </task>
-    <task id="LOCAL-00001" summary="работа над манагером">
-      <option name="closed" value="true" />
-      <created>1727872530763</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1727872530763</updated>
-    </task>
-    <task id="LOCAL-00002" summary="работа над манагером">
-      <option name="closed" value="true" />
-      <created>1727872639084</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1727872639084</updated>
-    </task>
-    <task id="LOCAL-00003" summary="работа над манагером">
-      <option name="closed" value="true" />
-      <created>1728208417128</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1728208417128</updated>
-    </task>
-    <task id="LOCAL-00004" summary="можно загружать фото пользователя с компьютера">
-      <option name="closed" value="true" />
-      <created>1728216334762</created>
-      <option name="number" value="00004" />
-      <option name="presentableId" value="LOCAL-00004" />
-      <option name="project" value="LOCAL" />
-      <updated>1728216334762</updated>
-    </task>
-    <option name="localTasksCounter" value="5" />
     <servers />
-  </component>
-  <component name="VcsManagerConfiguration">
-    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="работа над манагером" />
-    <MESSAGE value="можно загружать фото пользователя с компьютера" />
-    <option name="LAST_COMMIT_MESSAGE" value="можно загружать фото пользователя с компьютера" />
   </component>
 </project>
