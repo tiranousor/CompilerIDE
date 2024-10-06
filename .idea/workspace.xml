@@ -4,7 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a1a9092f-0576-4574-a82f-653caf8467c0" name="Changes" comment="" />
+    <list default="true" id="a5331ade-1bce-405c-9284-d88e6267b941" name="Changes" comment="работа над манагером">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/controller/UserController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/oc-manager/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/oc-manager/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/oc-manager/src/main/resources/templates/editProfile.html" beforeDir="false" afterPath="$PROJECT_DIR$/oc-manager/src/main/resources/templates/editProfile.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/oc-manager/src/main/resources/templates/userProfile.html" beforeDir="false" afterPath="$PROJECT_DIR$/oc-manager/src/main/resources/templates/userProfile.html" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -14,18 +20,24 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Class" />
-        <option value="HTML File" />
       </list>
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_BRANCH_BY_REPOSITORY">
-      <map>
-        <entry key="$PROJECT_DIR$" value="main" />
-      </map>
-    </option>
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;tiranousor&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/tiranousor/CompilerIDE.git&quot;,
+    &quot;accountId&quot;: &quot;57c052e3-2a8f-432a-8eb4-59dbcc67b92c&quot;
+  }
+}</component>
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
@@ -33,23 +45,26 @@
       </MavenGeneralSettings>
     </option>
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 8
-}]]></component>
-  <component name="ProjectId" id="2n21HehoF5urMOxXBPy6pUl4GPL" />
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="2msifIpEcpOI2bQao2TzRjs00AM" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
-    <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
     "Application.CompilerIdeApplication.executor": "Run",
-    "DefaultHtmlFileTemplate": "HTML File",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
+    "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/Ta1dhen1/IdeaProjects/BookStoreeeeeeeeeee",
-    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings"
+    "last_opened_file_path": "C:/Users/Катя/IdeaProjects/compiler",
+    "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable"
   }
 }]]></component>
   <component name="RunManager">
@@ -75,33 +90,34 @@
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="a1a9092f-0576-4574-a82f-653caf8467c0" name="Changes" comment="" />
-      <created>1728156270224</created>
+      <changelist id="a5331ade-1bce-405c-9284-d88e6267b941" name="Changes" comment="" />
+      <created>1727871785605</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1728156270224</updated>
+      <updated>1727871785605</updated>
     </task>
+    <task id="LOCAL-00001" summary="работа над манагером">
+      <option name="closed" value="true" />
+      <created>1727872530763</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1727872530763</updated>
+    </task>
+    <task id="LOCAL-00002" summary="работа над манагером">
+      <option name="closed" value="true" />
+      <created>1727872639084</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1727872639084</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
-  <component name="Vcs.Log.Tabs.Properties">
-    <option name="TAB_STATES">
-      <map>
-        <entry key="MAIN">
-          <value>
-            <State />
-          </value>
-        </entry>
-      </map>
-    </option>
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <breakpoint enabled="true" type="java-exception">
-          <properties class="java.lang.NullPointerException" package="java.lang" />
-          <option name="timeStamp" value="1" />
-        </breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+    <MESSAGE value="работа над манагером" />
+    <option name="LAST_COMMIT_MESSAGE" value="работа над манагером" />
   </component>
 </project>

@@ -82,21 +82,20 @@
 <div class="container">
     <h1>Редактировать аккаунт</h1>
 <!--    <form th:action="@{/edit}" th:method="PATH" th:object="${client}">-->
-        <form th:action="@{/edit/{id}(id=${client.id})}" th:method="post" th:object="${client}" enctype="multipart/form-data">
+        <form th:action="@{/edit/{id}(id=${client.id})}" th:method="post" th:object="${client}" >
 <!--        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>-->
-            <label for="avatarUrl">Аватарка:</label>
-            <input type="file" id="avatarUrl" name="avatarUrl" accept="image/*" />
-            <div th:if="${client.avatarUrl != null}">
-                <div class="avatar-preview">
-                    <p>Текущая аватарка:</p>
-                    <img th:src="@{${client.avatarUrl}}" alt="Аватарка пользователя" />
-                </div>
-            </div>
+<!--            <input type="file" id="avatarUrl" name="avatarUrl" accept="image/*" />-->
+<!--            <div th:if="${client.avatarUrl != null}">-->
+<!--                <div class="avatar-preview">-->
+<!--                    <p>Текущая аватарка:</p>-->
+<!--                    <img th:src="@{${client.avatarUrl}}" alt="Аватарка пользователя" />-->
+<!--                </div>-->
+<!--            </div>-->
             <!-- Сообщение об ошибке при загрузке аватара -->
             <div class="form-error" th:if="${error}" th:text="${error}"></div>
 
             <!--            <label for="avatar_url">Аватарка</label>-->
-            <input class="form-input" type="text" th:field="*{avatar_url}" id="avatar_url"/>
+<!--            <input class="form-input" type="text" th:field="*{avatarUrl}" id="avatarUrl"/>-->
 <!--            <label for="username">Никнейм</label>-->
         <input type="text" th:field="*{username}" id="username" placeholder="Username" th:classappend="${#fields.hasErrors('username')} ? 'error' : 'form-input'"/>
 <!--        <div class="form-error" th:if="${#fields.hasErrors('username')}" th:text="*{username}"></div>-->

@@ -130,8 +130,7 @@
     <!-- Профиль пользователя -->
     <div class="profile-info">
         <!-- Аватар пользователя -->
-        <img th:if="${client.avatarUrl != null}" th:src="@{${client.avatarUrl}}" alt="User Avatar" class="profile-avatar">
-        <img th:if="${client.avatarUrl == null}" src="/uploads/default-avatar.png" alt="Default Avatar" class="profile-avatar">
+<!--        <img th:src="${client.avatar_url}" alt="User Avatar" class="profile-avatar">-->
 
         <!-- Информация о пользователе -->
         <h1 th:text="${client.username}">Имя пользователя</h1>
@@ -140,7 +139,7 @@
         <p th:text="${client.about}">О себе</p>
 
         <!-- Кнопка для редактирования профиля -->
-       <p> <a th:href="@{/edit/{id}(id=${client.id})}">
+        <p> <a th:href="@{/edit/{id}(id=${client.id})}">
             <button class="edit-profile-btn">Редактировать профиль</button>
         </a></p>
         <a href="/projects/userProfile/new" class="btn btn-primary">Создать новый проект</a>
@@ -152,7 +151,7 @@
         <ul>
             <th:block th:each="project : ${projects}">
                 <li>
-<!--                    <a th:href="@{/projects/{id}(id=${project.id})}" th:text="${project.name}">Проект</a>-->
+                    <!--                    <a th:href="@{/projects/{id}(id=${project.id})}" th:text="${project.name}">Проект</a>-->
                     <span th:text="${project.readMe}">Описание проекта</span>
                 </li>
             </th:block>
