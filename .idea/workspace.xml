@@ -5,12 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a5331ade-1bce-405c-9284-d88e6267b941" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/config/MvcConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/util/FileUploadUtil.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/user-photos/9/IMG_0571.JPG" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/Dto/ClientRegistrationDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/Dto/ClientUpdateDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/util/OnCreate.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/util/OnUpdate.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/user-photos/1/IMG_0571.JPG" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/user-photos/9/IMG_0587.JPG" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/controller/UserController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/services/ClientService.java" beforeDir="false" afterPath="$PROJECT_DIR$/oc-manager/src/main/java/com/example/CompilerIDE/services/ClientService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/oc-manager/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/oc-manager/src/main/resources/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/oc-manager/src/main/resources/templates/editProfile.html" beforeDir="false" afterPath="$PROJECT_DIR$/oc-manager/src/main/resources/templates/editProfile.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/oc-manager/src/main/resources/templates/userProfile.html" beforeDir="false" afterPath="$PROJECT_DIR$/oc-manager/src/main/resources/templates/userProfile.html" afterDir="false" />
     </list>
@@ -23,6 +27,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Class" />
+        <option value="Interface" />
       </list>
     </option>
   </component>
@@ -123,12 +128,21 @@
       <option name="project" value="LOCAL" />
       <updated>1728208417128</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="можно загружать фото пользователя с компьютера">
+      <option name="closed" value="true" />
+      <created>1728216334762</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1728216334762</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="работа над манагером" />
-    <option name="LAST_COMMIT_MESSAGE" value="работа над манагером" />
+    <MESSAGE value="можно загружать фото пользователя с компьютера" />
+    <option name="LAST_COMMIT_MESSAGE" value="можно загружать фото пользователя с компьютера" />
   </component>
 </project>

@@ -65,29 +65,10 @@ public class ClientService {
         client.setResetPasswordToken(null);
         clientRepository.save(client);
     }
-//    @Transactional
-//    public void update(int id, Client updateClient){
-//        updateClient.setId(id);
-//        clientRepository.save(updateClient);
-//    }
-@Transactional
-public void update(int id, Client updateClient){
-    Client existingClient = clientRepository.findById(id).orElseThrow(() -> new ClientNotFoundException("Client not found"));
-
-    existingClient.setUsername(updateClient.getUsername());
-    existingClient.setEmail(updateClient.getEmail());
-    existingClient.setGithubProfile(updateClient.getGithubProfile());
-    existingClient.setAbout(updateClient.getAbout());
-
-    if (updateClient.getPassword() != null && !updateClient.getPassword().isEmpty()) {
-        existingClient.setPassword(passwordEncoder.encode(updateClient.getPassword()));
+    @Transactional
+    public void update(int id, Client updateClient){
+        updateClient.setId(id);
+        clientRepository.save(updateClient);
     }
-
-    if (updateClient.getAvatarUrl() != null) {
-        existingClient.setAvatarUrl(updateClient.getAvatarUrl());
-    }
-
-    clientRepository.save(existingClient);
-}
 
 }

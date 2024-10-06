@@ -33,7 +33,8 @@ public class UserController {
     private final ClientService clientService;
     private final ProjectService projectService;
     private final ClientValidator clientValidator;
-    @Autowired
+
+//    @Autowired
     private PasswordEncoder passwordEncoder;
     @GetMapping("/")
     public String home() {
