@@ -67,9 +67,12 @@
                     <i class="fas fa-folder-open"></i> Выгрузить папку
                 </button>
 <!--                <div class="btn btn-secondary" sec:authorize="!isAuthenticated()">-->
-                    <a href="/login" class="btn btn-secondary" sec:authorize="!isAuthenticated()">Войти</a>
-
-<!--                </div>-->
+                <form sec:authorize="!isAuthenticated()" th:action="@{/login}" th:method="GET">
+                    <button type="submit" class="btn btn-secondary">Войти</button>
+                </form>
+                <form sec:authorize="isAuthenticated()" th:action="@{/logout}" th:method="POST">
+                    <button type="submit" class="btn btn-secondary">Выйти</button>
+                </form>
 
             </div>
             <!-- Выбор языка программирования -->

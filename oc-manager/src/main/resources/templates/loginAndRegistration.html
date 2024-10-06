@@ -257,6 +257,10 @@
             <div th:if="${param.logout}">
                 <p style="color:green;">Вы успешно вышли из аккаунта.</p>
             </div>
+            <div th:if="${message != null}">
+                <p style="color:green;">[[${message}]]</p>
+            </div>
+
         </form>
     </div>
 
@@ -264,10 +268,10 @@
         <div class="toggle">
 
             <div class="toggle-panel toggle-right">
-                <h1>Еще не зарегестрированы?</h1>
+                <h1>Еще не зарегистрированы?</h1>
                 <p>Пора исправлять!</p>
                 <a href="/registration">
-                <button class="hidden" id="register">зарегестрироваться</button></a>
+                <button class="hidden" id="register">зарегистрироваться</button></a>
             </div>
         </div>
     </div>

@@ -3,6 +3,7 @@ package com.example.CompilerIDE.services;
 import com.example.CompilerIDE.providers.Client;
 import com.example.CompilerIDE.providers.Project;
 import com.example.CompilerIDE.repositories.ClientRepository;
+import com.example.CompilerIDE.util.ClientNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -46,7 +47,10 @@ public class ClientService {
         if (client != null) {
             client.setResetPasswordToken(token);
             clientRepository.save(client);
+        } else {
+            throw new ClientNotFoundException("Email не найден: " + email);
         }
+
     }
 
     public Client getByResetPasswordToken(String token) {
