@@ -127,25 +127,21 @@
 <body>
 
 <div class="container">
-    <!-- Профиль пользователя -->
     <div class="profile-info">
-        <!-- Аватар пользователя -->
 <!--        <img th:src="${client.avatar_url}" alt="User Avatar" class="profile-avatar">-->
-
+        <img th:src="@{${client.avatarUrl}}" alt="User Avatar" class="profile-avatar">
         <!-- Информация о пользователе -->
         <h1 th:text="${client.username}">Имя пользователя</h1>
         <p><span th:text="${client.email}">example@example.com</span></p>
         <p><a th:href="${client.githubProfile}" target="_blank">GitHub Профиль</a></p>
         <p th:text="${client.about}">О себе</p>
 
-        <!-- Кнопка для редактирования профиля -->
         <p> <a th:href="@{/edit/{id}(id=${client.id})}">
             <button class="edit-profile-btn">Редактировать профиль</button>
         </a></p>
         <a href="/projects/userProfile/new" class="btn btn-primary">Создать новый проект</a>
     </div>
 
-    <!-- Раздел с проектами пользователя -->
     <div class="projects-section">
         <h2>Мои проекты</h2>
         <ul>
