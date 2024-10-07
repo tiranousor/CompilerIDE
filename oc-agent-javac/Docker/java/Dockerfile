@@ -1,4 +1,4 @@
 FROM openjdk:21
 WORKDIR /java
-EXPOSE 8081
+EXPOSE 8091
 CMD ["sh", "-c", "tail -f /dev/null"]
