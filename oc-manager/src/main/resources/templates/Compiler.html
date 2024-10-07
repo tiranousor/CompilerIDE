@@ -60,6 +60,8 @@
                 <button class="btn btn-secondary" onclick="uploadFile()">
                     <i class="fas fa-upload"></i> Выгрузить файл
                 </button>
+                <meta name="_csrf" th:content="${_csrf.token}"/>
+                <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
                 <button class="btn btn-success" onclick="submitCode()">
                     <i class="fas fa-play"></i> Компилировать
                 </button>

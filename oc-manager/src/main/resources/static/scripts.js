@@ -45,14 +45,19 @@ async function submitCode() {
     const currentContent = editor.getValue();
     updateFileContent(currentFileName, currentContent);
 
+    // Получаем CSRF-токен и заголовок из метатегов
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
     try {
-        const response = await fetch('http://localhost:8080/api/compile', {
+        const response = await fetch('http://localhost:8080/compile', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken // Добавляем CSRF-токен в заголовок
             },
             body: JSON.stringify({
-                files: files,  // Передаем все файлы
+                files: files,
                 language: language
             })
         });

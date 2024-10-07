@@ -11,8 +11,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/compile")
 public class CodeCompilerController {
 
     DockerService dockerService;
