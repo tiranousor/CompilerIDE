@@ -35,4 +35,30 @@ public class CreateFileService {
         }
         return uniqueId;
     }
+    // Метод для сохранения файлов в папке, идентифицированной по `uniqueId`
+    public String saveFilesLocally(List<CodeCompilerController.FileData> fileData, String baseFolderPath, String uniqueId) throws IOException {
+        // Путь к папке, включающий уникальный идентификатор пользователя
+        String folderPath = baseFolderPath + "/" + uniqueId;
+
+        // Создаем папку, если она еще не существует
+        File folder = new File(folderPath);
+        if (!folder.exists()) {
+            folder.mkdirs();
+        }
+
+        // Сохраняем каждый файл в указанной папке
+        for (CodeCompilerController.FileData file : fileData) {
+            String fileName = file.fileName;
+            String fileContent = file.content;
+
+            // Создаем файл в папке
+            File newFile = new File(folder, fileName);
+            try (FileWriter writer = new FileWriter(newFile)) {
+                writer.write(fileContent);
+            }
+        }
+        return uniqueId;
+    }
+
+
 }

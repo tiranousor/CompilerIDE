@@ -130,7 +130,6 @@
     <div class="profile-info">
 <!--        <img th:src="${client.avatar_url}" alt="User Avatar" class="profile-avatar">-->
         <img th:src="@{${client.avatarUrl}}" alt="User Avatar" class="profile-avatar">
-        <!-- Информация о пользователе -->
         <h1 th:text="${client.username}">Имя пользователя</h1>
         <p><span th:text="${client.email}">example@example.com</span></p>
         <p><a th:href="${client.githubProfile}" target="_blank">GitHub Профиль</a></p>
@@ -139,17 +138,17 @@
         <p> <a th:href="@{/edit/{id}(id=${client.id})}">
             <button class="edit-profile-btn">Редактировать профиль</button>
         </a></p>
-        <a href="/projects/userProfile/new" class="btn btn-primary">Создать новый проект</a>
+        <a th:href="@{/projects/userProfile/new}" class="btn btn-primary">Создать новый проект</a>
     </div>
 
-    <!-- Раздел с проектами пользователя -->
     <div class="projects-section">
         <h2>Мои проекты</h2>
         <ul>
             <th:block th:each="project : ${projects}">
                 <li>
-                    <!--                    <a th:href="@{/projects/{id}(id=${project.id})}" th:text="${project.name}">Проект</a>-->
+                    <span th:text="${project.name}">Проект</span>
                     <span th:text="${project.readMe}">Описание проекта</span>
+                    <a th:href="@{/projects/edit/{id}(id=${project.id})}" class="btn btn-secondary">Редактировать</a>
                 </li>
             </th:block>
         </ul>

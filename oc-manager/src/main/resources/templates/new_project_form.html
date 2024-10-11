@@ -80,7 +80,9 @@
 
 <div class="container">
     <h2>Добавить новый проект</h2>
-    <form action="/projects/userProfile/new" method="post"  th:object="${project}">
+    <form th:action="@{/projects/userProfile/new}" method="post" enctype="multipart/form-data" th:object="${project}">
+        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+
         <div class="form-input">
             <label for="name">Название проекта:</label>
             <input type="text" class="form-control" id="name" name="name" required  th:field="*{name}">
@@ -89,8 +91,16 @@
             <label for="language">Язык программирования:</label>
             <input type="text" class="form-control" id="language" name="language" required  th:field="*{language}">
         </div>
+
+        <!-- Добавим возможность загрузки файлов -->
+        <div class="form-input">
+            <label for="files">Загрузить файлы проекта:</label>
+            <input type="file" class="form-control" id="files" name="files" multiple>
+        </div>
+
         <button type="submit" class="btn btn-primary">Создать</button>
     </form>
+
 </div>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

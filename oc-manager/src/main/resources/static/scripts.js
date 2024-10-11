@@ -7,6 +7,7 @@ const templates = {
 let files = [];  // Массив для хранения всех файлов пользователя
 let editor;
 let models = {}; // Объект для хранения моделей для каждого языка
+let editor;
 
 // Инициализация Monaco Editor
 require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.28.1/min/vs' }});
@@ -144,3 +145,73 @@ function downloadFile() {
     link.href = window.URL.createObjectURL(blob);
     link.click();
 }
+
+
+    // Инициализация Monaco Editor
+    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.28.1/min/vs' } });
+    require(['vs/editor/editor.main'], function() {
+        editor = monaco.editor.create(document.getElementById('editor-container'), {
+            value: '',
+            language: 'java', // по умолчанию Java, изменится при выборе
+            theme: 'vs-dark'
+        });
+    });
+
+    // Загрузка файлов проекта с сервера
+    function loadProjectFiles(projectId) {
+        fetch(`/api/projects/${projectId}`)
+            .then(response => response.json())
+            .then(files => {
+                // Отображаем первый файл в редакторе
+                if (files.length > 0) {
+                    editor.setValue(files[0].content);
+                    // Установим язык редактора, соответствующий файлу
+                    monaco.editor.setModelLanguage(editor.getModel(), files[0].language);
+                }
+
+                // Динамически добавляем файлы в список файлов
+                const filesContainer = document.getElementById('files-container');
+                filesContainer.innerHTML = '';
+                files.forEach((file, index) => {
+                    const fileElement = document.createElement('div');
+                    fileElement.textContent = file.fileName;
+                    fileElement.onclick = () => {
+                        editor.setValue(file.content); // Загружаем содержимое файла в редактор
+                        monaco.editor.setModelLanguage(editor.getModel(), file.language);
+                    };
+                    filesContainer.appendChild(fileElement);
+                });
+            })
+            .catch(error => console.error('Ошибка при загрузке проекта:', error));
+    }
+
+    // Отправка файлов для компиляции
+    function submitCode() {
+        const content = editor.getValue();
+        const language = document.getElementById('languageSelect').value;
+
+        const requestData = {
+            files: [{ fileName: 'Main.java', content: content }],
+            language: language
+        };
+
+        fetch('/api/compile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestData)
+        })
+            .then(response => response.text())
+            .then(output => {
+                document.getElementById('output').textContent = output;
+            })
+            .catch(error => console.error('Ошибка при компиляции:', error));
+    }
+
+    // Функция загрузки выбранного языка в редакторе
+    function setLanguage(language) {
+        monaco.editor.setModelLanguage(editor.getModel(), language);
+    }
+
+    // Пример вызова загрузки файлов проекта по его ID
+    loadProjectFiles(1); // Передай ID проекта
+

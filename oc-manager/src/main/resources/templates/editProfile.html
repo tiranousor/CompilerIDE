@@ -81,32 +81,41 @@
 
 <div class="container">
     <h1>Редактировать аккаунт</h1>
-<!--    <form th:action="@{/edit}" th:method="PATH" th:object="${client}">-->
         <form th:action="@{/edit/{id}(id=${client.id})}" th:method="POST" th:object="${client}" enctype="multipart/form-data">
         <input type="file" name="avatarFile" accept="image/*" />
 
-            <div class="form-error" th:if="${#fields.hasErrors('avatarUrl')}" th:errors="*{avatarUrl}"></div>
-
+<!--        <div class="form-error" th:if="${#fields.hasErrors('avatarUrl')}" th:errors="*{avatarUrl}"></div>-->
         <input type="text" th:field="*{username}" id="username" placeholder="Username" th:classappend="${#fields.hasErrors('username')} ? 'error' : 'form-input'"/>
-<!--        <div class="form-error" th:if="${#fields.hasErrors('username')}" th:text="*{username}"></div>-->
-<!--            <label for="email">Email</label>-->
         <input type="text" th:field="*{email}" id="email" placeholder="Email" th:classappend="${#fields.hasErrors('email')} ? 'error' : 'form-input'"/>
-<!--        <div class="form-error" th:if="${#fields.hasErrors('email')}" th:text="*{email}"></div>-->
-<!--            <label for="githubProfile">GitHub профиль</label>-->
-
         <input type="text" th:field="*{githubProfile}" id="githubProfile" placeholder="GitHub URL" th:classappend="${#fields.hasErrors('githubProfile')} ? 'error' : 'form-input'"/>
-<!--        <div class="form-error" th:if="${#fields.hasErrors('githubProfile')}" th:text="*{githubProfile}"></div>-->
-<!--            <label for="about">О себе</label>-->
+        <input type="text" th:field="*{about}" id="about" placeholder="About" th:classappend="${#fields.hasErrors('about')} ? 'error' : 'form-input'"/>
+        <input type="hidden" th:field="*{password}" id="password" placeholder="New Password" th:classappend="${#fields.hasErrors('password')} ? 'error' : 'form-input'"/>
 
-            <input type="text" th:field="*{about}" id="about" placeholder="About" th:classappend="${#fields.hasErrors('about')} ? 'error' : 'form-input'"/>
-
-            <input type="hidden" th:field="*{password}" id="password" placeholder="New Password" th:classappend="${#fields.hasErrors('password')} ? 'error' : 'form-input'"/>
-<!--        <div class="form-error" th:if="${#fields.hasErrors('password')}" th:text="*{password}"></div>-->
-
-            <button type="submit" value="Добавить измения"></button>
+        <button type="submit" value="Добавить измения"></button>
     </form>
 </div>
+<script>
+    function updateProfile() {
+    const username = document.getElementById("username").value;
+    const email = document.getElementById("email").value;
 
+    fetch('/api/users/profile', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem("authToken")
+        },
+        body: JSON.stringify({ username, email })
+    }).then(response => {
+        if (response.ok) {
+            alert("Profile updated successfully!");
+        } else {
+            alert("Error updating profile.");
+        }
+    });
+}
+
+</script>
 </body>
 
 </html>
