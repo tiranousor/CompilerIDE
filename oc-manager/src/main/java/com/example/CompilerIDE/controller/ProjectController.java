@@ -22,25 +22,26 @@ public class ProjectController {
     }
 
     // Отображение всех проектов клиента
-    @GetMapping("/userProfile")
-    public String showProjects(@PathVariable int clientId, Model model) {
-        Client client = clientService.findOne(clientId);
-        model.addAttribute("client", client);
-        model.addAttribute("projects", projectService.findByClient(client));
-        return "userProfile"; // это наш HTML файл профиля
-    }
+//    @GetMapping("/userProfile")
+//    public String showProjects(@PathVariable int clientId, Model model) {
+//        Client client = clientService.findOne(clientId);
+//        model.addAttribute("client", client);
+//        model.addAttribute("projects", projectService.findByClient(client));
+//        return "userProfile"; // это наш HTML файл профиля
+//    }
+//
+//    @GetMapping("/userProfile/new")
+//    public String newProjectForm(Authentication authentication, Model model) {
+////        model.addAttribute("clientId", clientService.getPerson(authentication.getName()).get().getId());
+//        model.addAttribute("project", new Project());
+//        return "new_project_form"; // это HTML форма для добавления проекта
+//    }
+//
+//    @PostMapping("/userProfile/new")
+//    public String createProject(@ModelAttribute Project project, Authentication authentication) {
+//        project.setClient(clientService.getClient(authentication.getName()).get());
+//        projectService.save(project);
+//        return "redirect:/projects/"; // перенаправляем обратно на страницу проектов
+//    }
 
-    @GetMapping("/userProfile/new")
-    public String newProjectForm(Authentication authentication, Model model) {
-//        model.addAttribute("clientId", clientService.getPerson(authentication.getName()).get().getId());
-        model.addAttribute("project", new Project());
-        return "new_project_form"; // это HTML форма для добавления проекта
-    }
-
-    @PostMapping("/userProfile/new")
-    public String createProject(@ModelAttribute Project project, Authentication authentication) {
-        project.setClient(clientService.getClient(authentication.getName()).get());
-        projectService.save(project);
-        return "redirect:/projects/"; // перенаправляем обратно на страницу проектов
-    }
 }

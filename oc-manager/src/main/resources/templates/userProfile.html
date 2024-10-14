@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:sec="http://www.w3.org/1999/xhtml" xmlns:th="http://www.w3.org/1999/xhtml">
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 
 <head>
     <meta charset="UTF-8">
@@ -17,144 +17,430 @@
         }
 
         body {
-            background: linear-gradient(70deg, #fff, #fff);
+            background-color: #E6EEF5;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
+            align-items: flex-start;
             height: 100vh;
+            overflow: hidden;
         }
 
         .container {
-            background-color: #fff;
-            border-radius: 30px;
-            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.35);
-            width: 800px;
-            max-width: 100%;
-            padding: 30px;
+            display: flex;
+            gap: 30px;
+            margin-top: 30px;
+            margin-left: 100px;
+            width: 100%;
+            max-width: 1200px;
+            height: calc(100vh - 60px);
+            overflow: hidden;
+            align-items: flex-start;
+        }
+
+        /* Левый контейнер (профиль пользователя) */
+        .profile-container {
+            width: 270px;
+            background-color: #FFFFFF;
+            border-radius: 25px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
         }
 
         .profile-avatar {
-            width: 150px;
-            height: 150px;
+            width: 130px;
+            height: 130px;
             border-radius: 50%;
             object-fit: cover;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
         }
 
         .profile-info {
             text-align: center;
-            margin: 20px 0;
-        }
-
-        .profile-info h1 {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 10px;
         }
 
         .profile-info p {
-            font-size: 14px;
-            color: #555;
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #333;
         }
 
         .profile-info a {
-            color: #000;
             text-decoration: none;
-            font-weight: 500;
-            margin-top: 5px;
-            display: inline-block;
+            color: #1DB954;
+            font-weight: 600;
+            margin-bottom: 10px;
         }
 
         .profile-info a:hover {
             text-decoration: underline;
         }
 
-        .edit-profile-btn {
-            background-color: #000;
-            color: #fff;
-            font-size: 12px;
-            padding: 10px 45px;
-            border: 1px solid transparent;
-            border-radius: 8px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            margin-top: 20px;
-            cursor: pointer;
+        /* Правый контейнер (список проектов) */
+        .projects-container {
+            flex-grow: 1;
+            background-color: #FFFFFF;
+            border-radius: 25px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            height: 100%;
+            overflow-y: auto;
         }
 
-        .projects-section {
-            margin-top: 30px;
-            text-align:center;
-        }
-
-        .projects-section h2 {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .projects-section ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        .projects-section ul li {
-            background-color: #f0f0f0;
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
+        .projects-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: background-color 0.2s;
+            margin-bottom: 25px;
         }
 
-        .projects-section ul li:hover {
-            background-color: #e0e0e0;
+        .projects-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
         }
 
-        .projects-section ul li a {
+        .add-btn {
+            background-color: #1DB954;
             text-decoration: none;
-            color: #000;
-            font-weight: 500;
+            border: none;
+            color: #fff;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 22px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
+        .project-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .project-item {
+            background-color: #F9FBFC;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            transition: background-color 0.3s;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .project-item:hover {
+            background-color: #E8EFF5;
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .project-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .project-actions button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-open {
+            background-color: #1DB954;
+            color: #fff;
+        }
+
+        .btn-delete {
+            background-color: #FF4D4F;
+            color: #fff;
+        }
+
+        .btn-info {
+            background-color: #E0E0E0;
+            color: #333;
+            border: none;
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Стили для раскрывающегося окна с информацией о проекте */
+        .project-details {
+            margin-top: 15px;
+            background-color: #F7F9FA;
+            padding: 20px;
+            border-radius: 15px;
+            display: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .project-details p {
+            margin-bottom: 12px;
+            font-size: 15px;
+            color: #555;
+        }
+
+        .project-details-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .project-details-actions .btn-edit,
+        .project-details-actions .btn-continue,
+        .project-details-actions .btn-delete {
+            background-color: #1DB954;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 15px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .project-details-actions .btn-delete {
+            background-color: #FF4D4F;
+        }
+
+        /* Фиксированные кнопки (назад и настройки) */
+        .back-btn,
+        .settings-btn {
+            position: absolute;
+            width: 45px;
+            height: 45px;
+            background-color: #E0E0E0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-btn {
+            top: 20px;
+            left: 20px;
+        }
+
+        .settings-btn {
+            top: 20px;
+            right: 20px;
+        }
+
+        /* Slide-out Menu */
+        .settings-menu {
+            text-decoration: none;
+            position: fixed;
+            top: 0;
+            right: -300px;
+            height: 100%;
+            width: 300px;
+            background-color: #FFFFFF;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+            transition: right 0.4s ease;
+            z-index: 100;
+            padding: 25px;
+        }
+
+        .settings-menu a {
+            display: block;
+            padding: 12px;
+            color: #333;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            border-radius: 8px;
+        }
+
+        .settings-menu a:hover {
+            background-color: #F0F0F0;
+        }
+
+        .edit-profile-btn {
+            display: block;
+            padding: 12px;
+            font-size: 16px;
+            color: #333;
+            text-decoration: none;
+            font-weight: 600;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .edit-profile-btn:hover {
+            background-color: #F0F0F0;
+            border-radius: 8px;
+        }
+
+        /* Overlay для затемнения фона */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+            z-index: 50;
+        }
+
+        /* Показываем overlay и меню настроек, когда активны */
+        .overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .settings-menu.active {
+            right: 0;
+        }
     </style>
 </head>
 
 <body>
-
 <div class="container">
-    <div class="profile-info">
-<!--        <img th:src="${client.avatar_url}" alt="User Avatar" class="profile-avatar">-->
+    <!-- Левый контейнер (Профиль пользователя) -->
+    <div class="profile-container">
+        <a href="/" class="back-btn">
+            <i class='bx bx-arrow-back'></i>
+        </a>
         <img th:src="@{${client.avatarUrl}}" alt="User Avatar" class="profile-avatar">
-        <!-- Информация о пользователе -->
-        <h1 th:text="${client.username}">Имя пользователя</h1>
-        <p><span th:text="${client.email}">example@example.com</span></p>
-        <p><a th:href="${client.githubProfile}" target="_blank">GitHub Профиль</a></p>
-        <p th:text="${client.about}">О себе</p>
-
-        <p> <a th:href="@{/edit/{id}(id=${client.id})}">
-            <button class="edit-profile-btn">Редактировать профиль</button>
-        </a></p>
-        <a href="/projects/userProfile/new" class="btn btn-primary">Создать новый проект</a>
+        <div class="profile-info">
+            <p class="info-item" th:text="${client.username}">Имя пользователя</p>
+            <p class="info-item" th:text="${client.email}">example@example.com</p>
+            <p class="info-item">
+                <a th:href="${client.githubProfile}" target="_blank">GitHub Профиль</a>
+            </p>
+            <p class="info-item" th:text="${client.about}">О себе</p>
+        </div>
     </div>
 
-    <!-- Раздел с проектами пользователя -->
-    <div class="projects-section">
-        <h2>Мои проекты</h2>
-        <ul>
+    <!-- Правый контейнер (Проекты) -->
+    <div class="projects-container">
+        <div class="projects-header">
+            <h2>Projects</h2>
+            <a th:href="@{/userProfile/new}" class="add-btn">
+                <i class='bx bx-plus'></i>
+            </a>
+        </div>
+        <ul class="project-list">
             <th:block th:each="project : ${projects}">
-                <li>
-                    <!--                    <a th:href="@{/projects/{id}(id=${project.id})}" th:text="${project.name}">Проект</a>-->
-                    <span th:text="${project.readMe}">Описание проекта</span>
+                <li class="project-item">
+                    <!-- Заголовок проекта -->
+                    <div class="project-header">
+                        <span class="project-name" th:text="${project.name}">Project Name</span>
+                        <div class="project-actions">
+                            <button class="btn-open">Open</button>
+                            <!-- Кнопка информации -->
+                            <button class="btn-info">
+                                <i class='bx bx-info-circle'></i>
+                            </button>
+                            <form th:action="@{/userProfile/delete/{id}(id=${project.id})}" method="post" style="display: inline;"
+                                  onsubmit="return confirm('Вы действительно хотите удалить проект?');">
+                                <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+                                <button type="submit" class="btn-delete">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- Раскрывающееся окно с информацией о проекте -->
+                    <div class="project-details">
+                        <p><strong>Имя проекта:</strong> <span th:text="${project.name}">Имя проекта</span></p>
+                        <p><strong>ReadMe:</strong> <span th:text="${project.readMe}">ReadMe</span></p>
+                        <p><strong>Язык:</strong> <span th:text="${project.language}">Язык</span></p>
+                        <p><strong>Ссылка на GitHub:</strong> <a th:href="${project.refGit}" target="_blank">Перейти</a></p>
+                        <p><strong>Тип проекта:</strong> <span th:text="${project.projectType}">Тип проекта</span></p>
+                        <!-- Кнопки внизу -->
+                        <div class="project-details-actions">
+                            <a th:href="@{/projects/edit/{id}(id=${project.id})}" class="btn-edit">Редактировать</a>
+                            <a th:href="@{/projects/continue/{id}(id=${project.id})}" class="btn-continue">Продолжить работу</a>
+                            <form th:action="@{/userProfile/delete/{id}(id=${project.id})}" method="post" style="display: inline;"
+                                  onsubmit="return confirm('Вы действительно хотите удалить проект?');">
+                                <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+                                <button type="submit" class="btn-delete">Удалить проект</button>
+                            </form>
+                        </div>
+                    </div>
                 </li>
             </th:block>
         </ul>
     </div>
 </div>
+
+<!-- Кнопка настроек -->
+<div class="settings-btn">
+    <i class='bx bx-cog'></i>
+</div>
+
+<!-- Меню настроек -->
+<div class="settings-menu" id="settingsMenu">
+    <a th:href="@{/edit/{id}(id=${client.id})}">Редактировать профиль</a>
+    <form th:action="@{/logout}" th:method="POST">
+        <input type="submit" value="Выход" class="edit-profile-btn">
+    </form>
+</div>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay"></div>
+
+<script>
+    // Существующий код для меню настроек
+    const settingsBtn = document.querySelector('.settings-btn');
+    const settingsMenu = document.getElementById('settingsMenu');
+    const overlay = document.getElementById('overlay');
+
+    settingsBtn.addEventListener('click', () => {
+        settingsMenu.classList.toggle('active');
+        overlay.classList.toggle('active');
+    });
+
+    overlay.addEventListener('click', () => {
+        settingsMenu.classList.remove('active');
+        overlay.classList.remove('active');
+    });
+
+    // Код для раскрытия информации о проекте
+    const infoButtons = document.querySelectorAll('.btn-info');
+
+    infoButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const projectItem = button.closest('.project-item');
+            const projectDetails = projectItem.querySelector('.project-details');
+            projectDetails.style.display = (projectDetails.style.display === 'none' || projectDetails.style.display === '') ? 'block' : 'none';
+        });
+    });
+</script>
 
 </body>
 
