@@ -17,8 +17,7 @@
         }
 
         body {
-<!--            background: linear-gradient(70deg,  #7E56C8, #CAEDA7);-->
-            background-color: #999;
+            background: linear-gradient(70deg, #E0C3FC, #8EC5FC);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -27,11 +26,9 @@
         }
 
         .container {
-            background-color: #fff;
-            border-radius: 30px;
-<!--            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.35);-->
-            background-color: #999;
-
+            background-color: #FFFFFF;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             position: relative;
             overflow: hidden;
             width: 768px;
@@ -44,58 +41,82 @@
             line-height: 20px;
             letter-spacing: 0.3px;
             margin: 20px 0;
+            color: #555;
         }
 
         .container span {
-            font-size: 12px;
+            font-size: 13px;
+            color: #777;
         }
 
         .container a {
-            color: #333;
+            color: #555;
             font-size: 13px;
             text-decoration: none;
             margin: 15px 0 10px;
+            transition: color 0.3s;
+        }
+
+        .container a:hover {
+            color: #8EC5FC;
         }
 
         .container button {
-            background-color: #000;
-
+            background-color: #8EC5FC;
             color: #fff;
-            font-size: 12px;
+            font-size: 14px;
             padding: 10px 45px;
-            border: 1px solid transparent;
-            border-radius: 8px;
+            border: none;
+            border-radius: 12px;
             font-weight: 600;
             letter-spacing: 0.5px;
             text-transform: uppercase;
-            margin-top: 10px;
+            margin-top: 20px;
             cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .container button:hover {
+            background-color: #6FA3EF;
         }
 
         .container button.hidden {
             background-color: transparent;
-            border-color: #fff;
+            border: 2px solid #8EC5FC;
+            color: #8EC5FC;
+            padding: 10px 25px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container button.hidden:hover {
+            background-color: #8EC5FC;
+            color: #fff;
         }
 
         .container form {
-            background-color: #fff;
+            background-color: #FFFFFF;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            padding: 0 40px;
+            padding: 40px;
             height: 100%;
         }
 
         .container input {
-            background-color: #eee;
-            border: none;
-            margin: 8px 0;
-            padding: 10px 15px;
-            font-size: 13px;
-            border-radius: 8px;
+            background-color: #F0F0F0;
+            border: 1px solid #DDD;
+            margin: 10px 0;
+            padding: 12px 20px;
+            font-size: 14px;
+            border-radius: 10px;
             width: 100%;
             outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .container input:focus {
+            border-color: #8EC5FC;
         }
 
         .form-container {
@@ -126,18 +147,15 @@
             transform: translateX(100%);
             opacity: 1;
             z-index: 5;
-            animation: move 0.6s;
+            animation: fadeIn 0.6s;
         }
 
-        @keyframes move {
-            0%,
-            49.99% {
+        @keyframes fadeIn {
+            0%, 49.99% {
                 opacity: 0;
                 z-index: 1;
             }
-
-            50%,
-            100% {
+            50%, 100% {
                 opacity: 1;
                 z-index: 5;
             }
@@ -148,14 +166,20 @@
         }
 
         .social-icons a {
-            border: 1px solid #ccc;
-            border-radius: 20%;
+            border: 1px solid #CCC;
+            border-radius: 50%;
             display: inline-flex;
             justify-content: center;
             align-items: center;
-            margin: 0 3px;
-            width: 40px;
-            height: 40px;
+            margin: 0 5px;
+            width: 45px;
+            height: 45px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .social-icons a:hover {
+            background: #8EC5FC;
+            color: #FFFFFF;
         }
 
         .toggle-container {
@@ -176,9 +200,9 @@
         }
 
         .toggle {
-            background-color: #000;
+            background-color: #8EC5FC;
             height: 100%;
-            color: #fff;
+            color: #FFFFFF;
             position: relative;
             left: -100%;
             height: 100%;
@@ -224,19 +248,6 @@
 <body>
 
 <div class="container" id="container">
-<!--    <div class="form-container sign-up">-->
-<!--        <form action="/process_registration" method="post" th:object="${person}">-->
-<!--            <h1>Create Account</h1>-->
-<!--            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>-->
-<!--            <span>Register with login</span>-->
-<!--            <input class="form-input" type="text" th:field="*{username}" id="username" placeholder="Name" th:classappend="${#fields.hasErrors('username')} ? 'error' : 'form-input'"/>-->
-<!--            <div class="form-error" th:if="${#fields.hasErrors('username')}" th:text="${#fields.errors('username').get(#fields.errors('username').size() - 1)}"></div>-->
-<!--            <input class="form-input" type="password" th:field="*{password}" id="password" placeholder="Enter Password" th:classappend="${#fields.hasErrors('password')} ? 'error' : 'form-input'"/>-->
-<!--            <div class="form-error" th:if="${#fields.hasErrors('password')}" th:text="${#fields.errors('password').get(#fields.errors('password').size() - 1)}"></div>-->
-<!--            <button>Sign Up</button>-->
-<!--        </form>-->
-<!--    </div>-->
-
     <div class="form-container sign-in">
         <form action="/process_login" method="post">
             <h1>Войти</h1>
@@ -247,31 +258,28 @@
             <div>
                 <input type="hidden" name="referer" th:value="${param.referer}" />
             </div>
-<!--            <a href="#">Forget Password?</a>-->
             <button type="submit">Войти</button>
             <div th:if="${param.error}">
                 <p style="color:red;">Неверное имя пользователя или пароль.</p>
             </div>
             <a th:href="@{/forgot_password}">Забыли пароль?</a>
-
             <div th:if="${param.logout}">
                 <p style="color:green;">Вы успешно вышли из аккаунта.</p>
             </div>
             <div th:if="${message != null}">
                 <p style="color:green;">[[${message}]]</p>
             </div>
-
         </form>
     </div>
 
     <div class="toggle-container">
         <div class="toggle">
-
             <div class="toggle-panel toggle-right">
                 <h1>Еще не зарегистрированы?</h1>
                 <p>Пора исправлять!</p>
                 <a href="/registration">
-                <button class="hidden" id="register">зарегистрироваться</button></a>
+                    <button class="hidden" id="register">зарегистрироваться</button>
+                </a>
             </div>
         </div>
     </div>

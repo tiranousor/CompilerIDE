@@ -41,9 +41,14 @@ public class ProjectService {
         updateProject.setId(id);
         projectRepository.save(updateProject);
     }
-    @Transactional
-    public void delete(int id){
-        projectRepository.deleteById(id);
+    // Method to find a project by ID
+    public Optional<Project> findById(int projectId) {
+        return projectRepository.findById(projectId);
+    }
+
+    // Method to delete a project
+    public void delete(Project project) {
+        projectRepository.delete(project);
     }
     public List<Project> findByClient(Client client) {
         return projectRepository.findByClient(client);

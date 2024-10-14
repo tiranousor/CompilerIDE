@@ -1,10 +1,211 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            background-color: #F0F0F0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .profile-container {
+            display: flex;
+            width: 900px;
+            background-color: #fff;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        /* Left side (profile) */
+        .profile-sidebar {
+            width: 250px;
+            padding: 30px;
+            background-color: #F5F5F5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-info {
+            text-align: center;
+        }
+
+        .profile-info p {
+            margin-bottom: 10px;
+        }
+
+        .profile-info a {
+            text-decoration: none;
+            color: #000;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .profile-info a:hover {
+            text-decoration: underline;
+        }
+
+        .profile-info .info-item {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        /* Right side (projects) */
+        .projects-content {
+            flex-grow: 1;
+            padding: 30px;
+            position: relative;
+        }
+
+        .projects-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .projects-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .projects-header .add-btn {
+            background-color: #1DB954;
+            border: none;
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .project-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .project-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #F5F5F5;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .project-item:hover {
+            background-color: #E0E0E0;
+        }
+
+        .project-item span {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .project-actions button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-open {
+            background-color: #1DB954;
+            color: #fff;
+        }
+
+        .btn-delete {
+            background-color: #FF4D4F;
+            color: #fff;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
 </head>
+
 <body>
 
+<div class="profile-container">
+    <!-- Left Sidebar: User Profile -->
+    <div class="profile-sidebar">
+        <a href="#" class="back-btn">
+            <i class='bx bx-arrow-back'></i>
+        </a>
+        <img th:src="@{${client.avatarUrl}}" alt="User Avatar" class="profile-avatar">
+        <div class="profile-info">
+            <p class="info-item" th:text="${client.username}">User Name</p>
+            <p class="info-item" th:text="${client.email}">email@example.com</p>
+            <p class="info-item">
+                <a th:href="${client.githubProfile}" target="_blank">GitHub Profile</a>
+            </p>
+            <p class="info-item" th:text="${client.about}">About</p>
+        </div>
+    </div>
+
+    <!-- Right Section: Projects -->
+    <div class="projects-content">
+        <div class="projects-header">
+            <h2>Projects</h2>
+            <button class="add-btn"><i class='bx bx-plus'></i></button>
+        </div>
+        <ul class="project-list">
+            <th:block th:each="project : ${projects}">
+                <li class="project-item">
+                    <span th:text="${project.name}">Project Name</span>
+                    <div class="project-actions">
+                        <button class="btn-open">Open</button>
+                        <button class="btn-delete">Delete</button>
+                    </div>
+                </li>
+            </th:block>
+        </ul>
+    </div>
+</div>
+
 </body>
+
 </html>

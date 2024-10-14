@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<html lang="ru" xmlns:th="http://www.w3.org/1999/xhtml">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <title>Edit Account</title>
+    <title>Редактировать Аккаунт</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
 
@@ -17,7 +17,7 @@
         }
 
         body {
-            background: linear-gradient(70deg, #fff, #fff);
+            background: linear-gradient(135deg, #DDF5E5, #DEDEDE);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -27,45 +27,45 @@
         .container {
             background-color: #fff;
             border-radius: 30px;
-            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.35);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             width: 600px;
             max-width: 100%;
             padding: 30px;
+            text-align: center;
         }
 
-        .container h1 {
-            text-align: center;
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
             margin-bottom: 20px;
         }
 
-        .container form {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .container input {
-            background-color: #eee;
-            border: none;
-            margin: 8px 0;
-            padding: 10px 15px;
-            font-size: 13px;
-            border-radius: 8px;
+        .form-control {
             width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #eee;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
             outline: none;
         }
 
-        .container button {
-            background-color: #000;
+        .form-control:focus {
+            border-color: #1DB954;
+        }
+
+        .btn-primary {
+            background-color: #1DB954;
             color: #fff;
-            font-size: 12px;
             padding: 10px 45px;
             border: 1px solid transparent;
             border-radius: 8px;
             font-weight: 600;
-            letter-spacing: 0.5px;
             text-transform: uppercase;
-            margin-top: 10px;
             cursor: pointer;
+            margin-top: 20px;
         }
 
         .form-error {
@@ -74,6 +74,9 @@
             margin-top: -5px;
         }
 
+        p {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 
@@ -81,29 +84,33 @@
 
 <div class="container">
     <h1>Редактировать аккаунт</h1>
-<!--    <form th:action="@{/edit}" th:method="PATH" th:object="${client}">-->
-        <form th:action="@{/edit/{id}(id=${client.id})}" th:method="POST" th:object="${client}" enctype="multipart/form-data">
-        <input type="file" name="avatarFile" accept="image/*" />
+    <form th:action="@{/edit/{id}(id=${client.id})}" th:method="POST" th:object="${client}" enctype="multipart/form-data">
+        <!-- Avatar upload -->
+        <input type="file" name="avatarFile" class="form-control" accept="image/*" />
+        <div class="form-error" th:if="${#fields.hasErrors('avatarUrl')}" th:errors="*{avatarUrl}"></div>
 
-            <div class="form-error" th:if="${#fields.hasErrors('avatarUrl')}" th:errors="*{avatarUrl}"></div>
+        <!-- Username input -->
+        <input type="text" class="form-control" th:field="*{username}" id="username" placeholder="Username" th:classappend="${#fields.hasErrors('username')} ? 'error' : 'form-control'"/>
+        <div class="form-error" th:if="${#fields.hasErrors('username')}" th:text="*{username}"></div>
 
-        <input type="text" th:field="*{username}" id="username" placeholder="Username" th:classappend="${#fields.hasErrors('username')} ? 'error' : 'form-input'"/>
-<!--        <div class="form-error" th:if="${#fields.hasErrors('username')}" th:text="*{username}"></div>-->
-<!--            <label for="email">Email</label>-->
-        <input type="text" th:field="*{email}" id="email" placeholder="Email" th:classappend="${#fields.hasErrors('email')} ? 'error' : 'form-input'"/>
-<!--        <div class="form-error" th:if="${#fields.hasErrors('email')}" th:text="*{email}"></div>-->
-<!--            <label for="githubProfile">GitHub профиль</label>-->
+        <!-- Email input -->
+        <input type="text" class="form-control" th:field="*{email}" id="email" placeholder="Email" th:classappend="${#fields.hasErrors('email')} ? 'error' : 'form-control'"/>
+        <div class="form-error" th:if="${#fields.hasErrors('email')}" th:text="*{email}"></div>
 
-        <input type="text" th:field="*{githubProfile}" id="githubProfile" placeholder="GitHub URL" th:classappend="${#fields.hasErrors('githubProfile')} ? 'error' : 'form-input'"/>
-<!--        <div class="form-error" th:if="${#fields.hasErrors('githubProfile')}" th:text="*{githubProfile}"></div>-->
-<!--            <label for="about">О себе</label>-->
+        <!-- GitHub Profile input -->
+        <input type="text" class="form-control" th:field="*{githubProfile}" id="githubProfile" placeholder="GitHub URL" th:classappend="${#fields.hasErrors('githubProfile')} ? 'error' : 'form-control'"/>
+        <div class="form-error" th:if="${#fields.hasErrors('githubProfile')}" th:text="*{githubProfile}"></div>
 
-            <input type="text" th:field="*{about}" id="about" placeholder="About" th:classappend="${#fields.hasErrors('about')} ? 'error' : 'form-input'"/>
+        <!-- About input -->
+        <input type="text" class="form-control" th:field="*{about}" id="about" placeholder="About" th:classappend="${#fields.hasErrors('about')} ? 'error' : 'form-control'"/>
+        <div class="form-error" th:if="${#fields.hasErrors('about')}" th:text="*{about}"></div>
 
-            <input type="hidden" th:field="*{password}" id="password" placeholder="New Password" th:classappend="${#fields.hasErrors('password')} ? 'error' : 'form-input'"/>
-<!--        <div class="form-error" th:if="${#fields.hasErrors('password')}" th:text="*{password}"></div>-->
+        <!-- Password hidden input -->
+        <input type="hidden" th:field="*{password}" id="password" placeholder="New Password" th:classappend="${#fields.hasErrors('password')} ? 'error' : 'form-control'"/>
+        <div class="form-error" th:if="${#fields.hasErrors('password')}" th:text="*{password}"></div>
 
-            <button type="submit" value="Добавить измения"></button>
+        <!-- Submit button -->
+        <button type="submit" class="btn-primary">Сохранить изменения</button>
     </form>
 </div>
 

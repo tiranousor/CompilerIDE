@@ -16,9 +16,9 @@ public class Project {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false, unique = true, name="uuid")
+    @Column(nullable = true, unique = true, name="uuid")
     private String uuid;
-    @Column(nullable = false, unique = true, name="name")
+    @Column(nullable = true, unique = true, name="name")
     private String name;
     @Column(name="read me")
     private String readMe;

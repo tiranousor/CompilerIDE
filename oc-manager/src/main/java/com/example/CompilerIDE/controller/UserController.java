@@ -69,6 +69,44 @@ public class UserController {
         return "redirect:/login?registration";
     }
 
+//    @GetMapping("/userProfile")
+//    public String showProjects(@PathVariable int clientId, Model model) {
+//        Client client = clientService.findOne(clientId);
+//        model.addAttribute("client", client);
+//        model.addAttribute("projects", projectService.findByClient(client));
+//        return "userProfile"; // это наш HTML файл профиля
+//    }
+
+    @GetMapping("/userProfile/new")
+    public String newProjectForm(Authentication authentication, Model model) {
+        model.addAttribute("project", new Project());
+        return "new_project_form"; // Ensure this template exists
+    }
+
+    // Handle new project creation
+    @PostMapping("/userProfile/new")
+    public String createProject(@ModelAttribute Project project, Authentication authentication) {
+        project.setClient(clientService.getClient(authentication.getName()).get());
+        projectService.save(project);
+        return "redirect:/userProfile"; // Redirect to user profile after saving
+    }
+    // Delete a project
+    @PostMapping("/userProfile/delete/{id}")
+    public String deleteProject(@PathVariable("id") int projectId, Authentication authentication) {
+        // Get the logged-in user
+        Client client = clientService.findByUsername(authentication.getName()).get();
+
+        // Find the project to delete
+        Optional<Project> projectToDelete = projectService.findById(projectId);
+
+        // Ensure the project belongs to the current user
+        if (projectToDelete.isPresent() && projectToDelete.get().getClient().getId() == client.getId()) {
+            projectService.delete(projectToDelete.get()); // Delete the project from DB
+        }
+
+        // Redirect back to the user's profile page after deletion
+        return "redirect:/userProfile";
+    }
 
     @GetMapping("/userProfile")
     public String ClientProfile(Model model, Authentication authentication) {
@@ -76,7 +114,7 @@ public class UserController {
 
         List<Project> project = projectService.findByClient(client);
         model.addAttribute("client", client);
-        model.addAttribute("project", project);
+        model.addAttribute("projects", project);
 
         return "userProfile";
     }
