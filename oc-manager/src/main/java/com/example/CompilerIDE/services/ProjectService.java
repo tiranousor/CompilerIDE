@@ -1,11 +1,15 @@
 package com.example.CompilerIDE.services;
 
+import com.example.CompilerIDE.client.FileStorageClient;
 import com.example.CompilerIDE.providers.Client;
 import com.example.CompilerIDE.providers.Project;
+import com.example.CompilerIDE.providers.ProjectStruct;
 import com.example.CompilerIDE.repositories.ProjectRepository;
+import com.example.CompilerIDE.repositories.ProjectStructRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,9 +17,13 @@ import java.util.Optional;
 @Service
 public class ProjectService {
     private final ProjectRepository projectRepository;
+    private final ProjectStructRepository projectStructRepository;
+    private final FileStorageClient fileStorageClient;
     @Autowired
-    public ProjectService(ProjectRepository projectRepository) {
+    public ProjectService(ProjectRepository projectRepository, ProjectStructRepository projectStructRepository, FileStorageClient fileStorageClient) {
         this.projectRepository = projectRepository;
+        this.projectStructRepository = projectStructRepository;
+        this.fileStorageClient = fileStorageClient;
     }
     public List<Project> showAllProjects() {
         return projectRepository.findAll();
@@ -27,7 +35,9 @@ public class ProjectService {
         Optional<Project> foundBook = projectRepository.findById(id);
         return foundBook.orElse(null);
     }
-
+    public Optional<Project> findByNameAndClient(String name, Client client){
+            return projectRepository.findByNameAndClient(name, client);
+    }
     public List<Project> findOne(String name) {
         return projectRepository.findByName(name);
     }
@@ -52,5 +62,21 @@ public class ProjectService {
     }
     public List<Project> findByClient(Client client) {
         return projectRepository.findByClient(client);
+    }
+
+    public void saveProjectFiles(Project project, List<MultipartFile> files, String path) {
+        for (MultipartFile file : files) {
+            // Сохранение информации о файле в базе данных
+            ProjectStruct projectStruct = new ProjectStruct();
+            projectStruct.setProject(project);
+            projectStruct.setName(file.getOriginalFilename());
+            projectStruct.setPath(path);
+            projectStruct.setType("file");
+            // Вычислите и сохраните хеш содержимого файла, если требуется
+            projectStructRepository.save(projectStruct);
+
+            // Отправка файла на File Storage Server
+            fileStorageClient.uploadFile(project.getId().toString(), file, path);
+        }
     }
 }

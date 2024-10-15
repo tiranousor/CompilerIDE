@@ -7,6 +7,7 @@ import com.example.CompilerIDE.services.ClientService;
 import com.example.CompilerIDE.services.ProjectService;
 import com.example.CompilerIDE.util.ClientValidator;
 import com.example.CompilerIDE.util.FileUploadUtil;
+import com.example.CompilerIDE.util.ProjectValidator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,14 +34,16 @@ public class UserController {
     private final ProjectService projectService;
     private final ClientValidator clientValidator;
     private final PasswordEncoder passwordEncoder;
+    private final ProjectValidator projectValidator;
 
     @Autowired
     public UserController(ClientService clientService, ProjectService projectService, ClientValidator clientValidator,
-                          PasswordEncoder passwordEncoder) {
+                          PasswordEncoder passwordEncoder, ProjectValidator projectValidator) {
         this.passwordEncoder = passwordEncoder;
         this.clientService = clientService;
         this.clientValidator = clientValidator;
         this.projectService = projectService;
+        this.projectValidator = projectValidator;
     }
 
     @GetMapping("/")
@@ -66,6 +69,15 @@ public class UserController {
             return "registrationPage";
 
         clientService.save(client);
+
+        Project project = new Project();
+        project.setName("Untitled");
+        project.setLanguage("Java");
+       project.setClient(client);
+
+        // Сохраняем проект
+        projectService.save(project);
+
         return "redirect:/login?registration";
     }
 
@@ -83,12 +95,19 @@ public class UserController {
         return "new_project_form"; // Ensure this template exists
     }
 
-    // Handle new project creation
     @PostMapping("/userProfile/new")
-    public String createProject(@ModelAttribute Project project, Authentication authentication) {
+    public String createProject(@Valid @ModelAttribute("project") Project project, BindingResult bindingResult, Authentication authentication) {
+        if (bindingResult.hasErrors()) {
+            return "new_project_form"; // Возвращаем обратно на форму при ошибках
+        }
         project.setClient(clientService.getClient(authentication.getName()).get());
+        projectValidator.validate(project, bindingResult);
+        if (bindingResult.hasErrors()) {
+            return "new_project_form"; // Возвращаем обратно на форму при ошибках
+        }
         projectService.save(project);
-        return "redirect:/userProfile"; // Redirect to user profile after saving
+
+        return "redirect:/userProfile";
     }
     // Delete a project
     @PostMapping("/userProfile/delete/{id}")
@@ -124,20 +143,6 @@ public class UserController {
         model.addAttribute("client", clientService.findOne(id));
         return "editProfile";
     }
-//    @PostMapping("/edit/{id}")
-//    public String updateProfile(Authentication authentication, @PathVariable("id") int id, @Valid Client client, BindingResult bindingResult) {
-//        if (bindingResult.hasErrors()) {
-//            return "editProfile";
-//        }
-//
-//        clientService.update(id, client);
-//        if (!authentication.getName().equals(client.getUsername())) {
-//            Authentication newAuth = new UsernamePasswordAuthenticationToken(client.getUsername(), authentication.getCredentials(), authentication.getAuthorities());
-//            SecurityContextHolder.getContext().setAuthentication(newAuth);
-//        }
-//
-//        return "redirect:/userProfile";
-//    }
     @PostMapping("/edit/{id}")
     public String updateProfile(Authentication authentication, @PathVariable("id") int id,
                                 @Valid Client clientForm, BindingResult bindingResult,

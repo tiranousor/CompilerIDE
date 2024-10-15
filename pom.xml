@@ -17,7 +17,8 @@
 	<modules>
 		<module>oc-manager</module>
 		<module>oc-agent-javac</module>
-	</modules>
+        <module>oc-file-container</module>
+    </modules>
 
 	<properties>
 		<java.version>21</java.version>

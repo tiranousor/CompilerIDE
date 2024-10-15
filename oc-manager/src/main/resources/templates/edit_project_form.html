@@ -2,10 +2,10 @@
 <html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Новый Проект</title>
+    <title>Редактировать Проект</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
+        /* Добавьте здесь ваши стили или скопируйте из `new_project_form.html` */
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
 
         * {
@@ -99,19 +99,18 @@
             font-size: 12px;
             margin-top: -5px;
         }
-
     </style>
 </head>
 
 <body>
 
 <div class="container">
-    <h2>Добавить новый проект</h2>
-    <form th:action="@{/userProfile/new}" method="post" th:object="${project}">
+    <h2>Редактировать проект</h2>
+    <form th:action="@{/projects/edit/{id}(id=${project.id})}" method="post" th:object="${project}">
         <div class="form-input">
             <label for="name">Название проекта:</label>
-            <input type="text" class="form-control" id="name" name="name" required th:field="*{name}">
-            <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+            <input type="text" class="form-control" id="name" name="name" th:field="*{name}" required>
+            <div class="form-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Ошибка в названии проекта</div>
         </div>
         <div class="form-input">
             <label for="language">Язык программирования:</label>
@@ -126,12 +125,15 @@
         <div class="form-input">
             <label for="readMe">Read Me:</label>
             <textarea class="form-control" id="readMe" name="readMe" th:field="*{readMe}" rows="3"></textarea>
+            <div class="form-error" th:if="${#fields.hasErrors('readMe')}" th:errors="*{readMe}">Ошибка в поле Read Me</div>
         </div>
+
         <div class="form-input">
             <label for="projectType">Тип проекта:</label>
             <input type="text" class="form-control" id="projectType" name="projectType" th:field="*{projectType}">
+            <div class="form-error" th:if="${#fields.hasErrors('projectType')}" th:errors="*{projectType}">Ошибка в типе проекта</div>
         </div>
-        <button type="submit" class="btn btn-primary">Создать</button>
+        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
     </form>
 </div>
 

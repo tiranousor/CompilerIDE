@@ -20,6 +20,7 @@ public class CompilationController {
     @PostMapping
     @ResponseBody
     public String compileCode(@RequestBody CompileRequest request) {
+
         return codeCompilationService.compileCode(request);
     }
 }

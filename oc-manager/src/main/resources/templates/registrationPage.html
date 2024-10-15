@@ -263,19 +263,16 @@
             <h1>Создать аккаунт</h1>
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
             <span style="margin-top:20px;">Зарегистрироваться с помощью логина</span>
-            <input class="form-input" type="text" th:field="*{username}" id="username" placeholder="Name" th:classappend="${#fields.hasErrors('username')} ? 'error' : 'form-input'"/>
-            <div class="form-error" th:if="${#fields.hasErrors('username')}" th:text="${#fields.errors('username').get(#fields.errors('username').size() - 1)}"></div>
+            <input type="text" th:field="*{username}" placeholder="Имя пользователя" th:classappend="${#fields.hasErrors('username')} ? 'error' : ''"/>
+            <div th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
 
-            <!-- Email input field -->
-            <input class="form-input" type="email" th:field="*{email}" id="email" placeholder="Email" th:classappend="${#fields.hasErrors('email')} ? 'error' : 'form-input'"/>
-            <div class="form-error" th:if="${#fields.hasErrors('email')}" th:text="${#fields.errors('email').get(#fields.errors('email').size() - 1)}"></div>
+            <!-- Поле email -->
+            <input type="email" th:field="*{email}" placeholder="Email" th:classappend="${#fields.hasErrors('email')} ? 'error' : ''"/>
+            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
 
-            <!-- GitHub URL input field -->
-            <input class="form-input" type="url" th:field="*{githubProfile}" id="githubProfile" placeholder="GitHub URL" th:classappend="${#fields.hasErrors('githubProfile')} ? 'error' : 'form-input'"/>
-            <div class="form-error" th:if="${#fields.hasErrors('githubProfile')}" th:text="${#fields.errors('githubProfile').get(#fields.errors('githubProfile').size() - 1)}"></div>
-
-            <input class="form-input" type="password" th:field="*{password}" id="password" placeholder="Enter Password" th:classappend="${#fields.hasErrors('password')} ? 'error' : 'form-input'"/>
-            <div class="form-error" th:if="${#fields.hasErrors('password')}" th:text="${#fields.errors('password').get(#fields.errors('password').size() - 1)}"></div>
+            <!-- Поле пароля -->
+            <input type="password" th:field="*{password}" placeholder="Пароль" th:classappend="${#fields.hasErrors('password')} ? 'error' : ''"/>
+            <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
             <button>зарегистрироваться</button>
         </form>
     </div>

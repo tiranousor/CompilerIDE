@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "projects_struct")
-public class ProjectsStruct {
+public class ProjectStruct {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

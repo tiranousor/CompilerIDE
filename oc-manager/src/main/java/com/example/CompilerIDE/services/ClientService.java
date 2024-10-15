@@ -33,7 +33,9 @@ public class ClientService {
         client.setPassword(passwordEncoder.encode(client.getPassword()));
         clientRepository.save(client);
     }
-
+    public Optional<Client> getClientByEmail(String email) {
+        return clientRepository.findByEmail(email);
+    }
     public Optional<Client> findByUsername(String username) {
         return clientRepository.findByUsername(username);
     }
@@ -47,7 +49,7 @@ public class ClientService {
     }
 
     public void updateResetPasswordToken(String token, String email) {
-        Client client = clientRepository.findByEmail(email);
+        Client client = clientRepository.findByEmail(email).get();
         if (client != null) {
             client.setResetPasswordToken(token);
             clientRepository.save(client);

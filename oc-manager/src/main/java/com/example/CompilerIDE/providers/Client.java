@@ -22,15 +22,16 @@ public class Client {
     @Column(name="user_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    @Column(name="username")
-    @NotBlank(message = "Username is mandatory")
+    @Column(name = "username", unique = true)
+    @NotBlank(message = "Имя пользователя не может быть пустым")
     private String username;
+
+    @Column(name = "email", unique = true)
+    @Email(message = "Введите действительный адрес электронной почты")
+    @NotBlank(message = "Email не может быть пустым")
+    private String email;
     @Column(name="active")
     private Boolean active;
-    @Column(name="email")
-    @Email(message = "Please enter a valid email address")
-    @NotBlank(message = "Email is mandatory")
-    private String email;
     @NotEmpty(message = "Пароль не должен быть пустым")
     @Column(name = "password")
     private String password;

@@ -1,15 +1,20 @@
 package com.example.CompilerIDE.providers;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.URL;
 
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "projects")
+@Table(name = "projects", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"name", "user_id"})
+})
 public class Project {
 
     @Id
@@ -18,17 +23,22 @@ public class Project {
 
     @Column(nullable = true, unique = true, name="uuid")
     private String uuid;
-    @Column(nullable = true, unique = true, name="name")
+    @NotBlank(message = "Название проекта не может быть пустым")
+    @Size(max = 100, message = "Название проекта должно быть не длиннее 100 символов")
     private String name;
-    @Column(name="read me")
-    private String readMe;
-    @Column(nullable = false)
+
+    @NotBlank(message = "Язык программирования не может быть пустым")
     private String language;
-    @Column(name="ref to Git")
+
+    private String readMe;
+
+    @URL(message = "Неверный формат URL")
     private String refGit;
     @Column(name="project type")
     private String projectType;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private Client client;
+    @OneToMany
+    private ProjectStruct projectsStruct;
 }
