@@ -77,6 +77,16 @@
         p {
             margin-bottom: 20px;
         }
+
+        #preview {
+            margin: 0 auto 20px;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            object-fit: cover;
+            display: block;
+        }
     </style>
 </head>
 
@@ -84,35 +94,48 @@
 
 <div class="container">
     <h1>Редактировать аккаунт</h1>
+
+    <img id="preview" th:src="${client.avatarUrl != null ? client.avatarUrl : '/static/noAvatar.png'}" alt="Предпросмотр изображения"/>
+
     <form th:action="@{/edit/{id}(id=${client.id})}" th:method="POST" th:object="${client}" enctype="multipart/form-data">
-        <!-- Avatar upload -->
-        <input type="file" name="avatarFile" class="form-control" accept="image/*" />
+        <input type="file" name="avatarFile" class="form-control" accept="image/*" onchange="previewImage(event)" />
         <div class="form-error" th:if="${#fields.hasErrors('avatarUrl')}" th:errors="*{avatarUrl}"></div>
 
-        <!-- Username input -->
         <input type="text" class="form-control" th:field="*{username}" id="username" placeholder="Username" th:classappend="${#fields.hasErrors('username')} ? 'error' : 'form-control'"/>
         <div class="form-error" th:if="${#fields.hasErrors('username')}" th:text="*{username}"></div>
 
-        <!-- Email input -->
         <input type="text" class="form-control" th:field="*{email}" id="email" placeholder="Email" th:classappend="${#fields.hasErrors('email')} ? 'error' : 'form-control'"/>
         <div class="form-error" th:if="${#fields.hasErrors('email')}" th:text="*{email}"></div>
 
-        <!-- GitHub Profile input -->
         <input type="text" class="form-control" th:field="*{githubProfile}" id="githubProfile" placeholder="GitHub URL" th:classappend="${#fields.hasErrors('githubProfile')} ? 'error' : 'form-control'"/>
         <div class="form-error" th:if="${#fields.hasErrors('githubProfile')}" th:text="*{githubProfile}"></div>
 
-        <!-- About input -->
         <input type="text" class="form-control" th:field="*{about}" id="about" placeholder="About" th:classappend="${#fields.hasErrors('about')} ? 'error' : 'form-control'"/>
         <div class="form-error" th:if="${#fields.hasErrors('about')}" th:text="*{about}"></div>
 
-        <!-- Password hidden input -->
         <input type="hidden" th:field="*{password}" id="password" placeholder="New Password" th:classappend="${#fields.hasErrors('password')} ? 'error' : 'form-control'"/>
         <div class="form-error" th:if="${#fields.hasErrors('password')}" th:text="*{password}"></div>
 
-        <!-- Submit button -->
         <button type="submit" class="btn-primary">Сохранить изменения</button>
     </form>
 </div>
+
+<script>
+    function previewImage(event) {
+        const preview = document.getElementById('preview');
+        const file = event.target.files[0];
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function () {
+                preview.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            preview.src = '';
+        }
+    }
+</script>
 
 </body>
 

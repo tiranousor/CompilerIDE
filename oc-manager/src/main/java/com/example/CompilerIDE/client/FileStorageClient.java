@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import feign.Headers;
 
-@FeignClient(name = "fileStorageClient", url = "http://localhost:8081") // Укажите URL вашего File Storage Server
+@FeignClient(name = "fileStorageClient", url = "http://localhost:8082") // Укажите URL вашего File Storage Server
 public interface FileStorageClient {
 
     @PostMapping(value = "/projects/{projectId}/files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

@@ -25,17 +25,10 @@ public class FileService {
         Path projectDir = rootLocation.resolve(projectId).resolve(path).normalize();
 
         Files.createDirectories(projectDir);
-
-        try {
-            if (file.isEmpty()) {
-                throw new IOException("Failed to store empty file " + filename);
-            }
-            Path destinationFile = projectDir.resolve(filename);
-            file.transferTo(destinationFile);
-        } catch (IOException e) {
-            throw new IOException("Failed to store file " + filename, e);
-        }
+        Path destinationFile = projectDir.resolve(filename);
+        file.transferTo(destinationFile);
     }
+
 
     public Resource loadFile(String projectId, String path, String filename) throws MalformedURLException {
         Path file = rootLocation.resolve(projectId).resolve(path).resolve(filename).normalize();

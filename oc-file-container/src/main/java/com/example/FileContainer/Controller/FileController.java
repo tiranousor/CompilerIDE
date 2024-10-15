@@ -31,7 +31,7 @@ public class FileController {
             fileService.storeFile(projectId, path, file);
             return ResponseEntity.ok().build();
         } catch (IOException e) {
-            return ResponseEntity.status(500).body("Failed to store file.");
+            return ResponseEntity.status(500).body("Ошибка при сохранении файла.");
         }
     }
 

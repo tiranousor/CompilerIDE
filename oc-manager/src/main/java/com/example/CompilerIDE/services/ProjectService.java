@@ -66,17 +66,17 @@ public class ProjectService {
 
     public void saveProjectFiles(Project project, List<MultipartFile> files, String path) {
         for (MultipartFile file : files) {
-            // Сохранение информации о файле в базе данных
+            // Сохраняем информацию о файле в БД
             ProjectStruct projectStruct = new ProjectStruct();
             projectStruct.setProject(project);
             projectStruct.setName(file.getOriginalFilename());
             projectStruct.setPath(path);
             projectStruct.setType("file");
-            // Вычислите и сохраните хеш содержимого файла, если требуется
             projectStructRepository.save(projectStruct);
 
-            // Отправка файла на File Storage Server
+            // Отправляем файл на File Storage Server
             fileStorageClient.uploadFile(project.getId().toString(), file, path);
         }
     }
+
 }

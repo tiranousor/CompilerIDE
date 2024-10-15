@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.URL;
 
+import java.util.List;
+
 @Entity
 @Data
 @AllArgsConstructor
@@ -39,6 +41,6 @@ public class Project {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private Client client;
-    @OneToMany
-    private ProjectStruct projectsStruct;
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<ProjectStruct> projectsStruct;
 }

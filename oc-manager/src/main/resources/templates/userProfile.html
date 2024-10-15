@@ -335,7 +335,8 @@
         <a href="/" class="back-btn">
             <i class='bx bx-arrow-back'></i>
         </a>
-        <img th:src="@{${client.avatarUrl}}" alt="User Avatar" class="profile-avatar">
+        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="profile-avatar">
+
         <div class="profile-info">
             <p class="info-item" th:text="${client.username}">Имя пользователя</p>
             <p class="info-item" th:text="${client.email}">example@example.com</p>

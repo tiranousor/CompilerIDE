@@ -88,9 +88,11 @@ public class ProjectController {
         if (project.isEmpty()) {
             return "redirect:/error";
         }
-        projectService.saveProjectFiles(project.orElse(null), files, path);
+        // Сохраняем файлы проекта
+        projectService.saveProjectFiles(project.get(), files, path);
         return "redirect:/projects/" + projectId + "/edit";
     }
+
     @PostMapping("/{projectId}/compile")
     public String compileProject(@PathVariable int projectId, Model model) {
         Optional<Project> project = projectService.findById(projectId);
@@ -98,7 +100,8 @@ public class ProjectController {
             return "redirect:/error";
         }
         try {
-            String compilationResult = compilationService.compileProject(project.orElse(null));
+            // Компиляция проекта
+            String compilationResult = compilationService.compileProject(project.get());
             model.addAttribute("compilationResult", compilationResult);
             return "compilation_result";
         } catch (IOException | InterruptedException e) {
@@ -106,5 +109,17 @@ public class ProjectController {
             model.addAttribute("compilationResult", "Ошибка при компиляции проекта.");
             return "compilation_result";
         }
+    }
+
+    @PostMapping("/{projectId}/files")
+    public String uploadProjectFiles(@PathVariable int projectId,
+                                     @RequestParam("files") List<MultipartFile> files,
+                                     @RequestParam(value = "path", defaultValue = "") String path) {
+        Optional<Project> project = projectService.findById(projectId);
+        if (project.isEmpty()) {
+            return "redirect:/error";
+        }
+        projectService.saveProjectFiles(project.orElse(null), files, path);
+        return "redirect:/projects/" + projectId;
     }
 }

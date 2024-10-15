@@ -42,6 +42,22 @@
             <groupId>com.github.docker-java</groupId>
             <artifactId>docker-java</artifactId>
         </dependency>
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-core</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -53,6 +69,7 @@
                 <configuration>
                     <mainClass>com.example.FileContainer.FileContainerApplication</mainClass>
                 </configuration>
+
             </plugin>
         </plugins>
     </build>

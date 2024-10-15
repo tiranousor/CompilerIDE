@@ -28,40 +28,31 @@ public class CompilationService {
         // Создаем временную директорию для компиляции
         Path tempDir = Files.createTempDirectory("project_" + project.getId());
 
-        // Получаем файлы проекта из базы данных
+        // Загружаем файлы проекта с File Storage Server
         List<ProjectStruct> projectFiles = projectStructRepository.findByProject(project);
-
-        // Загружаем файлы с File Storage Server и сохраняем во временную директорию
         for (ProjectStruct fileStruct : projectFiles) {
             byte[] fileContent = fileStorageClient.downloadFile(
-                    project.getId().toString(),
-                    fileStruct.getPath(),
-                    fileStruct.getName()
-            );
+                    project.getId().toString(), fileStruct.getPath(), fileStruct.getName());
             Path filePath = tempDir.resolve(fileStruct.getPath()).resolve(fileStruct.getName());
             Files.createDirectories(filePath.getParent());
             Files.write(filePath, fileContent);
         }
 
-        // Запускаем компиляцию
+        // Компиляция с помощью Docker-контейнера
         ProcessBuilder processBuilder = new ProcessBuilder("javac", "Main.java");
         processBuilder.directory(tempDir.toFile());
         processBuilder.redirectErrorStream(true);
 
         Process process = processBuilder.start();
         StringBuilder output = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(process.getInputStream()))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 output.append(line).append("\n");
             }
         }
 
-        int exitCode = process.waitFor();
-
-        // Удаляем временную директорию
-        deleteDirectory(tempDir.toFile());
+        process.waitFor();
 
         // Возвращаем результат компиляции
         return output.toString();
