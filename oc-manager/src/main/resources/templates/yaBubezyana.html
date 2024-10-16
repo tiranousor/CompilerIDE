@@ -1,211 +1,228 @@
-<!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+package com.example.CompilerIDE.controller;
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile</title>
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+import com.example.CompilerIDE.Dto.ClientDto;
+import com.example.CompilerIDE.providers.Client;
+import com.example.CompilerIDE.providers.Project;
+import com.example.CompilerIDE.services.ClientService;
+import com.example.CompilerIDE.services.ProjectService;
+import com.example.CompilerIDE.util.ClientValidator;
+import com.example.CompilerIDE.util.FileUploadUtil;
+import com.example.CompilerIDE.util.ProjectValidator;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Montserrat', sans-serif;
+import java.io.IOException;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Optional;
+
+@Controller
+public class UserController {
+private final ClientService clientService;
+private final ProjectService projectService;
+private final ClientValidator clientValidator;
+private final PasswordEncoder passwordEncoder;
+private final ProjectValidator projectValidator;
+
+@Autowired
+public UserController(ClientService clientService, ProjectService projectService, ClientValidator clientValidator,
+PasswordEncoder passwordEncoder, ProjectValidator projectValidator) {
+this.passwordEncoder = passwordEncoder;
+this.clientService = clientService;
+this.clientValidator = clientValidator;
+this.projectService = projectService;
+this.projectValidator = projectValidator;
+}
+
+@GetMapping("/")
+public String home() {
+return "Compiler";
+}
+
+@GetMapping("/Compiler/{projectId}")
+public String compiler(@PathVariable("projectId") int projectId, Authentication authentication, Model model) {
+Project project = projectService.findOne(projectId);
+if (project == null || !Objects.equals(project.getClient().getUsername(), authentication.getName())) {
+return "redirect:/userProfile";
+}
+model.addAttribute("projectId", projectId);
+
+return "Compiler";
+}
+
+@GetMapping("/login")
+public String showLoginPage() {
+return "loginAndRegistration";
+}
+
+@GetMapping("/registration")
+public String registration(@ModelAttribute Client client){
+return "registrationPage";
+}
+
+@PostMapping("/process_registration")
+public String registrationPerson(@Valid @ModelAttribute Client client, BindingResult bindingResult) {
+clientValidator.validate(client, bindingResult);
+
+if (bindingResult.hasErrors())
+return "registrationPage";
+
+clientService.save(client);
+
+Project project = new Project();
+project.setName("Untitled");
+project.setLanguage("Java");
+project.setClient(client);
+
+// Сохраняем проект
+projectService.save(project);
+
+return "redirect:/login?registration";
+}
+
+//    @GetMapping("/userProfile")
+//    public String showProjects(@PathVariable int clientId, Model model) {
+//        Client client = clientService.findOne(clientId);
+//        model.addAttribute("client", client);
+//        model.addAttribute("projects", projectService.findByClient(client));
+//        return "userProfile"; // это наш HTML файл профиля
+//    }
+
+@GetMapping("/userProfile/new")
+public String newProjectForm(Authentication authentication, Model model) {
+model.addAttribute("project", new Project());
+return "new_project_form"; // Ensure this template exists
+}
+
+@PostMapping("/userProfile/new")
+public String createProject(@Valid @ModelAttribute("project") Project project, BindingResult bindingResult, Authentication authentication) {
+if (bindingResult.hasErrors()) {
+return "new_project_form"; // Возвращаем обратно на форму при ошибках
+}
+project.setClient(clientService.getClient(authentication.getName()).get());
+projectValidator.validate(project, bindingResult);
+if (bindingResult.hasErrors()) {
+return "new_project_form"; // Возвращаем обратно на форму при ошибках
+}
+projectService.save(project);
+
+return "redirect:/userProfile";
+}
+
+
+// Delete a project
+@PostMapping("/userProfile/delete/{id}")
+public String deleteProject(@PathVariable("id") int projectId, Authentication authentication) {
+// Get the logged-in user
+Client client = clientService.findByUsername(authentication.getName()).get();
+
+// Find the project to delete
+Optional<Project> projectToDelete = projectService.findById(projectId);
+
+    // Ensure the project belongs to the current user
+    if (projectToDelete.isPresent() && projectToDelete.get().getClient().getId() == client.getId()) {
+    projectService.delete(projectToDelete.get()); // Delete the project from DB
+    }
+
+    // Redirect back to the user's profile page after deletion
+    return "redirect:/userProfile";
+    }
+
+    @GetMapping("/userProfile")
+    public String ClientProfile(Model model, Authentication authentication) {
+    Client client = clientService.findByUsername(authentication.getName()).get();
+
+    List<Project> project = projectService.findByClient(client);
+        model.addAttribute("client", client);
+        model.addAttribute("projects", project);
+
+        return "userProfile";
         }
 
-        body {
-            background-color: #F0F0F0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+        @GetMapping("/edit/{id}")
+        public String editProfile(Model model, @PathVariable("id") int id) {
+        model.addAttribute("client", clientService.findOne(id));
+        return "editProfile";
+        }
+        @PostMapping("/edit/{id}")
+        public String updateProfile(Authentication authentication, @PathVariable("id") int id,
+        @Valid Client clientForm, BindingResult bindingResult,
+        @RequestParam("avatarFile") MultipartFile avatarFile) {
+        if (bindingResult.hasErrors()) {
+        return "editProfile";
         }
 
-        .profile-container {
-            display: flex;
-            width: 900px;
-            background-color: #fff;
-            border-radius: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+        Client existingClient = clientService.findOne(id);
+
+        if (!avatarFile.isEmpty()) {
+        String originalFileName = avatarFile.getOriginalFilename();
+        String extension = "";
+
+        if (originalFileName != null) {
+        extension = originalFileName.substring(originalFileName.lastIndexOf("."));
         }
 
-        /* Left side (profile) */
-        .profile-sidebar {
-            width: 250px;
-            padding: 30px;
-            background-color: #F5F5F5;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        String fileName = existingClient.getId() + extension;
+        String uploadDir = "user-photos/";
+        try {
+        FileUploadUtil.saveFile(uploadDir, fileName, avatarFile);
+        existingClient.setAvatarUrl("/" + uploadDir + fileName);
+        } catch (IOException e) {
+        bindingResult.rejectValue("avatarUrl","error.avatarUrl", e.getMessage());
+        return "editProfile";
+        }
         }
 
-        .profile-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        existingClient.setUsername(clientForm.getUsername());
+        existingClient.setEmail(clientForm.getEmail());
+        existingClient.setGithubProfile(clientForm.getGithubProfile());
+        existingClient.setAbout(clientForm.getAbout());
+
+        //        if (!clientForm.getPassword().isEmpty()) {
+        //            existingClient.setPassword(passwordEncoder.encode(clientForm.getPassword()));
+        //        }
+
+
+        clientService.update(id, existingClient);
+
+        if (!authentication.getName().equals(existingClient.getUsername())) {
+        Authentication newAuth = new UsernamePasswordAuthenticationToken(existingClient.getUsername(),
+        authentication.getCredentials(), authentication.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(newAuth);
         }
 
-        .profile-info {
-            text-align: center;
+        return "redirect:/userProfile";
         }
 
-        .profile-info p {
-            margin-bottom: 10px;
+        //    @PostMapping("/edit/{id}")
+        //    public String updateProfile(Authentication authentication, @PathVariable("id") int id,@ModelAttribute("client") @Valid ClientDto clientDto, BindingResult bindingResult) {
+        //        if (bindingResult.hasErrors()) {
+        //            return "editProfile";
+        //        }
+        //        Client client = clientService.findOne(id);
+        //        client = clientMapper.updateUserFromDto(clientDto,client);
+        //        clientService.update(client);
+        //        if (!authentication.getName().equals(client.getUsername())) {
+        //            Authentication newAuth = new UsernamePasswordAuthenticationToken(client.getUsername(), authentication.getCredentials(), authentication.getAuthorities());
+        //            SecurityContextHolder.getContext().setAuthentication(newAuth);
+        //        }
+        //
+        //        return "redirect:/userProfile";
+        //    }
+
+
+
         }
-
-        .profile-info a {
-            text-decoration: none;
-            color: #000;
-            font-weight: 500;
-            margin-bottom: 5px;
-        }
-
-        .profile-info a:hover {
-            text-decoration: underline;
-        }
-
-        .profile-info .info-item {
-            font-size: 14px;
-            margin-bottom: 5px;
-        }
-
-        /* Right side (projects) */
-        .projects-content {
-            flex-grow: 1;
-            padding: 30px;
-            position: relative;
-        }
-
-        .projects-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .projects-header h2 {
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        .projects-header .add-btn {
-            background-color: #1DB954;
-            border: none;
-            color: #fff;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            font-size: 20px;
-        }
-
-        .project-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .project-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #F5F5F5;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            transition: background-color 0.3s;
-        }
-
-        .project-item:hover {
-            background-color: #E0E0E0;
-        }
-
-        .project-item span {
-            font-size: 16px;
-            font-weight: 500;
-        }
-
-        .project-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .project-actions button {
-            padding: 5px 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .btn-open {
-            background-color: #1DB954;
-            color: #fff;
-        }
-
-        .btn-delete {
-            background-color: #FF4D4F;
-            color: #fff;
-        }
-
-        .back-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 24px;
-            cursor: pointer;
-        }
-    </style>
-</head>
-
-<body>
-
-<div class="profile-container">
-    <!-- Left Sidebar: User Profile -->
-    <div class="profile-sidebar">
-        <a href="#" class="back-btn">
-            <i class='bx bx-arrow-back'></i>
-        </a>
-        <img th:src="@{${client.avatarUrl}}" alt="User Avatar" class="profile-avatar">
-        <div class="profile-info">
-            <p class="info-item" th:text="${client.username}">User Name</p>
-            <p class="info-item" th:text="${client.email}">email@example.com</p>
-            <p class="info-item">
-                <a th:href="${client.githubProfile}" target="_blank">GitHub Profile</a>
-            </p>
-            <p class="info-item" th:text="${client.about}">About</p>
-        </div>
-    </div>
-
-    <!-- Right Section: Projects -->
-    <div class="projects-content">
-        <div class="projects-header">
-            <h2>Projects</h2>
-            <button class="add-btn"><i class='bx bx-plus'></i></button>
-        </div>
-        <ul class="project-list">
-            <th:block th:each="project : ${projects}">
-                <li class="project-item">
-                    <span th:text="${project.name}">Project Name</span>
-                    <div class="project-actions">
-                        <button class="btn-open">Open</button>
-                        <button class="btn-delete">Delete</button>
-                    </div>
-                </li>
-            </th:block>
-        </ul>
-    </div>
-</div>
-
-</body>
-
-</html>

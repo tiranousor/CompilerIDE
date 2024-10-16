@@ -48,14 +48,20 @@ public class UserController {
 
     @GetMapping("/")
     public String home() {
-        return "Compiler";
+        return "CompilerHomepage";
     }
 
     @GetMapping("/login")
     public String showLoginPage() {
         return "loginAndRegistration";
     }
-
+    @PostMapping("/login")
+    public String processLogin(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            return "redirect:/userProfile";
+        }
+        return "loginAndRegistration";
+    }
     @GetMapping("/registration")
     public String registration(@ModelAttribute Client client){
         return "registrationPage";
@@ -80,7 +86,21 @@ public class UserController {
 
         return "redirect:/login?registration";
     }
+    @GetMapping("/Compiler/{projectId}")
+    public String compiler(@PathVariable("projectId") int projectId, Authentication authentication, Model model) {
+        Project project = projectService.findOne(projectId);
+        if (project == null) {
+            return "redirect:/userProfile";
+        }
 
+        if (!project.getClient().getUsername().equals(authentication.getName())) {
+            return "redirect:/userProfile";
+        }
+
+        model.addAttribute("projectId", projectId);
+
+        return "Compiler";
+    }
 //    @GetMapping("/userProfile")
 //    public String showProjects(@PathVariable int clientId, Model model) {
 //        Client client = clientService.findOne(clientId);
