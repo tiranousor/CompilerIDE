@@ -148,6 +148,60 @@ function downloadFile() {
     link.click();
 }
 
+// Функция для сохранения проекта
+async function saveProject() {
+    const language = document.getElementById('languageSelect').value;
+
+    // Получаем содержимое текущего файла и обновляем его в массиве файлов
+    const currentFileName = getCurrentFileName();
+    const currentContent = editor.getValue();
+    updateFileContent(currentFileName, currentContent);
+
+    // Получаем CSRF-токен и заголовок из метатегов
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+    const projectId = document.querySelector('meta[name="projectId"]').getAttribute('content');
+
+    if (!projectId) {
+        alert("Не удалось определить идентификатор проекта.");
+        return;
+    }
+
+    try {
+        // Создаем FormData для отправки файлов
+        const formData = new FormData();
+
+        // Добавляем каждый файл в FormData
+        files.forEach(file => {
+            const blob = new Blob([file.content], { type: 'text/plain' });
+            formData.append('files', blob, file.fileName);
+        });
+
+        // Если нужен путь, добавьте его
+        formData.append('path', ''); // Укажите путь, если требуется
+
+        const response = await fetch(`/projects/${projectId}/save`, {
+            method: 'POST',
+            headers: {
+                [csrfHeader]: csrfToken
+            },
+            body: formData
+        });
+
+        if (response.ok) {
+            // Отобразить сообщение об успешном сохранении
+            showSuccessMessage("Ваш проект успешно сохранён");
+        } else {
+            const errorText = await response.text();
+            showErrorMessage(`Ошибка при сохранении проекта: ${errorText}`);
+        }
+    } catch (error) {
+        showErrorMessage(`Ошибка: ${error.message}`);
+    }
+}
+
+
 // Отправка всех файлов на сервер
 async function submitCode() {
     const language = document.getElementById('languageSelect').value;
@@ -193,3 +247,22 @@ function updateFileContent(fileName, newContent) {
     }
     openFiles[fileName] = newContent;  // Обновляем в массиве открытых файлов
 }
+
+// Функция для отображения успешного сообщения
+function showSuccessMessage(message) {
+    const messageContainer = document.getElementById('message-container');
+    messageContainer.innerHTML = `<div class="alert alert-success">${message}</div>`;
+    setTimeout(() => {
+        messageContainer.innerHTML = '';
+    }, 5000); // Сообщение исчезнет через 5 секунд
+}
+
+// Функция для отображения ошибки
+function showErrorMessage(message) {
+    const messageContainer = document.getElementById('message-container');
+    messageContainer.innerHTML = `<div class="alert alert-danger">${message}</div>`;
+    setTimeout(() => {
+        messageContainer.innerHTML = '';
+    }, 5000);
+}
+

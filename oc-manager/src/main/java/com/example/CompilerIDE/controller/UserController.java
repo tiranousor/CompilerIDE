@@ -4,6 +4,7 @@ import com.example.CompilerIDE.Dto.ClientDto;
 import com.example.CompilerIDE.providers.Client;
 import com.example.CompilerIDE.providers.Project;
 import com.example.CompilerIDE.services.ClientService;
+import com.example.CompilerIDE.services.MinioService;
 import com.example.CompilerIDE.services.ProjectService;
 import com.example.CompilerIDE.util.ClientValidator;
 import com.example.CompilerIDE.util.FileUploadUtil;
@@ -26,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 
 @Controller
@@ -35,20 +37,41 @@ public class UserController {
     private final ClientValidator clientValidator;
     private final PasswordEncoder passwordEncoder;
     private final ProjectValidator projectValidator;
+    private final MinioService minioService;
 
     @Autowired
     public UserController(ClientService clientService, ProjectService projectService, ClientValidator clientValidator,
-                          PasswordEncoder passwordEncoder, ProjectValidator projectValidator) {
+                          PasswordEncoder passwordEncoder, ProjectValidator projectValidator, MinioService minioService) {
         this.passwordEncoder = passwordEncoder;
         this.clientService = clientService;
         this.clientValidator = clientValidator;
         this.projectService = projectService;
         this.projectValidator = projectValidator;
+        this.minioService = minioService;
     }
 
     @GetMapping("/")
     public String home() {
         return "CompilerHomepage";
+    }
+
+    @GetMapping("Compiler/project/{projectId}")
+    public String compiler(@PathVariable("projectId") int projectId, Authentication authentication, Model model) {
+        Project project = projectService.findById(projectId).orElse(null);
+        if (project == null) {
+            return "redirect:/userProfile";
+        }
+
+        if (!project.getClient().getUsername().equals(authentication.getName())) {
+            return "redirect:/userProfile";
+        }
+
+        model.addAttribute("projectId", projectId);
+        System.out.println(projectId);
+        List<String> fileNames = minioService.listFiles("projects/" + projectId + "/");
+        model.addAttribute("files", fileNames);
+
+        return "Compiler";
     }
 
     @GetMapping("/login")
@@ -86,28 +109,6 @@ public class UserController {
 
         return "redirect:/login?registration";
     }
-    @GetMapping("/Compiler/{projectId}")
-    public String compiler(@PathVariable("projectId") int projectId, Authentication authentication, Model model) {
-        Project project = projectService.findOne(projectId);
-        if (project == null) {
-            return "redirect:/userProfile";
-        }
-
-        if (!project.getClient().getUsername().equals(authentication.getName())) {
-            return "redirect:/userProfile";
-        }
-
-        model.addAttribute("projectId", projectId);
-
-        return "Compiler";
-    }
-//    @GetMapping("/userProfile")
-//    public String showProjects(@PathVariable int clientId, Model model) {
-//        Client client = clientService.findOne(clientId);
-//        model.addAttribute("client", client);
-//        model.addAttribute("projects", projectService.findByClient(client));
-//        return "userProfile"; // это наш HTML файл профиля
-//    }
 
     @GetMapping("/userProfile/new")
     public String newProjectForm(Authentication authentication, Model model) {
@@ -129,6 +130,8 @@ public class UserController {
 
         return "redirect:/userProfile";
     }
+
+
     // Delete a project
     @PostMapping("/userProfile/delete/{id}")
     public String deleteProject(@PathVariable("id") int projectId, Authentication authentication) {
