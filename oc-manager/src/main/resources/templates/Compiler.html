@@ -171,9 +171,6 @@
             <div id="files-container">
                 <!-- Здесь будут отображаться файлы пользователя -->
                 <p>Ваши файлы</p>
-                <div th:each="file : ${files}" class="file-item-container">
-                    <span th:text="${file}" class="file-name"></span>
-                </div>
                 <!-- Добавьте динамическое отображение файлов по необходимости -->
             </div>
         </div>
@@ -196,12 +193,17 @@
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.28.1/min/vs/loader.min.js"></script>
+<!-- Подключаем scripts.js перед скриптом с вызовом функций -->
 <script th:src="@{/scripts.js}" src="/scripts.js"></script>
-<script>
+<script th:inline="javascript">
     document.addEventListener("DOMContentLoaded", function() {
-        const files = /*[[${files}]]*/ [];
-        files.forEach(fileName => addFileToContainer(fileName));
+        window.files = /*[[${files}]]*/ [];
+        window.projectId = /*[[${projectId}]]*/ 0;
+
+        console.log("Список файлов:", window.files);
+        window.files.forEach(fileName => addFileToContainer(fileName));
     });
 </script>
+
 </body>
 </html>

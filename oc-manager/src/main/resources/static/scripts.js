@@ -4,10 +4,71 @@ const templates = {
     "python3": `print("Hello, Python!")`
 };
 
-let files = [];  // Массив для хранения всех файлов пользователя
-let openFiles = {};  // Объект для хранения содержимого всех открытых файлов
+// Используем window.files для глобальной доступности
+window.files = [];  // Массив для хранения всех файлов пользователя
+window.openFiles = {};  // Объект для хранения содержимого всех открытых файлов
 let editor;
 let models = {}; // Объект для хранения моделей для каждого языка
+
+function addFileToContainer(fileName) {
+    console.log("Добавляем файл:", fileName);
+    const filesContainer = document.getElementById('files-container');
+
+    const fileElement = document.createElement('div');
+    fileElement.classList.add('file-item-container');
+
+    const fileNameSpan = document.createElement('span');
+    fileNameSpan.textContent = fileName;
+    fileNameSpan.classList.add('file-name');
+
+    // Обработчик клика по файлу для его открытия
+    fileElement.addEventListener('click', () => {
+        openFile(fileName);  // Открываем файл в редакторе
+        highlightActiveFile(fileElement);  // Подсветка активного файла
+    });
+
+    fileElement.appendChild(fileNameSpan);
+    filesContainer.appendChild(fileElement);
+}
+
+function openFile(fileName) {
+    const currentFileName = getCurrentFileName();
+
+    // Сохраняем текущее содержимое открытого файла перед переключением
+    if (currentFileName && openFiles[currentFileName]) {
+        openFiles[currentFileName] = editor.getValue();
+    }
+
+    // Устанавливаем содержимое выбранного файла
+    if (openFiles[fileName]) {
+        editor.setValue(openFiles[fileName]);
+    } else {
+        const projectId = window.projectId;  // Используем window.projectId
+        fetch(`/projects/${projectId}/files/${fileName}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Ошибка при загрузке файла: ${response.statusText}`);
+                }
+                return response.text();
+            })
+            .then(content => {
+                editor.setValue(content);
+                openFiles[fileName] = content;
+            })
+            .catch(error => {
+                console.error('Ошибка при загрузке файла:', error);
+            });
+    }
+
+    highlightActiveFileByName(fileName);
+}
+
+function highlightActiveFile(selectedFileElement) {
+    const fileItems = document.querySelectorAll('.file-item-container');
+    fileItems.forEach(item => item.classList.remove('active'));  // Снимаем выделение
+
+    selectedFileElement.classList.add('active');  // Выделяем активный файл
+}
 
 // Инициализация Monaco Editor
 require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.28.1/min/vs' }});
@@ -34,40 +95,21 @@ function setLanguage(language) {
 
 // Добавление файла в массив файлов
 function addFile(fileName, content) {
-    files.push({ fileName, content });
+    window.files.push({ fileName, content });
 }
 
-// Открытие файла в редакторе
-function openFile(fileName) {
-    const currentFileName = getCurrentFileName();
 
-    // Сохраняем текущее содержимое открытого файла перед переключением
-    if (currentFileName && openFiles[currentFileName]) {
-        openFiles[currentFileName] = editor.getValue();  // Сохраняем код
-    }
 
-    // Устанавливаем содержимое выбранного файла
-    if (openFiles[fileName]) {
-        editor.setValue(openFiles[fileName]);  // Загружаем содержимое
-    } else {
-        const file = files.find(f => f.fileName === fileName);
-        if (file) {
-            editor.setValue(file.content);  // Устанавливаем содержимое нового файла
-            openFiles[fileName] = file.content;  // Добавляем его в открытые файлы
-        }
-    }
-
-    updateCurrentFileName(fileName);  // Обновляем активный файл
-}
 
 // Обновляем текущее имя файла для корректного сохранения
-function updateCurrentFileName(fileName) {
-    const fileItems = document.querySelectorAll('.file-item-container .file-name');
+function highlightActiveFileByName(fileName) {
+    const fileItems = document.querySelectorAll('.file-item-container');
     fileItems.forEach(item => {
-        if (item.textContent === fileName) {
-            item.closest('.file-item-container').classList.add('active');
+        const itemName = item.querySelector('.file-name').textContent;
+        if (itemName === fileName) {
+            item.classList.add('active');
         } else {
-            item.closest('.file-item-container').classList.remove('active');
+            item.classList.remove('active');
         }
     });
 }
@@ -108,34 +150,8 @@ function uploadFile() {
     input.click();
 }
 
-// Добавление файла в контейнер слева и обработка кликов
-function addFileToContainer(fileName) {
-    const filesContainer = document.getElementById('files-container');
 
-    const fileElement = document.createElement('div');
-    fileElement.classList.add('file-item-container');
 
-    const fileNameSpan = document.createElement('span');
-    fileNameSpan.textContent = fileName;
-    fileNameSpan.classList.add('file-name');
-
-    // Обработчик клика по файлу для его открытия
-    fileElement.addEventListener('click', () => {
-        openFile(fileName);  // Открываем файл в редакторе
-        highlightActiveFile(fileElement);  // Подсветка активного файла
-    });
-
-    fileElement.appendChild(fileNameSpan);
-    filesContainer.appendChild(fileElement);
-}
-
-// Подсветка активного файла
-function highlightActiveFile(selectedFileElement) {
-    const fileItems = document.querySelectorAll('.file-item-container');
-    fileItems.forEach(item => item.classList.remove('active'));  // Снимаем выделение
-
-    selectedFileElement.classList.add('active');  // Выделяем активный файл
-}
 
 // Скачивание содержимого текущего файла
 function downloadFile() {
@@ -161,7 +177,7 @@ async function saveProject() {
     const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
-    const projectId = document.querySelector('meta[name="projectId"]').getAttribute('content');
+    const projectId = window.projectId;
 
     if (!projectId) {
         alert("Не удалось определить идентификатор проекта.");
@@ -241,11 +257,11 @@ async function submitCode() {
 
 // Обновляем содержимое файла в массиве файлов
 function updateFileContent(fileName, newContent) {
-    const file = files.find(file => file.fileName === fileName);
+    const file = window.files.find(file => file.fileName === fileName);
     if (file) {
         file.content = newContent;
     }
-    openFiles[fileName] = newContent;  // Обновляем в массиве открытых файлов
+    window.openFiles[fileName] = newContent;  // Обновляем в массиве открытых файлов
 }
 
 // Функция для отображения успешного сообщения

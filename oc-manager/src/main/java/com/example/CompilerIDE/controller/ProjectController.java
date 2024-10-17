@@ -103,7 +103,18 @@ public class ProjectController {
         }
         return "redirect:/userProfile";
     }
-
+    @GetMapping("/{projectId}/files/{fileName}")
+    public ResponseEntity<String> getFileContent(@PathVariable int projectId, @PathVariable String fileName, Authentication authentication) {
+        Project project = projectService.findById(projectId).orElse(null);
+        if (project == null || !project.getClient().getUsername().equals(authentication.getName())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Доступ запрещён");
+        }
+        String content = minioService.getFileContent("projects/" + projectId + "/" + fileName);
+        if (content == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Файл не найден");
+        }
+        return ResponseEntity.ok(content);
+    }
     // Сохранение файлов проекта с использованием MinIO
     @PostMapping("/{projectId}/save")
     public ResponseEntity<?> saveProjectFiles(@PathVariable int projectId,

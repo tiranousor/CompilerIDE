@@ -7,7 +7,9 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,7 +50,19 @@ public class MinioService {
         }
         return fileNames;
     }
+    public String getFileContent(String objectKey) {
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(defaultBucketName)
+                .key(objectKey)
+                .build();
 
+        try (InputStream inputStream = s3Client.getObject(getObjectRequest)) {
+            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 //    public InputStream downloadFile(String bucketName, String objectKey) {
 //        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
 //                .bucket(bucketName)
