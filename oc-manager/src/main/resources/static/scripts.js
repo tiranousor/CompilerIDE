@@ -273,15 +273,22 @@ function showSuccessMessage(message) {
     }, 5000); // Сообщение исчезнет через 5 секунд
 }
 document.addEventListener('click', function(event) {
-    if (event.target.classList.contains('folder-name')) {
-        const folder = event.target.parentElement;
-        const folderChildren = folder.querySelectorAll('.file-item-container, .folder-item-container');
+    if (event.target.classList.contains('folder-name') || event.target.classList.contains('folder-arrow')) {
+        const folderElement = event.target.closest('.folder-item-container');  // Получаем элемент папки
+        const arrowElement = folderElement.querySelector('.folder-arrow');  // Получаем стрелочку
+        const folderChildren = folderElement.querySelectorAll('.file-item-container, .folder-item-container');
 
+        // Переключаем видимость дочерних элементов (файлов и папок)
         folderChildren.forEach(child => {
             child.style.display = (child.style.display === 'none') ? 'block' : 'none';
         });
+
+        // Переключаем состояние стрелочки и иконки
+        arrowElement.classList.toggle('open');  // Переключаем класс open для стрелочки
+        folderElement.classList.toggle('open');  // Переключаем класс open для папки
     }
 });
+
 function uploadFolder() {
     const input = document.createElement('input');
     input.type = 'file';
@@ -366,6 +373,7 @@ function addFileToContainer(filePath) {
         }
     });
 }
+
 
 // Функция для отображения ошибки
 function showErrorMessage(message) {

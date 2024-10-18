@@ -113,6 +113,57 @@
 .file-item-container.active {
     background-color: #d0d0d0;
 }
+        .folder-item-container {
+    position: relative;
+    margin-left: 10px;  /* Отступ для вложенности папок */
+    padding: 5px;
+    cursor: pointer;
+}
+
+.folder-arrow {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 5px;
+<!--    border-left: 2px solid #888;-->
+<!--    border-bottom: 2px solid #888;-->
+    transform-origin: center;
+    opacity:0;
+
+    transform: rotate(-45deg);  /* Начальная позиция стрелки вправо */
+    transition: transform 0.3s ease;  /* Плавная анимация поворота */
+}
+
+.folder-arrow.open {
+    transform: rotate(45deg);  /* Поворачиваем стрелку вниз при открытии */
+}
+
+.folder-item-container::before {
+    content: "📁 ";  /* Иконка закрытой папки */
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.folder-item-container.open::before {
+    content: "📂 ";  /* Иконка открытой папки */
+}
+
+.file-item-container {
+    margin-left: 30px;  /* Отступ для файлов внутри папок */
+    padding: 5px;
+}
+
+.folder-item-container .folder-name,
+.file-item-container .file-name {
+    display: inline-block;
+}
+
+.folder-item-container .folder-name:hover,
+.file-item-container .file-name:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 
     </style>
 </head>
