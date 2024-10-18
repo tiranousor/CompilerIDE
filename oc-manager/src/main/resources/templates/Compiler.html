@@ -1,32 +1,209 @@
-const express = require('express');
-const archiver = require('archiver');
-const path = require('path');
-const fs = require('fs');
-const app = express();
+<!DOCTYPE html>
+<html lang="en" xmlns:sec="http://www.w3.org/1999/xhtml" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Compiler</title>
+    <link rel="stylesheet" th:href="@{/style.css}" href="/style.css" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="icon" type="image/png" href="/favicon.png" sizes="180x180">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="projectId" th:content="${projectId}">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
 
-app.post('/projects/:projectId/downloadFolder', (req, res) => {
-const projectId = req.params.projectId;
-const folderPath = req.body.path;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
 
-const absoluteFolderPath = path.join(__dirname, 'projects', projectId, folderPath);
+        body {
+            background-color: #E6EEF5;
+            padding: 20px;
+        }
 
-if (!fs.existsSync(absoluteFolderPath)) {
-return res.status(404).send('Папка не найдена.');
+        #editor-container {
+            height: 500px;
+            border: 1px solid grey;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        #files-container {
+            height: 500px;
+            background-color: #F9FBFC;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            padding: 15px;
+        }
+      .top-buttons .btn {
+            margin-right: 10px;
+
+            border-radius: 15px;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #F7F9FA;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            white-space: pre-wrap;
+        }
+
+        .top-buttons .btn {
+            margin-left: 5px;
+            border-radius: 8px;
+            padding: 10px 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: background-color 0.3s;
+        }
+
+        .top-buttons .btn-secondary:hover {
+            background-color: #E0E0E0;
+            border-radius: 15px;
+        }
+
+        .top-buttons .btn-success:hover {
+            background-color: #1AAE48;
+        }
+
+        .user-name {
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+    text-decoration: none;
+    cursor: default;
 }
 
-res.setHeader('Content-Disposition', `attachment; filename=${path.basename(folderPath)}.zip`);
-res.setHeader('Content-Type', 'application/zip');
+        #languageSelect {
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
 
-const archive = archiver('zip', {
-zlib: { level: 9 } // Сжатие
-});
+        /* Общие стили для контейнеров */
+        .container-fluid {
+            background-color: #FFFFFF;
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
 
-archive.directory(absoluteFolderPath, false);
+        .btn-group button {
+            transition: background-color 0.3s;
+        }
+        /* Стили для файла в контейнере */
+.file-item-container {
+    padding: 10px;
+    margin: 5px 0;
+    background-color: #f9fbfc;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
 
-archive.on('error', err => {
-throw err;
-});
+.file-item-container:hover {
+    background-color: #e0e0e0;
+}
 
-archive.pipe(res);
-archive.finalize();
-});
+.file-item-container.active {
+    background-color: #d0d0d0;
+}
+
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <!-- Верхняя панель с кнопками и выбором языка -->
+    <div class="row align-items-center mb-3">
+        <div class="col">
+            <h3 sec:authorize="!isAuthenticated()" class="user-name">Online Compiler</h3>
+            <a href="/userProfile" sec:authorize="isAuthenticated()" sec:authentication="name" class="user-name"></a>
+        </div>
+
+        <div class="col text-right">
+            <!-- Кнопки в верхней части страницы -->
+            <div class="btn-group top-buttons" role="group">
+                <button class="btn btn-primary" onclick="saveProject()" title="Сохранить проект">
+                    <i class="fas fa-save"></i> Сохранить проект
+                </button>
+                <button class="btn btn-secondary" onclick="downloadFile()" title="Сохранить файл">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button class="btn btn-secondary" onclick="uploadFile()" title="Выгрузить файл">
+                    <i class="fas fa-upload"></i>
+                </button>
+                <meta name="_csrf" th:content="${_csrf.token}"/>
+                <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+                <button class="btn btn-success" onclick="submitCode()">
+                    <i class="fas fa-play"></i>
+                </button>
+                <button class="btn btn-secondary" onclick="uploadFolder()" title="Выгрузить папку">
+                    <i class="fas fa-folder-open"></i>
+                </button>
+                <form sec:authorize="!isAuthenticated()" th:action="@{/login}" th:method="GET">
+                    <button type="submit" class="btn btn-secondary">Войти</button>
+                </form>
+                <form sec:authorize="isAuthenticated()" th:action="@{/logout}" th:method="POST">
+                    <button type="submit" class="btn btn-secondary">Выйти</button>
+                </form>
+            </div>
+            <div id="message-container"></div>
+        </div>
+        <!-- Выбор языка программирования -->
+        <div class="col-md-2">
+            <select id="languageSelect" class="form-control d-inline-block" onchange="setLanguage(this.value)">
+                <option value="java">Java</option>
+                <option value="python3">Python3</option>
+                <option value="cpp">C++</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="row">
+        <!-- Контейнер с файлами пользователя -->
+        <div class="col-md-3">
+            <div id="files-container">
+                <!-- Здесь будут отображаться файлы пользователя -->
+                <p>Ваши файлы</p>
+                <!-- Добавьте динамическое отображение файлов по необходимости -->
+            </div>
+        </div>
+        <!-- Контейнер с редактором кода -->
+        <div class="col-md-9">
+            <div id="editor-container"></div>
+        </div>
+    </div>
+
+    <!-- Контейнер для вывода результата -->
+    <div class="row">
+        <div class="col">
+            <div id="output" class="output-container">
+                <!-- Здесь будет отображаться вывод программы -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.28.1/min/vs/loader.min.js"></script>
+<!-- Подключаем scripts.js перед скриптом с вызовом функций -->
+<script th:src="@{/scripts.js}" src="/scripts.js"></script>
+<script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+        window.files = /*[[${files}]]*/ [];
+        window.projectId = /*[[${projectId}]]*/ 0;
+
+        console.log("Список файлов:", window.files);
+        window.files.forEach(fileName => addFileToContainer(fileName));
+    });
+</script>
+
+</body>
+</html>

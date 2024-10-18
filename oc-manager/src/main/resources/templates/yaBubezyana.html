@@ -1,228 +1,400 @@
-package com.example.CompilerIDE.controller;
+const templates = {
+"java": `public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, Java!");\n    }\n}`,
+"cpp": `#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello, C++!" << endl;\n    return 0;\n}`,
+    "python3": `print("Hello, Python!")`
+    };
 
-import com.example.CompilerIDE.Dto.ClientDto;
-import com.example.CompilerIDE.providers.Client;
-import com.example.CompilerIDE.providers.Project;
-import com.example.CompilerIDE.services.ClientService;
-import com.example.CompilerIDE.services.ProjectService;
-import com.example.CompilerIDE.util.ClientValidator;
-import com.example.CompilerIDE.util.FileUploadUtil;
-import com.example.CompilerIDE.util.ProjectValidator;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+    // Инициализация глобальных переменных
+    window.files = [];      // Массив для хранения файлов: {fileName, content}
+    window.openFiles = {};  // Объект для хранения содержимого открытых файлов
+    let editor;
+    let models = {};        // Объект для хранения моделей для каждого языка
 
-import java.io.IOException;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Optional;
-
-@Controller
-public class UserController {
-private final ClientService clientService;
-private final ProjectService projectService;
-private final ClientValidator clientValidator;
-private final PasswordEncoder passwordEncoder;
-private final ProjectValidator projectValidator;
-
-@Autowired
-public UserController(ClientService clientService, ProjectService projectService, ClientValidator clientValidator,
-PasswordEncoder passwordEncoder, ProjectValidator projectValidator) {
-this.passwordEncoder = passwordEncoder;
-this.clientService = clientService;
-this.clientValidator = clientValidator;
-this.projectService = projectService;
-this.projectValidator = projectValidator;
-}
-
-@GetMapping("/")
-public String home() {
-return "Compiler";
-}
-
-@GetMapping("/Compiler/{projectId}")
-public String compiler(@PathVariable("projectId") int projectId, Authentication authentication, Model model) {
-Project project = projectService.findOne(projectId);
-if (project == null || !Objects.equals(project.getClient().getUsername(), authentication.getName())) {
-return "redirect:/userProfile";
-}
-model.addAttribute("projectId", projectId);
-
-return "Compiler";
-}
-
-@GetMapping("/login")
-public String showLoginPage() {
-return "loginAndRegistration";
-}
-
-@GetMapping("/registration")
-public String registration(@ModelAttribute Client client){
-return "registrationPage";
-}
-
-@PostMapping("/process_registration")
-public String registrationPerson(@Valid @ModelAttribute Client client, BindingResult bindingResult) {
-clientValidator.validate(client, bindingResult);
-
-if (bindingResult.hasErrors())
-return "registrationPage";
-
-clientService.save(client);
-
-Project project = new Project();
-project.setName("Untitled");
-project.setLanguage("Java");
-project.setClient(client);
-
-// Сохраняем проект
-projectService.save(project);
-
-return "redirect:/login?registration";
-}
-
-//    @GetMapping("/userProfile")
-//    public String showProjects(@PathVariable int clientId, Model model) {
-//        Client client = clientService.findOne(clientId);
-//        model.addAttribute("client", client);
-//        model.addAttribute("projects", projectService.findByClient(client));
-//        return "userProfile"; // это наш HTML файл профиля
-//    }
-
-@GetMapping("/userProfile/new")
-public String newProjectForm(Authentication authentication, Model model) {
-model.addAttribute("project", new Project());
-return "new_project_form"; // Ensure this template exists
-}
-
-@PostMapping("/userProfile/new")
-public String createProject(@Valid @ModelAttribute("project") Project project, BindingResult bindingResult, Authentication authentication) {
-if (bindingResult.hasErrors()) {
-return "new_project_form"; // Возвращаем обратно на форму при ошибках
-}
-project.setClient(clientService.getClient(authentication.getName()).get());
-projectValidator.validate(project, bindingResult);
-if (bindingResult.hasErrors()) {
-return "new_project_form"; // Возвращаем обратно на форму при ошибках
-}
-projectService.save(project);
-
-return "redirect:/userProfile";
-}
-
-
-// Delete a project
-@PostMapping("/userProfile/delete/{id}")
-public String deleteProject(@PathVariable("id") int projectId, Authentication authentication) {
-// Get the logged-in user
-Client client = clientService.findByUsername(authentication.getName()).get();
-
-// Find the project to delete
-Optional<Project> projectToDelete = projectService.findById(projectId);
-
-    // Ensure the project belongs to the current user
-    if (projectToDelete.isPresent() && projectToDelete.get().getClient().getId() == client.getId()) {
-    projectService.delete(projectToDelete.get()); // Delete the project from DB
+    // Добавление файла в массив файлов
+    function addFile(fileName, content) {
+    window.files.push({ fileName, content });
+    console.log(`Файл ${fileName} добавлен в список.`);
     }
 
-    // Redirect back to the user's profile page after deletion
-    return "redirect:/userProfile";
+    // Добавление файла в контейнер файлов
+    function addFileToContainer(fileName) {
+    console.log("Добавляем файл:", fileName);
+    const filesContainer = document.getElementById('files-container');
+
+    if (!filesContainer) {
+    console.error("Контейнер для файлов не найден!");
+    return;
     }
 
-    @GetMapping("/userProfile")
-    public String ClientProfile(Model model, Authentication authentication) {
-    Client client = clientService.findByUsername(authentication.getName()).get();
+    const fileElement = document.createElement('div');
+    fileElement.classList.add('file-item-container');
 
-    List<Project> project = projectService.findByClient(client);
-        model.addAttribute("client", client);
-        model.addAttribute("projects", project);
+    const fileNameSpan = document.createElement('span');
+    fileNameSpan.textContent = fileName;
+    fileNameSpan.classList.add('file-name');
 
-        return "userProfile";
-        }
+    // Обработчик клика по файлу для его открытия
+    fileElement.addEventListener('click', () => {
+    openFile(fileName);  // Открываем файл в редакторе
+    highlightActiveFile(fileElement);  // Подсветка активного файла
+    });
 
-        @GetMapping("/edit/{id}")
-        public String editProfile(Model model, @PathVariable("id") int id) {
-        model.addAttribute("client", clientService.findOne(id));
-        return "editProfile";
-        }
-        @PostMapping("/edit/{id}")
-        public String updateProfile(Authentication authentication, @PathVariable("id") int id,
-        @Valid Client clientForm, BindingResult bindingResult,
-        @RequestParam("avatarFile") MultipartFile avatarFile) {
-        if (bindingResult.hasErrors()) {
-        return "editProfile";
-        }
+    fileElement.appendChild(fileNameSpan);
+    filesContainer.appendChild(fileElement);
 
-        Client existingClient = clientService.findOne(id);
+    console.log(`Файл ${fileName} добавлен в контейнер.`);
+    }
 
-        if (!avatarFile.isEmpty()) {
-        String originalFileName = avatarFile.getOriginalFilename();
-        String extension = "";
+    // Открытие файла в редакторе
+    function openFile(fileName) {
+    const currentFileName = getCurrentFileName();
 
-        if (originalFileName != null) {
-        extension = originalFileName.substring(originalFileName.lastIndexOf("."));
-        }
+    // Сохраняем текущее содержимое открытого файла перед переключением
+    if (currentFileName && window.openFiles[currentFileName]) {
+    window.openFiles[currentFileName] = editor.getValue();
+    console.log(`Содержимое файла ${currentFileName} сохранено перед переключением.`);
+    }
 
-        String fileName = existingClient.getId() + extension;
-        String uploadDir = "user-photos/";
-        try {
-        FileUploadUtil.saveFile(uploadDir, fileName, avatarFile);
-        existingClient.setAvatarUrl("/" + uploadDir + fileName);
-        } catch (IOException e) {
-        bindingResult.rejectValue("avatarUrl","error.avatarUrl", e.getMessage());
-        return "editProfile";
-        }
-        }
+    // Находим объект файла в массиве
+    const fileObj = window.files.find(file => file.fileName === fileName);
+    if (!fileObj) {
+    console.error(`Файл ${fileName} не найден в списке.`);
+    return;
+    }
 
-        existingClient.setUsername(clientForm.getUsername());
-        existingClient.setEmail(clientForm.getEmail());
-        existingClient.setGithubProfile(clientForm.getGithubProfile());
-        existingClient.setAbout(clientForm.getAbout());
+    if (fileObj.content) {
+    // Если содержимое уже загружено, устанавливаем его в редактор
+    editor.setValue(fileObj.content);
+    console.log(`Содержимое файла ${fileName} установлено в редактор.`);
+    } else {
+    // Иначе, загружаем содержимое с сервера
+    const projectId = window.projectId;  // Используем window.projectId
+    fetch(`/projects/${projectId}/files/${encodeURIComponent(fileName)}`)
+    .then(response => {
+    if (!response.ok) {
+    throw new Error(`Ошибка при загрузке файла: ${response.statusText}`);
+    }
+    return response.text();
+    })
+    .then(content => {
+    editor.setValue(content);
+    fileObj.content = content;
+    window.openFiles[fileName] = content;
+    console.log(`Файл ${fileName} загружен с сервера и установлен в редактор.`);
+    })
+    .catch(error => {
+    console.error('Ошибка при загрузке файла:', error);
+    showErrorMessage(`Ошибка при загрузке файла ${fileName}: ${error.message}`);
+    });
+    }
 
-        //        if (!clientForm.getPassword().isEmpty()) {
-        //            existingClient.setPassword(passwordEncoder.encode(clientForm.getPassword()));
-        //        }
+    highlightActiveFileByName(fileName);
+    }
 
+    // Подсветка активного файла
+    function highlightActiveFile(selectedFileElement) {
+    const fileItems = document.querySelectorAll('.file-item-container');
+    fileItems.forEach(item => item.classList.remove('active'));  // Снимаем выделение
 
-        clientService.update(id, existingClient);
+    selectedFileElement.classList.add('active');  // Выделяем активный файл
+    console.log(`Файл ${selectedFileElement.querySelector('.file-name').textContent} активирован.`);
+    }
 
-        if (!authentication.getName().equals(existingClient.getUsername())) {
-        Authentication newAuth = new UsernamePasswordAuthenticationToken(existingClient.getUsername(),
-        authentication.getCredentials(), authentication.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(newAuth);
-        }
+    // Подсветка активного файла по имени
+    function highlightActiveFileByName(fileName) {
+    const fileItems = document.querySelectorAll('.file-item-container');
+    fileItems.forEach(item => {
+    const itemName = item.querySelector('.file-name').textContent;
+    if (itemName === fileName) {
+    item.classList.add('active');
+    } else {
+    item.classList.remove('active');
+    }
+    });
+    }
 
-        return "redirect:/userProfile";
-        }
+    // Получение текущего имени файла
+    function getCurrentFileName() {
+    const activeFile = document.querySelector('.file-item-container.active .file-name');
+    return activeFile ? activeFile.textContent : null;
+    }
 
-        //    @PostMapping("/edit/{id}")
-        //    public String updateProfile(Authentication authentication, @PathVariable("id") int id,@ModelAttribute("client") @Valid ClientDto clientDto, BindingResult bindingResult) {
-        //        if (bindingResult.hasErrors()) {
-        //            return "editProfile";
-        //        }
-        //        Client client = clientService.findOne(id);
-        //        client = clientMapper.updateUserFromDto(clientDto,client);
-        //        clientService.update(client);
-        //        if (!authentication.getName().equals(client.getUsername())) {
-        //            Authentication newAuth = new UsernamePasswordAuthenticationToken(client.getUsername(), authentication.getCredentials(), authentication.getAuthorities());
-        //            SecurityContextHolder.getContext().setAuthentication(newAuth);
-        //        }
-        //
-        //        return "redirect:/userProfile";
-        //    }
+    // Инициализация Monaco Editor
+    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.28.1/min/vs' }});
+    require(['vs/editor/editor.main'], function() {
+    // Создаём модели для каждого языка с шаблонами
+    models['java'] = monaco.editor.createModel(templates['java'], 'java');
+    models['cpp'] = monaco.editor.createModel(templates['cpp'], 'cpp');
+    models['python3'] = monaco.editor.createModel(templates['python3'], 'python');
 
+    // Инициализация редактора с моделью Java по умолчанию
+    editor = monaco.editor.create(document.getElementById('editor-container'), {
+    model: models['java'],
+    theme: 'vs-dark'
+    });
 
+    console.log("Monaco Editor инициализирован с моделью Java.");
+    });
 
-        }
+    // Обработчик для смены языка
+    function setLanguage(language) {
+    editor.pushUndoStop();  // Останавливаем запись в историю
+    const currentModel = models[language];
+    if (currentModel) {
+    editor.setModel(currentModel);  // Переключаем модель
+    console.log(`Язык программирования изменён на ${language}.`);
+    } else {
+    console.error(`Модель для языка ${language} не найдена.`);
+    }
+    editor.pushUndoStop();  // Включаем запись в историю
+    }
+
+    // Загрузка файла в редактор и добавление его в контейнер файлов
+    function uploadFile() {
+    console.log("Начало загрузки файла");
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.txt,.java,.py,.cpp';
+
+    input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) {
+    console.log("Файл не выбран.");
+    return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = event => {
+    const content = event.target.result;
+    const fileName = file.name;
+
+    console.log(`Файл выбран: ${fileName}`);
+
+    // Проверка, существует ли уже файл с таким именем
+    const existingFile = window.files.find(file => file.fileName === fileName);
+    if (existingFile) {
+    const overwrite = confirm(`Файл "${fileName}" уже существует. Перезаписать?`);
+    if (!overwrite) {
+    console.log(`Файл ${fileName} не был перезаписан.`);
+    return;
+    }
+    existingFile.content = content;
+    window.openFiles[fileName] = content;
+    console.log(`Файл ${fileName} обновлён.`);
+    // Если файл активен, обновить содержимое редактора
+    const activeFileName = getCurrentFileName();
+    if (activeFileName === fileName) {
+    editor.setValue(content);
+    console.log(`Содержимое файла ${fileName} обновлено в редакторе.`);
+    }
+    return;
+    }
+
+    // Добавляем файл в массив
+    addFile(fileName, content);
+
+    // Устанавливаем содержимое файла в редактор
+    editor.setValue(content);
+    console.log(`Содержимое файла ${fileName} установлено в редактор.`);
+
+    // Отображаем файл в контейнере файлов
+    addFileToContainer(fileName);
+
+    // Скрываем сообщение об отсутствии файлов, если добавлен файл
+    document.getElementById('no-files-message').style.display = 'none';
+    };
+
+    reader.onerror = () => {
+    console.error("Ошибка при чтении файла.");
+    showErrorMessage("Ошибка при чтении файла.");
+    };
+
+    reader.readAsText(file);
+    };
+    input.click();
+    }
+
+    // Скачивание содержимого текущего файла
+    function downloadFile() {
+    const currentFileName = getCurrentFileName();
+    if (!currentFileName) {
+    alert("Нет открытого файла для скачивания.");
+    console.log("Нет открытого файла для скачивания.");
+    return;
+    }
+    const fileObj = window.files.find(file => file.fileName === currentFileName);
+    if (!fileObj || !fileObj.content) {
+    alert("Содержимое файла недоступно.");
+    console.log(`Содержимое файла ${currentFileName} недоступно.`);
+    return;
+    }
+    const content = fileObj.content;
+    const blob = new Blob([content], { type: 'text/plain' });
+
+    const link = document.createElement('a');
+    link.download = currentFileName;
+    link.href = window.URL.createObjectURL(blob);
+    link.click();
+
+    console.log(`Файл ${currentFileName} скачан.`);
+    }
+
+    // Функция для сохранения проекта
+    async function saveProject() {
+    const language = document.getElementById('languageSelect').value;
+
+    // Получаем содержимое текущего файла и обновляем его в массиве файлов
+    const currentFileName = getCurrentFileName();
+    if (currentFileName) {
+    const fileObj = window.files.find(file => file.fileName === currentFileName);
+    if (fileObj) {
+    fileObj.content = editor.getValue();
+    window.openFiles[currentFileName] = fileObj.content;
+    console.log(`Содержимое файла ${currentFileName} обновлено перед сохранением.`);
+    }
+    }
+
+    // Получаем CSRF-токен и заголовок из метатегов
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+    const projectId = window.projectId;
+    console.log("Значение projectId перед сохранением:", projectId);
+
+    if (!projectId) {
+    alert("Не удалось определить идентификатор проекта.");
+    console.log("Не удалось определить идентификатор проекта.");
+    return;
+    }
+
+    try {
+    // Создаем FormData для отправки файлов
+    const formData = new FormData();
+
+    // Добавляем каждый файл в FormData
+    window.files.forEach(file => {
+    if (file.content) {
+    const blob = new Blob([file.content], { type: 'text/plain' });
+    formData.append('files', blob, file.fileName);
+    console.log(`Файл ${file.fileName} добавлен в FormData.`);
+    } else {
+    console.warn(`Содержимое файла ${file.fileName} отсутствует и не будет отправлено.`);
+    }
+    });
+
+    // Если нужен путь, добавьте его
+    formData.append('path', ''); // Укажите путь, если требуется
+
+    const response = await fetch(`/projects/${projectId}/save`, {
+    method: 'POST',
+    headers: {
+    [csrfHeader]: csrfToken
+    },
+    body: formData
+    });
+
+    if (response.ok) {
+    // Отобразить сообщение об успешном сохранении
+    showSuccessMessage("Ваш проект успешно сохранён");
+    console.log("Проект успешно сохранён.");
+    } else {
+    const errorText = await response.text();
+    showErrorMessage(`Ошибка при сохранении проекта: ${errorText}`);
+    console.error(`Ошибка при сохранении проекта: ${errorText}`);
+    }
+    } catch (error) {
+    showErrorMessage(`Ошибка: ${error.message}`);
+    console.error(`Ошибка: ${error.message}`);
+    }
+    }
+
+    // Отправка всех файлов на сервер
+    async function submitCode() {
+    const language = document.getElementById('languageSelect').value;
+
+    // Обновляем содержимое текущего файла перед отправкой
+    const currentFileName = getCurrentFileName();
+    if (currentFileName) {
+    const fileObj = window.files.find(file => file.fileName === currentFileName);
+    if (fileObj) {
+    fileObj.content = editor.getValue();
+    window.openFiles[currentFileName] = fileObj.content;
+    console.log(`Содержимое файла ${currentFileName} обновлено перед отправкой на компиляцию.`);
+    }
+    }
+
+    // Получаем CSRF-токен и заголовок из метатегов
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+    const projectId = window.projectId;
+    console.log("Значение projectId перед компиляцией:", projectId);
+
+    if (!projectId) {
+    alert("Не удалось определить идентификатор проекта.");
+    console.log("Не удалось определить идентификатор проекта.");
+    return;
+    }
+
+    try {
+    const response = await fetch(`/projects/${projectId}/compile`, { // Исправленный URL
+    method: 'POST',
+    headers: {
+    'Content-Type': 'application/json',
+    [csrfHeader]: csrfToken  // Добавляем CSRF-токен в заголовок
+    },
+    body: JSON.stringify({
+    files: window.files.map(file => ({
+    fileName: file.fileName,
+    content: file.content
+    })),
+    language: language
+    })
+    });
+
+    if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Ошибка компиляции: ${errorText}`);
+    }
+
+    const result = await response.text();
+    document.getElementById('output').textContent = result || "No errors, code executed successfully!";
+    console.log("Компиляция успешно выполнена.");
+    } catch (error) {
+    document.getElementById('output').textContent = `Error: ${error.message}`;
+    console.error(`Ошибка при компиляции: ${error.message}`);
+    }
+    }
+
+    // Обновляем содержимое файла в массиве файлов
+    function updateFileContent(fileName, newContent) {
+    const fileObj = window.files.find(file => file.fileName === fileName);
+    if (fileObj) {
+    fileObj.content = newContent;
+    window.openFiles[fileName] = newContent;  // Обновляем в массиве открытых файлов
+    console.log(`Содержимое файла ${fileName} обновлено.`);
+    } else {
+    console.error(`Файл ${fileName} не найден в списке.`);
+    }
+    }
+
+    // Функция для отображения успешного сообщения
+    function showSuccessMessage(message) {
+    const messageContainer = document.getElementById('message-container');
+    messageContainer.innerHTML = `<div class="alert alert-success">${message}</div>`;
+    setTimeout(() => {
+    messageContainer.innerHTML = '';
+    }, 5000); // Сообщение исчезнет через 5 секунд
+    console.log(`Сообщение об успешном действии: ${message}`);
+    }
+
+    // Функция для отображения ошибки
+    function showErrorMessage(message) {
+    const messageContainer = document.getElementById('message-container');
+    messageContainer.innerHTML = `<div class="alert alert-danger">${message}</div>`;
+    setTimeout(() => {
+    messageContainer.innerHTML = '';
+    }, 5000);
+    console.error(`Сообщение об ошибке: ${message}`);
+    }
