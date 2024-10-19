@@ -206,6 +206,9 @@
                 <button class="btn btn-success" onclick="submitCode()">
                     <i class="fas fa-play"></i>
                 </button>
+                <button class="btn btn-secondary" onclick="uploadFolder()" title="Выгрузить папку">
+                    <i class="fas fa-folder-open"></i>
+                </button>
                 <form sec:authorize="!isAuthenticated()" th:action="@{/login}" th:method="GET">
                     <button type="submit" class="btn btn-secondary">Войти</button>
                 </form>
