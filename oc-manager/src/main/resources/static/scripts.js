@@ -83,6 +83,22 @@ require(['vs/editor/editor.main'], function() {
         model: models['java'],
         theme: 'vs-dark'
     });
+
+    // Добавляем обработчик для увеличения/уменьшения размера шрифта с помощью горячих клавиш
+    let currentFontSize = 14; // начальный размер шрифта
+    window.addEventListener('keydown', function(event) {
+        if ((event.ctrlKey || event.metaKey) && editor.hasTextFocus()) {
+            if (event.key === '+') {
+                event.preventDefault();
+                currentFontSize += 1;
+                editor.updateOptions({ fontSize: currentFontSize });
+            } else if (event.key === '-') {
+                event.preventDefault();
+                currentFontSize -= 1;
+                editor.updateOptions({ fontSize: currentFontSize });
+            }
+        }
+    });
 });
 
 // Обработчик для смены языка
@@ -96,10 +112,8 @@ function setLanguage(language) {
 // Добавление файла в массив файлов
 function addFile(fileName, content) {
     window.files.push({ fileName, content });
+    window.openFiles[fileName] = content; // Сохраняем содержимое файла в объект открытых файлов
 }
-
-
-
 
 // Обновляем текущее имя файла для корректного сохранения
 function highlightActiveFileByName(fileName) {
@@ -136,9 +150,6 @@ function uploadFile() {
             // Добавляем файл в массив
             addFile(fileName, content);
 
-            // Добавляем в массив открытых файлов
-            openFiles[fileName] = content;
-
             // Устанавливаем содержимое файла в редактор
             editor.setValue(content);
 
@@ -149,9 +160,6 @@ function uploadFile() {
     };
     input.click();
 }
-
-
-
 
 // Скачивание содержимого текущего файла
 function downloadFile() {
@@ -189,7 +197,7 @@ async function saveProject() {
         const formData = new FormData();
 
         // Добавляем каждый файл в FormData
-        files.forEach(file => {
+        window.files.forEach(file => {
             const blob = new Blob([file.content], { type: 'text/plain' });
             formData.append('files', blob, file.fileName);
         });
@@ -217,7 +225,6 @@ async function saveProject() {
     }
 }
 
-
 // Отправка всех файлов на сервер
 async function submitCode() {
     const language = document.getElementById('languageSelect').value;
@@ -239,7 +246,7 @@ async function submitCode() {
                 [csrfHeader]: csrfToken  // Добавляем CSRF-токен в заголовок
             },
             body: JSON.stringify({
-                files: files,
+                files: window.files,
                 language: language
             })
         });
@@ -272,16 +279,24 @@ function showSuccessMessage(message) {
         messageContainer.innerHTML = '';
     }, 5000); // Сообщение исчезнет через 5 секунд
 }
-document.addEventListener('click', function(event) {
-    if (event.target.classList.contains('folder-name')) {
-        const folder = event.target.parentElement;
-        const folderChildren = folder.querySelectorAll('.file-item-container, .folder-item-container');
 
+document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('folder-name') || event.target.classList.contains('folder-arrow')) {
+        const folderElement = event.target.closest('.folder-item-container');  // Получаем элемент папки
+        const arrowElement = folderElement.querySelector('.folder-arrow');  // Получаем стрелочку
+        const folderChildren = folderElement.querySelectorAll('.file-item-container, .folder-item-container');
+
+        // Переключаем видимость дочерних элементов (файлов и папок)
         folderChildren.forEach(child => {
             child.style.display = (child.style.display === 'none') ? 'block' : 'none';
         });
+
+        // Переключаем состояние стрелочки и иконки
+        arrowElement.classList.toggle('open');  // Переключаем класс open для стрелочки
+        folderElement.classList.toggle('open');  // Переключаем класс open для папки
     }
 });
+
 function uploadFolder() {
     const input = document.createElement('input');
     input.type = 'file';
@@ -312,6 +327,7 @@ function uploadFolder() {
 
     input.click();
 }
+
 function addFileToContainer(filePath) {
     const filesContainer = document.getElementById('files-container');
 
@@ -375,4 +391,3 @@ function showErrorMessage(message) {
         messageContainer.innerHTML = '';
     }, 5000);
 }
-

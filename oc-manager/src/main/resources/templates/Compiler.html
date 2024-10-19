@@ -8,9 +8,11 @@
     <link rel="icon" type="image/png" href="/favicon.png" sizes="180x180">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet">
     <meta name="projectId" th:content="${projectId}">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap');
 
         * {
             margin: 0;
@@ -22,29 +24,51 @@
         body {
             background-color: #E6EEF5;
             padding: 20px;
+            transition: margin-left 0.3s ease;
         }
 
         #editor-container {
             height: 500px;
+            width:100%;
             border: 1px solid grey;
             border-radius: 15px;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            font-family: 'Source Code Pro', monospace;
         }
 
         #files-container {
-            height: 500px;
+            height: 100%;
+            width: 300px;
+            position: fixed;
+            left: -300px;
+            top: 0;
             background-color: #F9FBFC;
-            border-radius: 15px;
+            border-radius: 0 15px 15px 0;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
             overflow-y: auto;
             padding: 15px;
+            transition: all 0.3s ease;
+            z-index: 100;
         }
-      .top-buttons .btn {
-            margin-right: 10px;
 
-            border-radius: 15px;
+        #files-container.open {
+            left: 0;
         }
+
+        #toggle-button {
+            position: fixed;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            background-color: #ffffff;
+            border-radius: 0 15px 15px 0;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            cursor: pointer;
+            z-index: 101;
+        }
+
         #output {
             margin-top: 20px;
             padding: 15px;
@@ -55,11 +79,8 @@
         }
 
         .top-buttons .btn {
-            margin-left: 5px;
-            border-radius: 8px;
-            padding: 10px 15px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: background-color 0.3s;
+            margin-right: 10px;
+            border-radius: 15px;
         }
 
         .top-buttons .btn-secondary:hover {
@@ -72,12 +93,12 @@
         }
 
         .user-name {
-    font-size: 28px;
-    font-weight: 700;
-    color: #333;
-    text-decoration: none;
-    cursor: default;
-}
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            text-decoration: none;
+            cursor: default;
+        }
 
         #languageSelect {
             border-radius: 8px;
@@ -85,7 +106,6 @@
             box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
         }
 
-        /* Общие стили для контейнеров */
         .container-fluid {
             background-color: #FFFFFF;
             border-radius: 25px;
@@ -93,27 +113,71 @@
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
         }
 
-        .btn-group button {
+<!--        .file-item-container {-->
+<!--            padding: 10px;-->
+<!--            margin: 5px 0;-->
+<!--            background-color: #f9fbfc;-->
+<!--            border-radius: 8px;-->
+<!--            cursor: pointer;-->
+<!--            transition: background-color 0.3s;-->
+<!--        }-->
+
+<!--        .file-item-container:hover {-->
+<!--            background-color: #e0e0e0;-->
+<!--        }-->
+
+<!--        .file-item-container.active {-->
+<!--            background-color: #d0d0d0;-->
+<!--        }-->
+                .file-item-container {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f9fbfc;
+            border-radius: 8px;
+            cursor: pointer;
             transition: background-color 0.3s;
         }
-        /* Стили для файла в контейнере */
-.file-item-container {
-    padding: 10px;
-    margin: 5px 0;
-    background-color: #f9fbfc;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
 
-.file-item-container:hover {
-    background-color: #e0e0e0;
-}
+        .file-item-container:hover {
+            background-color: #e0e0e0;
+        }
 
-.file-item-container.active {
-    background-color: #d0d0d0;
-}
+        .file-item-container.active {
+            background-color: #d0d0d0;
+        }
 
+        .folder-item-container {
+            position: relative;
+            margin-left: 10px;
+            padding: 5px;
+            cursor: pointer;
+        }
+
+        .folder-item-container::before {
+            content: "📁 ";
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .folder-item-container.open::before {
+            content: "📂 ";
+        }
+
+        .file-item-container {
+            margin-left: 30px;
+            padding: 5px;
+        }
+
+        .folder-item-container .folder-name,
+        .file-item-container .file-name {
+            display: inline-block;
+        }
+
+        .folder-item-container .folder-name:hover,
+        .file-item-container .file-name:hover {
+            text-decoration: underline;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -129,7 +193,7 @@
             <!-- Кнопки в верхней части страницы -->
             <div class="btn-group top-buttons" role="group">
                 <button class="btn btn-primary" onclick="saveProject()" title="Сохранить проект">
-                    <i class="fas fa-save"></i> Сохранить проект
+                    <i class="fas fa-save"></i>
                 </button>
                 <button class="btn btn-secondary" onclick="downloadFile()" title="Сохранить файл">
                     <i class="fas fa-download"></i>
@@ -141,9 +205,6 @@
                 <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
                 <button class="btn btn-success" onclick="submitCode()">
                     <i class="fas fa-play"></i>
-                </button>
-                <button class="btn btn-secondary" onclick="uploadFolder()" title="Выгрузить папку">
-                    <i class="fas fa-folder-open"></i>
                 </button>
                 <form sec:authorize="!isAuthenticated()" th:action="@{/login}" th:method="GET">
                     <button type="submit" class="btn btn-secondary">Войти</button>
@@ -163,37 +224,31 @@
             </select>
         </div>
     </div>
-
-    <!-- Основной контент -->
     <div class="row">
-        <!-- Контейнер с файлами пользователя -->
-        <div class="col-md-3">
-            <div id="files-container">
-                <!-- Здесь будут отображаться файлы пользователя -->
-                <p>Ваши файлы</p>
-                <!-- Добавьте динамическое отображение файлов по необходимости -->
-            </div>
-        </div>
-        <!-- Контейнер с редактором кода -->
-        <div class="col-md-9">
+        <div class="col-md-12">
             <div id="editor-container"></div>
         </div>
     </div>
 
-    <!-- Контейнер для вывода результата -->
     <div class="row">
         <div class="col">
             <div id="output" class="output-container">
-                <!-- Здесь будет отображаться вывод программы -->
             </div>
         </div>
     </div>
 </div>
 
+<div id="files-container">
+    <p>Ваши файлы</p>
+</div>
+
+<div id="toggle-button" onclick="toggleFilesContainer()">
+    <i class="fas fa-caret-right"></i>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.28.1/min/vs/loader.min.js"></script>
-<!-- Подключаем scripts.js перед скриптом с вызовом функций -->
 <script th:src="@{/scripts.js}" src="/scripts.js"></script>
 <script th:inline="javascript">
     document.addEventListener("DOMContentLoaded", function() {
@@ -202,8 +257,35 @@
 
         console.log("Список файлов:", window.files);
         window.files.forEach(fileName => addFileToContainer(fileName));
-    });
-</script>
 
+        // Обработчик для закрытия панели при клике вне ее области
+        document.addEventListener('click', function(event) {
+            const filesContainer = document.getElementById('files-container');
+            const toggleButton = document.getElementById('toggle-button');
+            if (!filesContainer.contains(event.target) && !toggleButton.contains(event.target)) {
+                if (filesContainer.classList.contains('open')) {
+                    toggleFilesContainer();
+                }
+            }
+        });
+    });
+
+    function toggleFilesContainer() {
+        const filesContainer = document.getElementById('files-container');
+        const toggleButton = document.getElementById('toggle-button');
+        const bodyElement = document.body;
+
+        filesContainer.classList.toggle('open');
+        if (filesContainer.classList.contains('open')) {
+            bodyElement.style.marginLeft = '320px'; // Сжимаем весь body, когда панель открыта
+            toggleButton.querySelector('i').classList.remove('fa-caret-right');
+            toggleButton.querySelector('i').classList.add('fa-caret-left');
+        } else {
+            bodyElement.style.marginLeft = '0'; // Возвращаем body на место, когда панель закрыта
+            toggleButton.querySelector('i').classList.remove('fa-caret-left');
+            toggleButton.querySelector('i').classList.add('fa-caret-right');
+        }
+    }
+</script>
 </body>
 </html>
