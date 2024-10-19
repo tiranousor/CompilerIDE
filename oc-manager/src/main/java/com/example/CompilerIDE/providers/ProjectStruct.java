@@ -1,34 +1,32 @@
 package com.example.CompilerIDE.providers;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
 
 @Entity
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "projects_struct")
+@AllArgsConstructor
+@Table(name = "project_structs")
 public class ProjectStruct {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long uid; // Уникальный идентификатор структуры проекта (первичный ключ).
+
+    @NotBlank(message = "Название файла или папки не может быть пустым")
+    private String name; // Название файла или папки.
+
+    @NotBlank(message = "Путь не может быть пустым")
+    private String path; // Путь к элементу структуры.
+
+    @NotBlank(message = "Тип элемента не может быть пустым")
+    private String type; // Тип элемента (например, файл или папка).
+
+    private String hash; // Хеш-сумма содержимого файла, используемая для проверки изменений.
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_uid", nullable = false)
-    private Project project;
-
-    @Column(nullable = false)
-    private String name;
-
-    @Column(nullable = false)
-    private String path;
-
-    @Column(nullable = false)
-    private String type;
-
-    @Column(nullable = false)
-    private String hash;
+    @JoinColumn(name = "project_id", nullable = false)
+    private Project project; // Связь с проектом.
 }

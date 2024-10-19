@@ -132,10 +132,10 @@ function addFileToContainer(fileName) {
 // Скачивание содержимого текущего файла
 function downloadFile() {
     const content = editor.getValue();
-    const blob = new Blob([content], { type: 'text/plain' });
+//    const blob = new Blob([content], { type: 'text/plain' });
 
     const link = document.createElement('a');
     link.download = `${getCurrentFileName()}`;
-    link.href = window.URL.createObjectURL(blob);
+//    link.href = window.URL.createObjectURL(blob);
     link.click();
 }

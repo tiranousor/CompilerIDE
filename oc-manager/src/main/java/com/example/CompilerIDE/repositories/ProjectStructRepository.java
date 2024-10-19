@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ProjectStructRepository extends JpaRepository<ProjectStruct, Integer> {
+public interface ProjectStructRepository extends JpaRepository<ProjectStruct, Long> {
     List<ProjectStruct> findByProject(Project project);
-    Optional<ProjectStruct> findByProjectIdAndName(int projectId, String name);
-    void deleteByProjectIdAndName(int projectId, String name);
+    Optional<ProjectStruct> findByProjectIdAndName(Long projectId, String name);
+    void deleteByProjectIdAndName(Long projectId, String name);
 }

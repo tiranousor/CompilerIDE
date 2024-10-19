@@ -6,11 +6,13 @@ import com.example.CompilerIDE.providers.Project;
 import com.example.CompilerIDE.providers.ProjectStruct;
 import com.example.CompilerIDE.repositories.ProjectRepository;
 import com.example.CompilerIDE.repositories.ProjectStructRepository;
+import com.example.CompilerIDE.util.HashUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 
@@ -76,6 +78,46 @@ public class ProjectService {
 
             // Отправляем файл на File Storage Server
             fileStorageClient.uploadFile(project.getId().toString(), file, path);
+        }
+    }
+
+
+    // Метод для сохранения структуры проекта
+    public void saveProjectStruct(ProjectStruct projectStruct) {
+        projectStructRepository.save(projectStruct);
+    }
+    @Transactional
+    public void saveProjectFiles(Project project, List<MultipartFile> files, String basePath, MinioService minioService, String bucketName) throws Exception {
+        for (MultipartFile file : files) {
+            String relativePath = basePath.isEmpty() ? file.getOriginalFilename() : basePath + "/" + file.getOriginalFilename();
+            String objectKey = "projects/" + project.getId() + "/" + relativePath;
+
+            // Загрузка файла в MinIO
+            minioService.uploadFile(
+                    objectKey,
+                    file.getInputStream(),
+                    file.getSize(),
+                    file.getContentType()
+            );
+
+            // Вычисление хеша файла
+            String hash;
+            try (InputStream is = file.getInputStream()) {
+                hash = HashUtil.computeSHA256Hash(is);
+            }
+
+            // Определение типа элемента
+            String type = file.isEmpty() ? "file" : "file"; // Здесь можно расширить логику определения типа
+
+            // Сохранение информации о структуре проекта
+            ProjectStruct projectStruct = new ProjectStruct();
+            projectStruct.setProject(project);
+            projectStruct.setName(file.getOriginalFilename());
+            projectStruct.setPath(relativePath);
+            projectStruct.setType(type);
+            projectStruct.setHash(hash);
+
+            projectStructRepository.save(projectStruct);
         }
     }
 

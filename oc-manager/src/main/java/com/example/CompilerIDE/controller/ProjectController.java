@@ -115,10 +115,10 @@ public class ProjectController {
         }
         return ResponseEntity.ok(content);
     }
-    // Сохранение файлов проекта с использованием MinIO
     @PostMapping("/{projectId}/save")
-    public ResponseEntity<?> saveProjectFiles(@PathVariable int projectId,
+    public ResponseEntity<?> saveProjectFiles(@PathVariable Long projectId,
                                               @RequestParam("files") List<MultipartFile> files,
+                                              @RequestParam(value = "basePath", required = false, defaultValue = "") String basePath,
                                               Authentication authentication) {
         // Проверяем, авторизован ли пользователь
         Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
@@ -129,7 +129,7 @@ public class ProjectController {
         Client client = clientOpt.get();
 
         // Находим проект
-        Optional<Project> projectOpt = projectService.findById(projectId);
+        Optional<Project> projectOpt = projectService.findById(projectId.intValue());
         if (projectOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Проект не найден");
         }
@@ -142,23 +142,11 @@ public class ProjectController {
         }
 
         try {
-            // Путь в MinIO для сохранения файлов проекта
-            String projectPath = "projects/" + projectId + "/";
-
-            // Создаём бакет, если необходимо (бакет может быть общим для всех проектов)
+            // Создаём бакет, если необходимо
             minioService.createBucket(bucketName);
 
-            // Сохраняем каждый файл в MinIO
-            for (MultipartFile file : files) {
-                String objectKey = projectPath + file.getOriginalFilename();
-
-                minioService.uploadFile(
-                        objectKey,
-                        file.getInputStream(),
-                        file.getSize(),
-                        file.getContentType()
-                );
-            }
+            // Сохраняем файлы и структуру проекта
+            projectService.saveProjectFiles(project, files, basePath, minioService, bucketName);
 
             return ResponseEntity.ok("Проект успешно сохранён");
         } catch (Exception e) {
