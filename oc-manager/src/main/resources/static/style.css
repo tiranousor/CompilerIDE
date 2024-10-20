@@ -15,9 +15,6 @@
     content: "📁 "; /* Иконка для папки */
 }
 
-.file-item::before {
-    content: "📄 "; /* Иконка для файла */
-}
 
 .file-item-container::before {
     content: "📄 ";
@@ -47,6 +44,10 @@
     border: 1px solid #ccc;
     padding: 5px;
     z-index: 10;
+}
+.file-item-container.binary .file-name::before {
+    content: "\1F4BE"; /* Иконка дискеты или другой символ */
+    margin-right: 5px;
 }
 
 .folder.open::before {

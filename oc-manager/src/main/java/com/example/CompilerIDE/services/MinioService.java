@@ -26,6 +26,15 @@ public class MinioService {
         this.s3Client = s3Client;
     }
 
+    public void deleteFile(String objectKey) {
+        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                .bucket(defaultBucketName)
+                .key(objectKey)
+                .build();
+
+        s3Client.deleteObject(deleteObjectRequest);
+    }
+
     public void uploadFile(String objectKey, InputStream inputStream, long contentLength, String contentType) {
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(defaultBucketName)
@@ -35,6 +44,19 @@ public class MinioService {
                 .build();
 
         s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(inputStream, contentLength));
+    }
+
+    public byte[] getFileContentAsBytes(String objectKey) {
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(defaultBucketName)
+                .key(objectKey)
+                .build();
+
+        try (InputStream inputStream = s3Client.getObject(getObjectRequest)) {
+            return inputStream.readAllBytes();
+        } catch (IOException | S3Exception e) {
+            return null;
+        }
     }
 
     public List<String> listFiles(String prefix) {

@@ -226,7 +226,7 @@
         window.projectId = /*[[${projectId}]]*/ 0;
 
         console.log("Список файлов:", window.files);
-        window.files.forEach(fileName => addFileToContainer(fileName));
+        window.files.forEach(filePath => addFileToContainer(filePath));
 
         // Обработчик для закрытия панели при клике вне ее области
         document.addEventListener('click', function(event) {
