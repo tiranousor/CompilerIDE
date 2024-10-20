@@ -21,11 +21,14 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final ProjectStructRepository projectStructRepository;
     private final FileStorageClient fileStorageClient;
+    private final MinioService minioService;
+
     @Autowired
-    public ProjectService(ProjectRepository projectRepository, ProjectStructRepository projectStructRepository, FileStorageClient fileStorageClient) {
+    public ProjectService(ProjectRepository projectRepository, ProjectStructRepository projectStructRepository, FileStorageClient fileStorageClient, MinioService minioService) {
         this.projectRepository = projectRepository;
         this.projectStructRepository = projectStructRepository;
         this.fileStorageClient = fileStorageClient;
+        this.minioService = minioService;
     }
     public List<Project> showAllProjects() {
         return projectRepository.findAll();
@@ -119,6 +122,22 @@ public class ProjectService {
 
             projectStructRepository.save(projectStruct);
         }
+    }
+
+    @Transactional
+    public void renameFile(Project project, String oldPath, String newPath) {
+        List<ProjectStruct> structs = projectStructRepository.findByProjectAndPathStartingWith(project, oldPath);
+        for (ProjectStruct struct : structs) {
+            String relativePath = struct.getPath();
+            String updatedPath = relativePath.replaceFirst(oldPath, newPath);
+            struct.setPath(updatedPath);
+            projectStructRepository.save(struct);
+        }
+    }
+
+    @Transactional
+    public void deleteFile(Project project, String filePath) {
+        projectStructRepository.deleteByProjectAndPathStartingWith(project, filePath);
     }
 
 }

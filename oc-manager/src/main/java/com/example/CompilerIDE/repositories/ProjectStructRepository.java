@@ -13,4 +13,6 @@ public interface ProjectStructRepository extends JpaRepository<ProjectStruct, Lo
     List<ProjectStruct> findByProject(Project project);
     Optional<ProjectStruct> findByProjectIdAndName(Long projectId, String name);
     void deleteByProjectIdAndName(Long projectId, String name);
+    List<ProjectStruct> findByProjectAndPathStartingWith(Project project, String path);
+    void deleteByProjectAndPathStartingWith(Project project, String path);
 }

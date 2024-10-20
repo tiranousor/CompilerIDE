@@ -10,6 +10,8 @@ window.openFiles = {};  // Объект для хранения содержим
 let editor;
 let models = {}; // Объект для хранения моделей для каждого языка
 
+let selectedFilePath = null;
+
 // Функция для добавления файла или папки в контейнер с файлами
 function addFileToContainer(filePath) {
     const filesContainer = document.getElementById('files-container');
@@ -32,6 +34,11 @@ function addFileToContainer(filePath) {
                 highlightActiveFile(fileElement);  // Подсвечиваем активный файл
             });
 
+            // Обработчик правого клика для отображения контекстного меню
+            fileElement.addEventListener('contextmenu', (event) => {
+                showContextMenu(event, filePath);
+            });
+
             fileElement.appendChild(fileNameSpan);
             currentElement.appendChild(fileElement);
         } else {
@@ -49,11 +56,7 @@ function addFileToContainer(filePath) {
                 folderNameSpan.classList.add('folder-name');
                 folderNameSpan.style.fontWeight = 'bold';  // Выделяем папку жирным
 
-                // Добавляем папку в текущий контейнер
-                folderElement.appendChild(folderNameSpan);
-                currentElement.appendChild(folderElement);
-
-                // Обработчик для сворачивания/разворачивания папки
+                // Обработчик клика для сворачивания/разворачивания папки
                 folderNameSpan.addEventListener('click', function () {
                     const isOpen = folderElement.classList.toggle('open');
                     const folderChildren = folderElement.querySelectorAll('.file-item-container, .folder-item-container');
@@ -61,6 +64,15 @@ function addFileToContainer(filePath) {
                         child.style.display = isOpen ? 'block' : 'none';
                     });
                 });
+
+                // Обработчик правого клика для папок
+                folderElement.addEventListener('contextmenu', (event) => {
+                    showContextMenu(event, filePath);
+                });
+
+                // Добавляем папку в текущий контейнер
+                folderElement.appendChild(folderNameSpan);
+                currentElement.appendChild(folderElement);
             }
 
             // Продолжаем строить структуру внутри этой папки
@@ -69,37 +81,138 @@ function addFileToContainer(filePath) {
     });
 }
 
-// Функция для открытия файла в редакторе
-function openFile(fileName) {
-    const currentFileName = getCurrentFileName();
+// Функция для отображения контекстного меню
+function showContextMenu(event, filePath) {
+    event.preventDefault();
+    selectedFilePath = filePath;
 
-    // Сохраняем текущее содержимое открытого файла перед переключением
-    if (currentFileName && openFiles[currentFileName]) {
-        openFiles[currentFileName] = editor.getValue();
+    const contextMenu = document.getElementById('context-menu');
+    contextMenu.style.top = `${event.clientY}px`;
+    contextMenu.style.left = `${event.clientX}px`;
+    contextMenu.style.display = 'block';
+}
+
+// Скрыть контекстное меню при клике вне его
+document.addEventListener('click', function(event) {
+    const contextMenu = document.getElementById('context-menu');
+    if (!contextMenu.contains(event.target)) {
+        contextMenu.style.display = 'none';
     }
+});
 
-    // Устанавливаем содержимое выбранного файла
-    if (openFiles[fileName]) {
-        editor.setValue(openFiles[fileName]);
-    } else {
-        const projectId = window.projectId;  // Используем window.projectId
-        fetch(`/projects/${projectId}/files/${fileName}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Ошибка при загрузке файла: ${response.statusText}`);
-                }
-                return response.text();
-            })
-            .then(content => {
-                editor.setValue(content);
-                openFiles[fileName] = content;
-            })
-            .catch(error => {
-                console.error('Ошибка при загрузке файла:', error);
+// Обработчики для опций контекстного меню
+document.getElementById('rename-option').addEventListener('click', function() {
+    if (selectedFilePath) {
+        const newName = prompt("Введите новое имя файла или папки:", selectedFilePath.split('/').pop());
+        if (newName && newName.trim() !== "") {
+            renameFile(selectedFilePath, newName.trim());
+        }
+    }
+    document.getElementById('context-menu').style.display = 'none';
+});
+
+document.getElementById('delete-option').addEventListener('click', function() {
+    if (selectedFilePath) {
+        const confirmDelete = confirm(`Вы уверены, что хотите удалить "${selectedFilePath.split('/').pop()}"?`);
+        if (confirmDelete) {
+            deleteFile(selectedFilePath);
+        }
+    }
+    document.getElementById('context-menu').style.display = 'none';
+});
+
+// Функция для переименования файла или папки
+function renameFile(oldPath, newName) {
+    const projectId = window.projectId;
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+    // Определяем новый путь
+    const pathParts = oldPath.split('/');
+    pathParts.pop(); // Удаляем старое имя файла или папки
+    const newPath = pathParts.length > 0 ? pathParts.join('/') + '/' + newName : newName;
+
+    fetch(`/projects/${projectId}/rename`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            [csrfHeader]: csrfToken
+        },
+        body: JSON.stringify({
+            oldPath: oldPath,
+            newPath: newPath
+        })
+    })
+    .then(response => {
+        if (response.ok) {
+            // Обновляем локальные данные
+            if (window.files.includes(oldPath)) {
+                const index = window.files.indexOf(oldPath);
+                window.files[index] = newPath;
+            }
+
+            if (openFiles[oldPath]) {
+                openFiles[newPath] = openFiles[oldPath];
+                delete openFiles[oldPath];
+            }
+
+            // Обновляем UI
+            refreshFileContainer();
+            showSuccessMessage("Файл успешно переименован");
+        } else {
+            response.text().then(text => {
+                showErrorMessage(`Ошибка при переименовании файла: ${text}`);
             });
-    }
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка при переименовании файла:', error);
+        showErrorMessage(`Ошибка при переименовании файла: ${error.message}`);
+    });
+}
 
-    highlightActiveFileByName(fileName);
+// Функция для удаления файла или папки
+function deleteFile(filePath) {
+    const projectId = window.projectId;
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+    fetch(`/projects/${projectId}/delete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            [csrfHeader]: csrfToken // Исправлено: передаём правильный заголовок
+        },
+        body: JSON.stringify({
+            filePath: filePath
+        })
+    })
+    .then(response => {
+        if (response.ok) {
+            // Удаляем из локальных данных
+            window.files = window.files.filter(path => path !== filePath && !path.startsWith(filePath + '/'));
+            delete openFiles[filePath];
+
+            // Обновляем UI
+            refreshFileContainer();
+            showSuccessMessage("Файл успешно удалён");
+        } else {
+            response.text().then(text => {
+                showErrorMessage(`Ошибка при удалении файла: ${text}`);
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка при удалении файла:', error);
+        showErrorMessage(`Ошибка при удалении файла: ${error.message}`);
+    });
+}
+
+// Функция для обновления контейнера файлов после изменений
+function refreshFileContainer() {
+    const filesContainer = document.getElementById('files-container');
+    filesContainer.innerHTML = '<p>Ваши файлы</p>';
+    window.files.forEach(filePath => addFileToContainer(filePath));
 }
 
 // Подсветка активного файла
@@ -107,7 +220,7 @@ function highlightActiveFileByName(fileName) {
     const fileItems = document.querySelectorAll('.file-item-container');
     fileItems.forEach(item => {
         const itemName = item.querySelector('.file-name').textContent;
-        if (itemName === fileName) {
+        if (itemName === fileName.split('/').pop()) {  // Проверка по последней части пути
             item.classList.add('active');
         } else {
             item.classList.remove('active');
@@ -115,9 +228,10 @@ function highlightActiveFileByName(fileName) {
     });
 }
 
-// Получение текущего имени файла
+// Получение имени текущего активного файла
 function getCurrentFileName() {
-    return document.querySelector('.file-item-container.active .file-name')?.textContent || null;
+    const activeItem = document.querySelector('.file-item-container.active .file-name');
+    return activeItem ? activeItem.textContent : null;
 }
 
 // Инициализация Monaco Editor
@@ -143,7 +257,6 @@ function setLanguage(language) {
     editor.pushUndoStop();  // Включаем запись в историю
 }
 
-// Загрузка файлов и папок
 function uploadFolder() {
     const input = document.createElement('input');
     input.type = 'file';
@@ -158,10 +271,10 @@ function uploadFolder() {
                 const content = e.target.result;
                 const filePath = file.webkitRelativePath;  // Это путь к файлу внутри папки
 
-                // Добавляем файл в массив файлов
-                addFile(filePath, content);
+                // Добавляем файл в массив файлов как строку пути
+                window.files.push(filePath);
 
-                // Добавляем в массив открытых файлов
+                // Добавляем содержимое файла в openFiles
                 openFiles[filePath] = content;
 
                 // Отображаем файл или папку в контейнере
@@ -188,7 +301,6 @@ function downloadFile() {
     link.click();
 }
 
-// Функция для сохранения проекта
 async function saveProject() {
     const language = document.getElementById('languageSelect').value;
     const currentFileName = getCurrentFileName();
@@ -206,9 +318,10 @@ async function saveProject() {
 
     try {
         const formData = new FormData();
-        files.forEach(file => {
-            const blob = new Blob([file.content], { type: 'text/plain' });
-            formData.append('files', blob, file.fileName);
+        window.files.forEach(filePath => {
+            const content = openFiles[filePath] || '';
+            const blob = new Blob([content], { type: 'text/plain' });
+            formData.append('files', blob, filePath);
         });
 
         const response = await fetch(`/projects/${projectId}/save`, {
@@ -232,27 +345,72 @@ async function saveProject() {
 
 // Обновляем содержимое файла в массиве файлов
 function updateFileContent(fileName, newContent) {
-    const file = window.files.find(file => file.fileName === fileName);
+    const file = window.files.find(file => file === fileName); // Исправлено: поиск по строке
     if (file) {
-        file.content = newContent;
+        const index = window.files.indexOf(file);
+        window.files[index] = fileName; // Путь остается тем же
+        openFiles[fileName] = newContent;  // Обновляем содержимое
     }
-    window.openFiles[fileName] = newContent;  // Обновляем в массиве открытых файлов
 }
 
 // Функция для отображения успешного сообщения
 function showSuccessMessage(message) {
     const messageContainer = document.getElementById('message-container');
-    messageContainer.innerHTML = `<div class="alert alert-success">${message}</div>`;
-    setTimeout(() => {
-        messageContainer.innerHTML = '';
-    }, 5000); // Сообщение исчезнет через 5 секунд
+    if (messageContainer) {
+        messageContainer.innerHTML = `<div class="alert alert-success">${message}</div>`;
+        setTimeout(() => {
+            messageContainer.innerHTML = '';
+        }, 5000); // Сообщение исчезнет через 5 секунд
+    }
 }
 
 // Функция для отображения ошибки
 function showErrorMessage(message) {
     const messageContainer = document.getElementById('message-container');
-    messageContainer.innerHTML = `<div class="alert alert-danger">${message}</div>`;
-    setTimeout(() => {
-        messageContainer.innerHTML = '';
-    }, 5000);
+    if (messageContainer) {
+        messageContainer.innerHTML = `<div class="alert alert-danger">${message}</div>`;
+        setTimeout(() => {
+            messageContainer.innerHTML = '';
+        }, 5000);
+    }
+}
+
+// Функция для открытия файла в редакторе
+function openFile(filePath) {
+    const currentFileName = getCurrentFileName();
+
+    // Сохраняем текущее содержимое открытого файла перед переключением
+    if (currentFileName && openFiles[currentFileName]) {
+        openFiles[currentFileName] = editor.getValue();
+    }
+
+    // Устанавливаем содержимое выбранного файла
+    if (openFiles[filePath]) {
+        editor.setValue(openFiles[filePath]);
+    } else {
+        const projectId = window.projectId;  // Используем window.projectId
+        fetch(`/projects/${projectId}/files/${filePath}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Ошибка при загрузке файла: ${response.statusText}`);
+                }
+                return response.text();
+            })
+            .then(content => {
+                editor.setValue(content);
+                openFiles[filePath] = content;
+            })
+            .catch(error => {
+                console.error('Ошибка при загрузке файла:', error);
+            });
+    }
+
+    highlightActiveFileByName(filePath);
+}
+
+// Функция для обновления контейнера файлов после изменений
+function refreshFileContainer() {
+    const filesContainer = document.getElementById('files-container');
+    filesContainer.innerHTML = '<p>Ваши файлы</p>';
+    window.files.forEach(filePath => addFileToContainer(filePath));
 }

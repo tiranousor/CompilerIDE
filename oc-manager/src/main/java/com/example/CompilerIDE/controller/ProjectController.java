@@ -16,6 +16,11 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
 
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+
+import software.amazon.awssdk.services.s3.model.*;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -28,17 +33,22 @@ public class ProjectController {
     private final ClientService clientService;
     private final CompilationService compilationService;
     private final MinioService minioService; // Добавлено
-    @Value("${minio.bucket-name}")
-    private String bucketName; // Убедитесь, что бакет создан
 
+    private final S3Client s3Client;
+    @Value("${minio.bucket-name}")
+    private String bucketName;
+
+    @Value("${minio.bucket-name}")
+    private String defaultBucketName;
     public ProjectController(ProjectService projectService,
                              ClientService clientService,
                              CompilationService compilationService,
-                             MinioService minioService) { // Добавлено
+                             MinioService minioService, S3Client s3Client) { // Добавлено
         this.projectService = projectService;
         this.clientService = clientService;
         this.compilationService = compilationService;
         this.minioService = minioService; // Добавлено
+        this.s3Client = s3Client;
     }
 
     // Отображение формы редактирования проекта
@@ -109,12 +119,14 @@ public class ProjectController {
         if (project == null || !project.getClient().getUsername().equals(authentication.getName())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Доступ запрещён");
         }
-        String content = minioService.getFileContent("projects/" + projectId + "/" + fileName);
+        String objectKey = "projects/" + projectId + "/" + fileName;
+        String content = minioService.getFileContent(objectKey);
         if (content == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Файл не найден");
         }
         return ResponseEntity.ok(content);
     }
+
     @PostMapping("/{projectId}/save")
     public ResponseEntity<?> saveProjectFiles(@PathVariable Long projectId,
                                               @RequestParam("files") List<MultipartFile> files,
@@ -190,4 +202,161 @@ public class ProjectController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при компиляции проекта");
         }
     }
+
+
+    // DTO для переименования файла
+    public static class RenameRequest {
+        private String oldPath;
+        private String newPath;
+
+        // Геттеры и сеттеры
+        public String getOldPath() {
+            return oldPath;
+        }
+
+        public void setOldPath(String oldPath) {
+            this.oldPath = oldPath;
+        }
+
+        public String getNewPath() {
+            return newPath;
+        }
+
+        public void setNewPath(String newPath) {
+            this.newPath = newPath;
+        }
+    }
+
+    // DTO для удаления файла
+    public static class DeleteRequest {
+        private String filePath;
+
+        // Геттеры и сеттеры
+        public String getFilePath() {
+            return filePath;
+        }
+
+        public void setFilePath(String filePath) {
+            this.filePath = filePath;
+        }
+    }
+
+    @PostMapping("/{projectId}/rename")
+    public ResponseEntity<?> renameFile(@PathVariable Long projectId,
+                                        @RequestBody RenameRequest renameRequest,
+                                        Authentication authentication) {
+        // Проверка авторизации
+        Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
+        if (clientOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Пользователь не авторизован");
+        }
+
+        Client client = clientOpt.get();
+
+        // Поиск проекта
+        Optional<Project> projectOpt = projectService.findById(projectId.intValue());
+        if (projectOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Проект не найден");
+        }
+
+        Project project = projectOpt.get();
+
+        // Проверка принадлежности проекта пользователю
+        if (!project.getClient().getId().equals(client.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("У вас нет доступа к этому проекту");
+        }
+
+        String oldObjectKey = "projects/" + projectId + "/" + renameRequest.getOldPath();
+        String newObjectKey = "projects/" + projectId + "/" + renameRequest.getNewPath();
+
+        try {
+            // Переименование файла или папки: копирование с новым именем и удаление старого
+            s3Client.copyObject(builder -> builder
+                    .sourceBucket(defaultBucketName)
+                    .sourceKey(oldObjectKey)
+                    .destinationBucket(defaultBucketName)
+                    .destinationKey(newObjectKey)
+                    .build());
+
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(defaultBucketName)
+                    .key(oldObjectKey)
+                    .build());
+
+            // Обновление структуры проекта в базе данных
+            projectService.renameFile(project, renameRequest.getOldPath(), renameRequest.getNewPath());
+
+            return ResponseEntity.ok("Файл успешно переименован");
+        } catch (S3Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при переименовании файла");
+        }
+    }
+
+    // Эндпоинт для удаления файла
+    @PostMapping("/{projectId}/delete")
+    public ResponseEntity<?> deleteFile(@PathVariable Long projectId,
+                                        @RequestBody DeleteRequest deleteRequest,
+                                        Authentication authentication) {
+        // Проверка авторизации
+        Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
+        if (clientOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Пользователь не авторизован");
+        }
+
+        Client client = clientOpt.get();
+
+        // Поиск проекта
+        Optional<Project> projectOpt = projectService.findById(projectId.intValue());
+        if (projectOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Проект не найден");
+        }
+
+        Project project = projectOpt.get();
+
+        // Проверка принадлежности проекта пользователю
+        if (!project.getClient().getId().equals(client.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("У вас нет доступа к этому проекту");
+        }
+
+        String objectKey = "projects/" + projectId + "/" + deleteRequest.getFilePath();
+
+        try {
+            // Удаление файла или папки и всех вложенных файлов
+            deleteRecursively(objectKey);
+
+            // Удаление из структуры проекта в базе данных
+            projectService.deleteFile(project, deleteRequest.getFilePath());
+
+            return ResponseEntity.ok("Файл успешно удалён");
+        } catch (S3Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при удалении файла");
+        }
+    }
+
+    // Рекурсивное удаление файлов и папок
+    private void deleteRecursively(String objectKey) {
+        ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
+                .bucket(defaultBucketName)
+                .prefix(objectKey)
+                .build();
+
+        ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
+
+        for (S3Object s3Object : listResponse.contents()) {
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(defaultBucketName)
+                    .key(s3Object.key())
+                    .build());
+        }
+
+        // Также удаляем сам объект, если он не содержит других объектов
+        s3Client.deleteObject(DeleteObjectRequest.builder()
+                .bucket(defaultBucketName)
+                .key(objectKey)
+                .build());
+    }
+
+
 }
