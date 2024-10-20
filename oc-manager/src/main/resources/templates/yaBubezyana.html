@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:sec="http://www.w3.org/1999/xhtml" xmlns:th="http://www.w3.org/1999/xhtml">
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+
 <head>
     <meta charset="UTF-8">
-    <title>Compiler</title>
-    <link rel="stylesheet" th:href="@{/style.css}" href="/style.css" />
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="icon" type="image/png" href="/favicon.png" sizes="180x180">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <meta name="projectId" th:content="${projectId}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <title>Register Page</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
 
@@ -16,668 +14,317 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Press Start 2P', cursive;
         }
 
         body {
-            background-color: #E6EEF5;
-            padding: 20px;
+            background: linear-gradient(70deg, #E0C3FC, #8EC5FC);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            height: 100vh;
         }
 
-        #editor-container {
-            height: 500px;
-            border: 1px solid grey;
-            border-radius: 15px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-
-        #files-container {
-            height: 500px;
-            background-color: #F9FBFC;
-            border-radius: 15px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-            overflow-y: auto;
-            padding: 15px;
-        }
-
-        .top-buttons .btn {
-            margin-right: 10px;
-            border-radius: 15px;
-        }
-
-        #output {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #F7F9FA;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            white-space: pre-wrap;
-        }
-
-        .top-buttons .btn {
-            margin-left: 5px;
-            border-radius: 8px;
-            padding: 10px 15px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: background-color 0.3s;
-        }
-
-        .top-buttons .btn-secondary:hover {
-            background-color: #E0E0E0;
-            border-radius: 15px;
-        }
-
-        .top-buttons .btn-success:hover {
-            background-color: #1AAE48;
-        }
-
-        .user-name {
-            font-size: 28px;
-            font-weight: 700;
-            color: #333;
-            text-decoration: none;
-            cursor: default;
-        }
-
-        #languageSelect {
-            border-radius: 8px;
-            padding: 8px;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .container-fluid {
+        .container {
             background-color: #FFFFFF;
-            border-radius: 25px;
-            padding: 30px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            width: 768px;
+            max-width: 100%;
+            min-height: 480px;
         }
 
-        .btn-group button {
-            transition: background-color 0.3s;
+        .container p {
+            font-size: 10px;
+            line-height: 16px;
+            letter-spacing: 0.3px;
+            margin: 20px 0;
+            color: #555;
         }
 
-        /* Обновленные стили для модального окна */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
+        .container span {
+            font-size: 8px;
+            color: #777;
+        }
+
+        .container a {
+            color: #555;
+            font-size: 8px;
+            text-decoration: none;
+            margin: 15px 0 10px;
+            transition: color 0.3s;
+        }
+
+        .container a:hover {
+            color: #8EC5FC;
+        }
+
+        .container button {
+            background-color: #8EC5FC;
+            color: #fff;
+            font-size: 10px;
+            padding: 10px 45px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .container button:hover {
+            background-color: #6FA3EF;
+        }
+
+        .container button.hidden {
+            background-color: transparent;
+            border: 2px solid #8EC5FC;
+            color: #8EC5FC;
+            padding: 10px 25px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container button.hidden:hover {
+            background-color: #8EC5FC;
+            color: #fff;
+        }
+
+        .container form {
+            background-color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 40px;
             height: 100%;
-            display: none; /* Скрыто по умолчанию */
+        }
+
+        .container input {
+            background-color: #F0F0F0;
+            border: 1px solid #DDD;
+            margin: 10px 0;
+            padding: 12px 20px;
+            font-size: 10px;
+            border-radius: 10px;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.3s;
+            font-family: 'Press Start 2P', cursive;
+
+        }
+
+        .container input:focus {
+            border-color: #8EC5FC;
+        }
+
+        .form-container {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            transition: all 0.6s ease-in-out;
+        }
+
+        .sign-in {
+            left: 0;
+            width: 50%;
+            z-index: 2;
+        }
+
+        .container.active .sign-in {
+            transform: translateX(100%);
+        }
+
+        .sign-up {
+            left: 0;
+            width: 50%;
+            opacity: 0;
+            z-index: 1;
+        }
+
+        .container.active .sign-up {
+            transform: translateX(100%);
+            opacity: 1;
+            z-index: 5;
+            animation: fadeIn 0.6s;
+        }
+
+        @keyframes fadeIn {
+            0%, 49.99% {
+                opacity: 0;
+                z-index: 1;
+            }
+            50%, 100% {
+                opacity: 1;
+                z-index: 5;
+            }
+        }
+
+        .social-icons {
+            margin: 20px 0;
+        }
+        h1 {
+            font-size: 14px; /* Увеличен размер шрифта */
+            margin-bottom: 10px;
+        }
+
+        button.hidden {
+            font-size: 10px; /* Увеличен размер шрифта */
+        }
+        .social-icons a {
+            border: 1px solid #CCC;
+            border-radius: 50%;
+            display: inline-flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000; /* Поверх всего */
+            margin: 0 5px;
+            width: 45px;
+            height: 45px;
+            transition: background 0.3s, color 0.3s;
         }
 
-        .modal-message {
-            background-color: rgba(144, 238, 144, 0.5); /* Зеленоватый цвет с прозрачностью */
-            padding: 40px;
-            border-radius: 25px;
-            text-align: center;
-            font-size: 22px;
-            font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            width: 50%; /* Увеличили ширину окна */
+        .social-icons a:hover {
+            background: #8EC5FC;
+            color: #FFFFFF;
         }
 
-        .file-item-container {
-            padding: 10px;
-            margin: 5px 0;
-            background-color: #f9fbfc;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s;
+        .toggle-container {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 50%;
+            height: 100%;
+
+            overflow: hidden;
+            transition: all 0.6s ease-in-out;
+            border-radius: 20px;
+            z-index: 1000;
         }
 
-        .file-item-container:hover {
-            background-color: #e0e0e0;
+        .container.active .toggle-container {
+            transform: translateX(-100%);
+            border-radius: 20px;
         }
 
-        .file-item-container.active {
-            background-color: #d0d0d0;
-        }
-
-        .folder-item-container {
+        .toggle {
+            background-color: #8EC5FC;
+            height: 100%;
+            color: #FFFFFF;
             position: relative;
-            margin-left: 10px;
-            padding: 5px;
-            cursor: pointer;
+            left: -100%;
+            height: 100%;
+            width: 200%;
+
+
+            transform: translateX(0);
+            transition: all 0.6s ease-in-out;
         }
 
-        .folder-item-container::before {
-            content: "📁 ";
-            display: inline-block;
-            margin-right: 5px;
+        .container.active .toggle {
+            transform: translateX(50%);
         }
 
-        .folder-item-container.open::before {
-            content: "📂 ";
+        .toggle-panel {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 0 30px;
+            text-align: center;
+            top: 0;
+            transform: translateX(0);
+            transition: all 0.6s ease-in-out;
+            font-family: 'Press Start 2P', cursive;
+
         }
 
-        .file-item-container {
-            margin-left: 30px;
-            padding: 5px;
+        .toggle-left {
+            transform: translateX(-200%);
         }
 
-        .folder-item-container .folder-name,
-        .file-item-container .file-name {
-            display: inline-block;
+        .container.active .toggle-left {
+            transform: translateX(0);
         }
 
-        .folder-item-container .folder-name:hover,
-        .file-item-container .file-name:hover {
-            text-decoration: underline;
-            cursor: pointer;
+        .toggle-right {
+            right: 0;
+            transform: translateX(0);
         }
-
     </style>
 </head>
+
 <body>
-<div class="container-fluid">
-    <!-- Верхняя панель с кнопками и выбором языка -->
-    <div class="row align-items-center mb-3">
-        <div class="col">
-            <h3 sec:authorize="!isAuthenticated()" class="user-name">Online Compiler</h3>
-            <a href="/userProfile" sec:authorize="isAuthenticated()" sec:authentication="name" class="user-name"></a>
-        </div>
 
-        <div class="col text-right">
-            <!-- Кнопки в верхней части страницы -->
-            <div class="btn-group top-buttons" role="group">
-                <button class="btn btn-primary" onclick="saveProject()" title="Сохранить проект">
-                    <i class="fas fa-save"></i>
-                </button>
-                <button class="btn btn-secondary" onclick="downloadFile()" title="Сохранить файл">
-                    <i class="fas fa-download"></i>
-                </button>
-                <button class="btn btn-secondary" onclick="uploadFile()" title="Выгрузить файл">
-                    <i class="fas fa-upload"></i>
-                </button>
-                <meta name="_csrf" th:content="${_csrf.token}"/>
-                <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-                <button class="btn btn-success" onclick="submitCode()">
-                    <i class="fas fa-play"></i>
-                </button>
-                <button class="btn btn-secondary" onclick="uploadFolder()" title="Выгрузить папку">
-                    <i class="fas fa-folder-open"></i>
-                </button>
-                <form sec:authorize="!isAuthenticated()" th:action="@{/login}" th:method="GET">
-                    <button type="submit" class="btn btn-secondary">Войти</button>
-                </form>
-                <form sec:authorize="isAuthenticated()" th:action="@{/logout}" th:method="POST">
-                    <button type="submit" class="btn btn-secondary">Выйти</button>
-                </form>
+<div class="container" id="container">
+    <div class="form-container sign-in">
+        <form action="/process_login" method="post">
+            <h1>Sign In</h1>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <span>Login With Username & Password</span>
+            <input type="text" id="username" name="username" placeholder="Enter Username" required>
+            <input type="password" id="password" name="password" placeholder="Enter Password" required>
+            <a href="#">Forget Password?</a>
+            <button type="submit">Sign In</button>
+            <div th:if="${param.error}">
+                <p style="color:red;">Неверное имя пользователя или пароль.</p>
             </div>
-            <div id="message-container"></div>
-        </div>
-        <!-- Выбор языка программирования -->
-        <div class="col-md-2">
-            <select id="languageSelect" class="form-control d-inline-block" onchange="setLanguage(this.value)">
-                <option value="java">Java</option>
-                <option value="python3">Python3</option>
-                <option value="cpp">C++</option>
-            </select>
-        </div>
+            <div th:if="${param.logout}">
+                <p style="color:green;">Вы успешно вышли из аккаунта.</p>
+            </div>
+        </form>
     </div>
 
-    <!-- Основной контент -->
-    <div class="row">
-        <!-- Контейнер с файлами пользователя -->
-        <div class="col-md-3">
-            <div id="files-container">
-                <p>Ваши файлы</p>
-            </div>
-        </div>
-        <!-- Контейнер с редактором кода -->
-        <div class="col-md-9">
-            <div id="editor-container"></div>
-        </div>
+    <div class="form-container sign-up">
+        <form action="/process_registration" method="post" th:object="${client}">
+            <h1>Создать аккаунт</h1>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <span style="margin-top:20px;">Зарегистрироваться с помощью логина</span>
+            <input type="text" th:field="*{username}" placeholder="Имя пользователя" th:classappend="${#fields.hasErrors('username')} ? 'error' : ''"/>
+            <div th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+
+            <!-- Поле email -->
+            <input type="email" th:field="*{email}" placeholder="Email" th:classappend="${#fields.hasErrors('email')} ? 'error' : ''"/>
+            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+
+            <!-- Поле пароля -->
+            <input type="password" th:field="*{password}" placeholder="Пароль" th:classappend="${#fields.hasErrors('password')} ? 'error' : ''"/>
+            <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+            <button>зарегистрироваться</button>
+        </form>
     </div>
 
-    <!-- Контейнер для вывода результата -->
-    <div class="row">
-        <div class="col">
-            <div id="output" class="output-container">
-                <!-- Здесь будет отображаться вывод программы -->
+    <div class="toggle-container">
+        <div class="toggle">
+            <div class="toggle-panel toggle-left">
+                <h1>Добро пожаловать<br></h1>
+                <p >Войти с помощью логина и пароля</p>
+                <a href="/login">
+                    <button class="hidden" id="login"style="   border-radius: 12px;
+            border: 1px solid #fff; color:white;">войти</button></a>
             </div>
         </div>
     </div>
-
-    <!-- Всплывающее модальное окно -->
-    <div class="modal-overlay" id="successModal">
-        <div class="modal-message">
-            Ваш проект успешно сохранён!
-        </div>
-    </div>
-
 </div>
+<script>
+    const container = document.getElementById('container');
+    const registerBtn = document.getElementById('register');
+    const loginBtn = document.getElementById('login');
 
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.28.1/min/vs/loader.min.js"></script>
-<!-- Подключаем scripts.js перед скриптом с вызовом функций -->
-<script th:src="@{/scripts.js}" src="/scripts.js"></script>
-<script th:inline="javascript">
-    document.addEventListener("DOMContentLoaded", function() {
-        window.files = /*[[${files}]]*/ [];
-        window.projectId = /*[[${projectId}]]*/ 0;
-
-        console.log("Список файлов:", window.files);
-        window.files.forEach(fileName => addFileToContainer(fileName));
+    registerBtn.addEventListener('click', () => {
+        container.classList.add("active");
     });
 
-    // Функция для отображения модального окна
-    function showSuccessMessage(message) {
-        const modal = document.getElementById('successModal');
-        const modalMessage = modal.querySelector('.modal-message');
-        modalMessage.textContent = message;
-
-        modal.style.display = 'flex'; // Показываем модальное окно
-
-        // Убираем модальное окно через 3 секунды
-        setTimeout(() => {
-            modal.style.display = 'none';
-        }, 3000);
-    }
+    loginBtn.addEventListener('click', () => {
+        container.classList.remove("active");
+    });
 </script>
-
 </body>
+
 </html>
-
-
-
-
-
-
-
-
-
-
-
-const templates = {
-"java": `public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, Java!");\n    }\n}`,
-"cpp": `#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello, C++!" << endl;\n    return 0;\n}`,
-    "python3": `print("Hello, Python!")`
-    };
-
-    // Используем window.files для глобальной доступности
-    window.files = [];  // Массив для хранения всех файлов пользователя
-    window.openFiles = {};  // Объект для хранения содержимого всех открытых файлов
-    let editor;
-    let models = {}; // Объект для хранения моделей для каждого языка
-
-    function addFileToContainer(fileName) {
-    console.log("Добавляем файл:", fileName);
-    const filesContainer = document.getElementById('files-container');
-
-    const fileElement = document.createElement('div');
-    fileElement.classList.add('file-item-container');
-
-    const fileNameSpan = document.createElement('span');
-    fileNameSpan.textContent = fileName;
-    fileNameSpan.classList.add('file-name');
-
-    // Обработчик клика по файлу для его открытия
-    fileElement.addEventListener('click', () => {
-    openFile(fileName);  // Открываем файл в редакторе
-    highlightActiveFile(fileElement);  // Подсветка активного файла
-    });
-
-    fileElement.appendChild(fileNameSpan);
-    filesContainer.appendChild(fileElement);
-    }
-
-    function openFile(fileName) {
-    const currentFileName = getCurrentFileName();
-
-    // Сохраняем текущее содержимое открытого файла перед переключением
-    if (currentFileName && openFiles[currentFileName]) {
-    openFiles[currentFileName] = editor.getValue();
-    }
-
-    // Устанавливаем содержимое выбранного файла
-    if (openFiles[fileName]) {
-    editor.setValue(openFiles[fileName]);
-    } else {
-    const projectId = window.projectId;  // Используем window.projectId
-    fetch(`/projects/${projectId}/files/${fileName}`)
-    .then(response => {
-    if (!response.ok) {
-    throw new Error(`Ошибка при загрузке файла: ${response.statusText}`);
-    }
-    return response.text();
-    })
-    .then(content => {
-    editor.setValue(content);
-    openFiles[fileName] = content;
-    })
-    .catch(error => {
-    console.error('Ошибка при загрузке файла:', error);
-    });
-    }
-
-    highlightActiveFileByName(fileName);
-    }
-
-    function highlightActiveFile(selectedFileElement) {
-    const fileItems = document.querySelectorAll('.file-item-container');
-    fileItems.forEach(item => item.classList.remove('active'));  // Снимаем выделение
-
-    selectedFileElement.classList.add('active');  // Выделяем активный файл
-    }
-
-    // Инициализация Monaco Editor
-    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.28.1/min/vs' }});
-    require(['vs/editor/editor.main'], function() {
-    // Создаём модели для каждого языка с шаблонами
-    models['java'] = monaco.editor.createModel(templates['java'], 'java');
-    models['cpp'] = monaco.editor.createModel(templates['cpp'], 'cpp');
-    models['python3'] = monaco.editor.createModel(templates['python3'], 'python');
-
-    // Инициализация редактора с моделью Java по умолчанию
-    editor = monaco.editor.create(document.getElementById('editor-container'), {
-    model: models['java'],
-    theme: 'vs-dark'
-    });
-    });
-
-    // Обработчик для смены языка
-    function setLanguage(language) {
-    editor.pushUndoStop();  // Останавливаем запись в историю
-    const currentModel = models[language];
-    editor.setModel(currentModel);  // Переключаем модель
-    editor.pushUndoStop();  // Включаем запись в историю
-    }
-
-    // Добавление файла в массив файлов
-    function addFile(fileName, content) {
-    window.files.push({ fileName, content });
-    }
-
-
-
-
-    // Обновляем текущее имя файла для корректного сохранения
-    function highlightActiveFileByName(fileName) {
-    const fileItems = document.querySelectorAll('.file-item-container');
-    fileItems.forEach(item => {
-    const itemName = item.querySelector('.file-name').textContent;
-    if (itemName === fileName) {
-    item.classList.add('active');
-    } else {
-    item.classList.remove('active');
-    }
-    });
-    }
-
-    // Получение текущего имени файла
-    function getCurrentFileName() {
-    return document.querySelector('.file-item-container.active .file-name')?.textContent || null;
-    }
-
-    // Загрузка файла в редактор и добавление его в контейнер файлов
-    function uploadFile() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.txt,.java,.py,.cpp';
-
-    input.onchange = e => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-
-    reader.onload = event => {
-    const content = event.target.result;
-    const fileName = file.name;
-
-    // Добавляем файл в массив
-    addFile(fileName, content);
-
-    // Добавляем в массив открытых файлов
-    openFiles[fileName] = content;
-
-    // Устанавливаем содержимое файла в редактор
-    editor.setValue(content);
-
-    // Отображаем файл в контейнере файлов
-    addFileToContainer(fileName);
-    };
-    reader.readAsText(file);
-    };
-    input.click();
-    }
-
-
-
-
-    // Скачивание содержимого текущего файла
-    function downloadFile() {
-    const content = editor.getValue();
-    const blob = new Blob([content], { type: 'text/plain' });
-
-    const link = document.createElement('a');
-    link.download = `${getCurrentFileName()}`;
-    link.href = window.URL.createObjectURL(blob);
-    link.click();
-    }
-
-    // Функция для сохранения проекта
-    async function saveProject() {
-    const language = document.getElementById('languageSelect').value;
-
-    // Получаем содержимое текущего файла и обновляем его в массиве файлов
-    const currentFileName = getCurrentFileName();
-    const currentContent = editor.getValue();
-    updateFileContent(currentFileName, currentContent);
-
-    // Получаем CSRF-токен и заголовок из метатегов
-    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
-
-    const projectId = window.projectId;
-
-    if (!projectId) {
-    alert("Не удалось определить идентификатор проекта.");
-    return;
-    }
-
-    try {
-    // Создаем FormData для отправки файлов
-    const formData = new FormData();
-
-    // Добавляем каждый файл в FormData
-    files.forEach(file => {
-    const blob = new Blob([file.content], { type: 'text/plain' });
-    formData.append('files', blob, file.fileName);
-    });
-
-    // Если нужен путь, добавьте его
-    formData.append('path', ''); // Укажите путь, если требуется
-
-    const response = await fetch(`/projects/${projectId}/save`, {
-    method: 'POST',
-    headers: {
-    [csrfHeader]: csrfToken
-    },
-    body: formData
-    });
-
-    if (response.ok) {
-    // Отобразить сообщение об успешном сохранении
-    showSuccessMessage("Ваш проект успешно сохранён");
-    } else {
-    const errorText = await response.text();
-    showErrorMessage(`Ошибка при сохранении проекта: ${errorText}`);
-    }
-    } catch (error) {
-    showErrorMessage(`Ошибка: ${error.message}`);
-    }
-    }
-
-
-    // Отправка всех файлов на сервер
-    async function submitCode() {
-    const language = document.getElementById('languageSelect').value;
-
-    // Обновляем содержимое текущего файла перед отправкой
-    const currentFileName = getCurrentFileName();
-    const currentContent = editor.getValue();
-    updateFileContent(currentFileName, currentContent);
-
-    // Получаем CSRF-токен и заголовок из метатегов
-    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
-
-    try {
-    const response = await fetch('http://localhost:8080/compile', {
-    method: 'POST',
-    headers: {
-    'Content-Type': 'application/json',
-    [csrfHeader]: csrfToken  // Добавляем CSRF-токен в заголовок
-    },
-    body: JSON.stringify({
-    files: files,
-    language: language
-    })
-    });
-
-    if (!response.ok) {
-    throw new Error('Network response was not ok');
-    }
-
-    const result = await response.text();
-    document.getElementById('output').textContent = result || "No errors, code executed successfully!";
-    } catch (error) {
-    document.getElementById('output').textContent = `Error: ${error.message}`;
-    }
-    }
-
-    // Обновляем содержимое файла в массиве файлов
-    function updateFileContent(fileName, newContent) {
-    const file = window.files.find(file => file.fileName === fileName);
-    if (file) {
-    file.content = newContent;
-    }
-    window.openFiles[fileName] = newContent;  // Обновляем в массиве открытых файлов
-    }
-
-    // Функция для отображения успешного сообщения
-    function showSuccessMessage(message) {
-    const messageContainer = document.getElementById('message-container');
-    messageContainer.innerHTML = `<div class="alert alert-success">${message}</div>`;
-    setTimeout(() => {
-    messageContainer.innerHTML = '';
-    }, 5000); // Сообщение исчезнет через 5 секунд
-    }
-    document.addEventListener('click', function(event) {
-    if (event.target.classList.contains('folder-name') || event.target.classList.contains('folder-arrow')) {
-    const folderElement = event.target.closest('.folder-item-container');  // Получаем элемент папки
-    const arrowElement = folderElement.querySelector('.folder-arrow');  // Получаем стрелочку
-    const folderChildren = folderElement.querySelectorAll('.file-item-container, .folder-item-container');
-
-    // Переключаем видимость дочерних элементов (файлов и папок)
-    folderChildren.forEach(child => {
-    child.style.display = (child.style.display === 'none') ? 'block' : 'none';
-    });
-
-    // Переключаем состояние стрелочки и иконки
-    arrowElement.classList.toggle('open');  // Переключаем класс open для стрелочки
-    folderElement.classList.toggle('open');  // Переключаем класс open для папки
-    }
-    });
-
-    function uploadFolder() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.webkitdirectory = true;
-    input.multiple = true;
-
-    input.onchange = async (event) => {
-    const files = event.target.files;
-
-    for (let file of files) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-    const content = e.target.result;
-    const filePath = file.webkitRelativePath;  // Это путь к файлу внутри папки
-
-    // Добавляем файл в массив файлов
-    addFile(filePath, content);
-
-    // Добавляем в массив открытых файлов
-    openFiles[filePath] = content;
-
-    // Отображаем файл или папку в контейнере
-    addFileToContainer(filePath);
-    };
-    reader.readAsText(file);
-    }
-    };
-
-    input.click();
-    }
-    function addFileToContainer(filePath) {
-    const filesContainer = document.getElementById('files-container');
-
-    const pathParts = filePath.split('/'); // Разбиваем путь на части (папки и файл)
-    let currentElement = filesContainer;
-
-    pathParts.forEach((part, index) => {
-    if (index === pathParts.length - 1) {
-    // Это файл, добавляем его как элемент
-    const fileElement = document.createElement('div');
-    fileElement.classList.add('file-item-container');
-
-    const fileNameSpan = document.createElement('span');
-    fileNameSpan.textContent = part;  // Только имя файла
-    fileNameSpan.classList.add('file-name');
-
-    // Обработчик клика для открытия файла
-    fileElement.addEventListener('click', () => {
-    openFile(filePath);  // Открываем файл в редакторе
-    highlightActiveFile(fileElement);  // Подсвечиваем активный файл
-    });
-
-    fileElement.appendChild(fileNameSpan);
-    currentElement.appendChild(fileElement);
-    } else {
-    // Это папка, создаем ее, если она еще не создана
-    let folderElement = currentElement.querySelector(`[data-folder="${part}"]`);
-
-    if (!folderElement) {
-    folderElement = document.createElement('div');
-    folderElement.classList.add('folder-item-container');
-    folderElement.setAttribute('data-folder', part); // Сохраняем идентификатор папки
-
-    // Добавляем стрелочку перед папкой
-    const arrowIcon = document.createElement('i');
-    arrowIcon.classList.add('fas', 'fa-caret-right', 'folder-arrow');
-
-    // Добавляем заголовок папки
-    const folderNameSpan = document.createElement('span');
-    folderNameSpan.textContent = part;  // Имя папки
-    folderNameSpan.classList.add('folder-name');
-    folderNameSpan.style.fontWeight = 'bold';  // Выделяем папку жирным
-
-    // Добавляем стрелку и папку в текущий контейнер
-    folderElement.appendChild(arrowIcon);
-    folderElement.appendChild(folderNameSpan);
-    currentElement.appendChild(folderElement);
-    }
-
-    // Продолжаем строить структуру внутри этой папки
-    currentElement = folderElement;
-    }
-    });
-    }
-
-
-    // Функция для отображения ошибки
-    function showErrorMessage(message) {
-    const messageContainer = document.getElementById('message-container');
-    messageContainer.innerHTML = `<div class="alert alert-danger">${message}</div>`;
-    setTimeout(() => {
-    messageContainer.innerHTML = '';
-    }, 5000);
-    }
-
