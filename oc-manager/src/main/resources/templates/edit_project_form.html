@@ -129,11 +129,7 @@
             <div class="form-error" th:if="${#fields.hasErrors('readMe')}" th:errors="*{readMe}">Ошибка в поле Read Me</div>
         </div>
 
-        <div class="form-input">
-            <label for="projectType">Тип проекта:</label>
-            <input type="text" class="form-control" id="projectType" name="projectType" th:field="*{projectType}">
-            <div class="form-error" th:if="${#fields.hasErrors('projectType')}" th:errors="*{projectType}">Ошибка в типе проекта</div>
-        </div>
+
         <button type="submit" class="btn btn-primary">Сохранить изменения</button>
     </form>
 </div>
