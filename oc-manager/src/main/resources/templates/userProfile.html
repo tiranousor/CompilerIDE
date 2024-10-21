@@ -342,6 +342,10 @@
                 <a th:href="${client.githubProfile}" target="_blank">GitHub Профиль</a>
             </p>
             <p class="info-item" th:text="${client.about}">О себе</p>
+            <p class="info-item">
+                <a th:href="@{/userProfile/activity}">Посмотреть историю активности</a>
+            </p>
+            <p class="info-item" th:text="${isActive ? 'Активен' : 'Неактивен'}"></p>
         </div>
     </div>
 

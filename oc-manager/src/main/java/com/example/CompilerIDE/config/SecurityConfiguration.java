@@ -39,7 +39,7 @@ public class SecurityConfiguration {
         http
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/userProfile").authenticated()
+                        .requestMatchers("/userProfile", "/userProfile/activity").authenticated()
                         .requestMatchers(AUTH_WHITELIST).permitAll()
                         .anyRequest().hasAnyRole("USER", "ADMIN")
                 )

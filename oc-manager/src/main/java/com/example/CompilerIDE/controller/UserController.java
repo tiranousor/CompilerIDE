@@ -64,16 +64,18 @@ public class UserController {
         }
 
         model.addAttribute("projectId", projectId);
-        System.out.println(projectId);
-        List<String> fileNames = minioService.listFiles("projects/" + projectId + "/");
 
-        if (fileNames == null) {
-            fileNames = new ArrayList<>();
+        // Получаем список полных путей файлов из базы данных
+        List<String> filePaths = projectService.getFilePaths(project);
+
+        if (filePaths == null) {
+            filePaths = new ArrayList<>();
         }
-        model.addAttribute("files", fileNames);
+        model.addAttribute("files", filePaths);
 
         return "Compiler";
     }
+
 
     @GetMapping("/login")
     public String showLoginPage() {
@@ -82,10 +84,31 @@ public class UserController {
     @PostMapping("/login")
     public String processLogin(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()) {
+            // Получаем текущего пользователя
+            String username = authentication.getName();
+            Optional<Client> client = clientService.findByUsername(username);
+
+            // Обновляем время последнего входа и добавляем в список всех входов
+            client.ifPresent(c -> {
+                Date now = new Date();
+                c.setLastLoginTime(now);  // для проверки активности
+                c.getLoginTimes().add(now);  // добавляем метку входа в историю
+                clientService.update(c.getId(), c);
+            });
+
             return "redirect:/userProfile";
         }
         return "loginAndRegistration";
     }
+    @GetMapping("/userProfile/activity")
+    public String showUserActivity(Model model, Authentication authentication) {
+        Optional<Client> client = clientService.findByUsername(authentication.getName());
+        if (client.isPresent()) {
+            model.addAttribute("loginTimes", client.get().getLoginTimes()); // передаем список временных меток
+        }
+        return "userActivity"; // возвращаем шаблон
+    }
+
     @GetMapping("/registration")
     public String registration(@ModelAttribute Client client){
         return "registrationPage";
@@ -151,16 +174,34 @@ public class UserController {
         return "redirect:/userProfile";
     }
 
-    @GetMapping("/userProfile")
-    public String ClientProfile(Model model, Authentication authentication) {
-        Client client = clientService.findByUsername(authentication.getName()).get();
-
-        List<Project> project = projectService.findByClient(client);
-        model.addAttribute("client", client);
-        model.addAttribute("projects", project);
-
-        return "userProfile";
+//    @GetMapping("/userProfile")
+//    public String ClientProfile(Model model, Authentication authentication) {
+//        Client client = clientService.findByUsername(authentication.getName()).get();
+//
+//        List<Project> project = projectService.findByClient(client);
+//        model.addAttribute("client", client);
+//        model.addAttribute("projects", project);
+//
+//        return "userProfile";
+//    }
+@GetMapping("/userProfile")
+public String ClientProfile(Model model, Authentication authentication) {
+    Client client = clientService.findByUsername(authentication.getName()).orElse(null);
+    if (client == null) {
+        return "redirect:/login";
     }
+
+    Date currentTime = new Date();
+    boolean isActive = client.getLastLoginTime() != null &&
+            (currentTime.getTime() - client.getLastLoginTime().getTime()) <= (10 * 60 * 1000);
+
+    model.addAttribute("client", client);
+    model.addAttribute("projects", projectService.findByClient(client));
+    model.addAttribute("isActive", isActive);  // передаем параметр активности
+
+    return "userProfile";
+}
+
 
     @GetMapping("/edit/{id}")
     public String editProfile(Model model, @PathVariable("id") int id) {

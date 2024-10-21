@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Table(name="client")
@@ -25,13 +27,18 @@ public class Client {
     @Column(name = "username", unique = true)
     @NotBlank(message = "Имя пользователя не может быть пустым")
     private String username;
-
+    @Column(name = "last_login_time")
+    private Date lastLoginTime;
+    @ElementCollection
+    @CollectionTable(name = "login_timestamps", joinColumns = @JoinColumn(name = "client_id"))
+    @Column(name = "login_time")
+    private List<Date> loginTimes = new ArrayList<>();
     @Column(name = "email", unique = true)
     @Email(message = "Введите действительный адрес электронной почты")
     @NotBlank(message = "Email не может быть пустым")
     private String email;
-    @Column(name="active")
-    private Boolean active;
+//    @Column(name="active")
+//    private Boolean active;
     @NotEmpty(message = "Пароль не должен быть пустым")
     @Column(name = "password")
     private String password;

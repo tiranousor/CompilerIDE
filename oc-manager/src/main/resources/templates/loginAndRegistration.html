@@ -5,52 +5,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <title>Login & Register Page</title>
+    <title>Retro Login & Register Page</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Montserrat:wght@300;400;500;600;700&display=swap');
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Press Start 2P', cursive;
         }
 
         body {
-            background: linear-gradient(70deg, #E0C3FC, #8EC5FC);
+            background: linear-gradient(70deg, #8EC5FC, #E0C3FC);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-direction: column;
             height: 100vh;
+            overflow: hidden;
+            color: #333;
         }
 
         .container {
-            background-color: #FFFFFF;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 3px solid #8EC5FC;
+            border-radius: 25px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
             position: relative;
             overflow: hidden;
             width: 768px;
             max-width: 100%;
             min-height: 480px;
+            padding: 20px;
+        }
+
+        .container h1, .container h3 {
+            color: #333333;
         }
 
         .container p {
-            font-size: 14px;
-            line-height: 20px;
-            letter-spacing: 0.3px;
-            margin: 20px 0;
-            color: #555;
+            font-size: 12px;
+            line-height: 18px;
+            letter-spacing: 1px;
+            margin: 15px 0;
+            color: #333;
         }
 
         .container span {
-            font-size: 13px;
-            color: #777;
+            font-size: 10px;
+            color: #555;
         }
 
         .container a {
-            color: #555;
+            color: #8EC5FC;
             font-size: 13px;
             text-decoration: none;
             margin: 15px 0 10px;
@@ -58,18 +66,17 @@
         }
 
         .container a:hover {
-            color: #8EC5FC;
+            color: #FF69B4;
         }
 
         .container button {
             background-color: #8EC5FC;
             color: #fff;
-            font-size: 14px;
-            padding: 10px 45px;
+            font-size: 12px;
+            padding: 10px 35px;
             border: none;
             border-radius: 12px;
             font-weight: 600;
-            letter-spacing: 0.5px;
             text-transform: uppercase;
             margin-top: 20px;
             cursor: pointer;
@@ -94,21 +101,21 @@
         }
 
         .container form {
-            background-color: #FFFFFF;
+            background-color: rgba(255, 255, 255, 0.9);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            padding: 40px;
+            padding: 30px;
             height: 100%;
         }
 
         .container input {
             background-color: #F0F0F0;
-            border: 1px solid #DDD;
+            border: 2px solid #8EC5FC;
             margin: 10px 0;
             padding: 12px 20px;
-            font-size: 14px;
+            font-size: 12px;
             border-radius: 10px;
             width: 100%;
             outline: none;
@@ -116,7 +123,7 @@
         }
 
         .container input:focus {
-            border-color: #8EC5FC;
+            border-color: #FF69B4;
         }
 
         .form-container {
@@ -166,7 +173,7 @@
         }
 
         .social-icons a {
-            border: 1px solid #CCC;
+            border: 2px solid #8EC5FC;
             border-radius: 50%;
             display: inline-flex;
             justify-content: center;
@@ -178,7 +185,7 @@
         }
 
         .social-icons a:hover {
-            background: #8EC5FC;
+            background: #FF69B4;
             color: #FFFFFF;
         }
 
@@ -188,7 +195,6 @@
             left: 50%;
             width: 50%;
             height: 100%;
-
             overflow: hidden;
             transition: all 0.6s ease-in-out;
             border-radius: 20px;
@@ -208,8 +214,6 @@
             left: -100%;
             height: 100%;
             width: 200%;
-
-
             transform: translateX(0);
             transition: all 0.6s ease-in-out;
         }
@@ -249,18 +253,14 @@
 </head>
 
 <body>
-
 <div class="container" id="container">
     <div class="form-container sign-in">
         <form action="/process_login" method="post">
             <h1>Войти</h1>
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
             <span style="margin-top:20px;">Войти с помощью Логина и пароля</span>
-            <input type="text" id="username" name="username" placeholder="Enter Username" required>
-            <input type="password" id="password" name="password" placeholder="Enter Password" required>
-            <div>
-                <input type="hidden" name="referer" th:value="${param.referer}" />
-            </div>
+            <input type="text" id="username" name="username" placeholder="Введите Логин" required>
+            <input type="password" id="password" name="password" placeholder="Введите Пароль" required>
             <button type="submit">Войти</button>
             <div th:if="${param.error}">
                 <p style="color:red;">Неверное имя пользователя или пароль.</p>
@@ -278,11 +278,11 @@
     <div class="toggle-container">
         <div class="toggle">
             <div class="toggle-panel toggle-right">
-                <h1>Еще не зарегистрированы?</h1>
+                <h1>Еще</h1>
+                <h3>не зарегистрированы?</h3>
                 <p>Пора исправлять!</p>
                 <a href="/registration">
-                    <button class="hidden" id="register" style="   border-radius: 12px;
-            border: 1px solid #fff; color:white;">зарегистрироваться</button>
+                    <button class="hidden" id="register" style="border-radius: 12px; border: 1px solid #fff; color:white;">зарегистрироваться</button>
                 </a>
             </div>
         </div>
@@ -292,14 +292,9 @@
 <script>
     const container = document.getElementById('container');
     const registerBtn = document.getElementById('register');
-    const loginBtn = document.getElementById('login');
 
     registerBtn.addEventListener('click', () => {
         container.classList.add("active");
-    });
-
-    loginBtn.addEventListener('click', () => {
-        container.classList.remove("active");
     });
 </script>
 </body>
