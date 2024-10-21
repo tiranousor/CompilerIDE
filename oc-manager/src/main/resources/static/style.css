@@ -1,63 +1,25 @@
-#files-container ul {
+/* Удалены старые стили для .file-item-container, .folder-item-container и т.д. */
 
-    list-style-type: none; /* Убираем стандартные маркеры списка */
-    padding-left: 20px; /* Отступ для иерархии */
-}
-.file-item {
-    cursor: pointer; /* Показываем, что элемент кликабелен */
-    padding: 5px;
-}
-.file-item:hover {
-    background-color: #e0e0e0; /* Светло-серый при наведении */
+#jstree {
+    margin-top: 10px;
 }
 
-.folder::before {
-    content: "📁 "; /* Иконка для папки */
+/* Настройка внешнего вида jsTree */
+.jstree-default .jstree-anchor {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
 }
 
-
-.file-item-container::before {
-    content: "📄 ";
+.jstree-default .jstree-node .jstree-anchor {
+    padding: 5px 0;
 }
 
-.file-item-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 5px;
+#files-container {
+    /* Остальные стили уже присутствуют */
 }
 
-.file-name {
-    flex-grow: 1;
-}
-
-.menu-button {
-    background: none;
-    border: none;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-.edit-menu {
-    position: absolute;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    padding: 5px;
-    z-index: 10;
-}
-.file-item-container.binary .file-name::before {
-    content: "\1F4BE"; /* Иконка дискеты или другой символ */
-    margin-right: 5px;
-}
-
-.folder.open::before {
-    content: "📂 "; /* Иконка для раскрытой папки */
-}
-
-.folder ul {
-    display: none; /* Скрываем содержимое папки по умолчанию */
-}
-
-.folder.open ul {
-    display: block; /* Показываем содержимое папки, если она раскрыта */
+/* Стиль для активного узла */
+#jstree .jstree-node.jstree-clicked > .jstree-anchor {
+    background: #d0d0d0;
+    border-radius: 4px;
 }

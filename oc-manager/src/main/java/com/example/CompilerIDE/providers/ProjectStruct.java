@@ -29,4 +29,9 @@ public class ProjectStruct {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
     private Project project; // Связь с проектом.
+
+    // Helper method to determine if the struct is a folder
+    public boolean isFolder() {
+        return "folder".equalsIgnoreCase(this.type);
+    }
 }

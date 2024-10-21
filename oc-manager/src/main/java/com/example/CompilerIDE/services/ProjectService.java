@@ -47,7 +47,7 @@ public class ProjectService {
         return foundBook.orElse(null);
     }
     public Optional<Project> findByNameAndClient(String name, Client client){
-            return projectRepository.findByNameAndClient(name, client);
+        return projectRepository.findByNameAndClient(name, client);
     }
     public List<Project> findOne(String name) {
         return projectRepository.findByName(name);
@@ -159,8 +159,8 @@ public class ProjectService {
                     String folderPath = cumulativePath.toString().replace("\\", "/"); // Для Windows-путей
 
                     // Проверяем, существует ли уже папка
-                    Optional<ProjectStruct> existingFolder = projectStructRepository.findByProjectIdAndPathAndType(
-                            project.getId(),
+                    Optional<ProjectStruct> existingFolder = projectStructRepository.findByProjectAndPathAndType(
+                            project,
                             folderPath,
                             "folder"
                     );

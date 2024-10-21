@@ -10,6 +10,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet">
     <meta name="projectId" th:content="${projectId}">
+    <script>
+        window.projectId = document.querySelector('meta[name="projectId"]').content;
+    </script>
+
+    <!-- Подключение стилей jsTree -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap');
@@ -22,20 +29,21 @@
         }
 
         body {
-    background-color: #E6EEF5;
-    transition: margin-left 0.3s ease;
-    padding-top: 47px; /* Added padding-top to make space for the fixed header */
-}
-
+            background-color: #E6EEF5;
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+        }
 
         #editor-container {
-            height: calc(100vh - 50px);
-            width: 100%;
+            height: 500px;
+            width:100%;
             border: 1px solid grey;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            font-family: 'Source Code Pro', 'Courier New', Courier, monospace; /* Шрифт для кода */
-<!--            font-size: 14px; /* Типичный размер шрифта для кода */-->
+            font-family: 'Source Code Pro', monospace;
         }
+
         #files-container {
             height: 100%;
             width: 300px;
@@ -43,7 +51,7 @@
             left: -300px;
             top: 0;
             background-color: #F9FBFC;
-            border-radius: 0;
+            border-radius: 0 15px 15px 0;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
             overflow-y: auto;
             padding: 15px;
@@ -61,7 +69,7 @@
             left: 0;
             transform: translateY(-50%);
             background-color: #ffffff;
-            border-radius: 0;
+            border-radius: 0 15px 15px 0;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
             padding: 10px;
             cursor: pointer;
@@ -72,203 +80,143 @@
             margin-top: 20px;
             padding: 15px;
             background-color: #F7F9FA;
-            border-radius: 0;
+            border-radius: 15px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             white-space: pre-wrap;
-            display: none;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            z-index: 102;
         }
 
         .top-buttons .btn {
-            margin-right: 5px;
-            border-radius: 0;
-            padding: 5px 10px;
-            font-size: 14px;
-            background-color: #f0f0f0;
-            color: #333;
-            border: 1px solid #ccc;
+            margin-right: 10px;
+            border-radius: 15px;
         }
 
-        .top-buttons .btn:hover {
-            background-color: #e6e6e6;
+        .top-buttons .btn-secondary:hover {
+            background-color: #E0E0E0;
+            border-radius: 15px;
+        }
+
+        .top-buttons .btn-success:hover {
+            background-color: #1AAE48;
         }
 
         .user-name {
-            font-size: 16px;
-            font-weight: 500;
+            font-size: 28px;
+            font-weight: 700;
             color: #333;
             text-decoration: none;
             cursor: default;
         }
 
         #languageSelect {
-            border-radius: 0;
-            padding: 5px;
-            border: 1px solid #ccc;
-            font-size: 14px;
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
+        .container-fluid {
             background-color: #FFFFFF;
-            border-bottom: 1px solid #ddd;
-            padding: 5px 15px;
-            z-index: 103;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
         }
 
-        .btn-group.top-buttons {
-            display: flex;
-            align-items: center;
-        }
+        /* Удаление лишних стилей */
+        /* .file-item-container, .folder-item-container и другие стили удалены */
 
-        .file-item-container {
-            padding: 10px;
-            margin: 5px 0;
-            background-color: #f9fbfc;
-            border-radius: 0;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .file-item-container:hover {
-            background-color: #e0e0e0;
-        }
-
-        .file-item-container.active {
-            background-color: #d0d0d0;
-        }
-
-        .folder-item-container {
-            position: relative;
-            margin-left: 10px;
-            padding: 5px;
-            cursor: pointer;
-        }
-
-        .folder-item-container::before {
-            content: "📁 ";
-            display: inline-block;
-            margin-right: 5px;
-        }
-
-        .folder-item-container.open::before {
-            content: "📂 ";
-        }
-
-        .folder-item-container .folder-name,
-        .file-item-container .file-name {
-            display: inline-block;
-        }
-
-        .folder-item-container .folder-name:hover,
-        .file-item-container .file-name:hover {
-            text-decoration: underline;
-            cursor: pointer;
+        /* Стиль для jsTree */
+        #jstree {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-<div class="header">
-    <a href="/userProfile" sec:authorize="isAuthenticated()" sec:authentication="name" class="user-name"></a>
-    <div class="btn-group top-buttons" role="group">
-        <button class="btn btn-primary" onclick="saveProject()" title="Сохранить проект">
-            <i class="fas fa-save"></i>
-        </button>
-        <button class="btn btn-secondary" onclick="downloadFile()" title="Сохранить файл">
-            <i class="fas fa-download"></i>
-        </button>
-        <button class="btn btn-secondary" onclick="uploadFile()" title="Выгрузить файл">
-            <i class="fas fa-upload"></i>
-        </button>
-        <meta name="_csrf" th:content="${_csrf.token}"/>
-        <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-        <button class="btn btn-success" onclick="submitCode()">
-            <i class="fas fa-play"></i>
-        </button>
-        <button class="btn btn-secondary" onclick="uploadFolder()" title="Выгрузить папку">
-            <i class="fas fa-folder-open"></i>
-        </button>
-        <select id="languageSelect" class="form-control d-inline-block" onchange="setLanguage(this.value)">
-            <option value="java">Java</option>
-            <option value="python3">Python3</option>
-            <option value="cpp">C++</option>
-        </select>
+<div class="container-fluid">
+    <!-- Верхняя панель с кнопками и выбором языка -->
+    <div class="row align-items-center mb-3">
+        <div class="col">
+            <h3 sec:authorize="!isAuthenticated()" class="user-name">Online Compiler</h3>
+            <a href="/userProfile" sec:authorize="isAuthenticated()" sec:authentication="name" class="user-name"></a>
+        </div>
+
+        <div class="col text-right">
+            <!-- Кнопки в верхней части страницы -->
+            <div class="btn-group top-buttons" role="group">
+                <button class="btn btn-primary" onclick="saveProject()" title="Сохранить проект">
+                    <i class="fas fa-save"></i>
+                </button>
+                <button class="btn btn-secondary" onclick="downloadCurrentFile()" title="Скачать текущий файл">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button class="btn btn-secondary" onclick="uploadFile()" title="Выгрузить файл">
+                    <i class="fas fa-upload"></i>
+                </button>
+                <meta name="_csrf" th:content="${_csrf.token}"/>
+                <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+                <button class="btn btn-success" onclick="submitCode()" title="Запустить код">
+                    <i class="fas fa-play"></i>
+                </button>
+                <button class="btn btn-secondary" onclick="uploadFolder()" title="Выгрузить папку">
+                    <i class="fas fa-folder-open"></i>
+                </button>
+                <form sec:authorize="!isAuthenticated()" th:action="@{/login}" th:method="GET">
+                    <button type="submit" class="btn btn-secondary">Войти</button>
+                </form>
+                <form sec:authorize="isAuthenticated()" th:action="@{/logout}" th:method="POST">
+                    <button type="submit" class="btn btn-secondary">Выйти</button>
+                </form>
+            </div>
+            <div id="message-container"></div>
+        </div>
+        <!-- Выбор языка программирования -->
+        <div class="col-md-2">
+            <select id="languageSelect" class="form-control d-inline-block" onchange="setLanguage(this.value)">
+                <option value="java">Java</option>
+                <option value="python3">Python3</option>
+                <option value="cpp">C++</option>
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div id="editor-container"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div id="output" class="output-container">
+            </div>
+        </div>
     </div>
 </div>
 
-<div id="editor-container"></div>
+<!-- Контейнер для jsTree -->
 <div id="files-container">
-    <p>Ваши файлы</p>
+    <div id="jstree"></div>
 </div>
 
 <div id="toggle-button" onclick="toggleFilesContainer()">
     <i class="fas fa-caret-right"></i>
 </div>
 
-<div id="output" class="output-container"></div>
-
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<!-- Подключение необходимых скриптов -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- jsTree JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
+<!-- Bootstrap JS (если необходимы функции Bootstrap) -->
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<!-- Monaco Editor -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.28.1/min/vs/loader.min.js"></script>
+<!-- Ваш основной скрипт -->
 <script th:src="@{/scripts.js}" src="/scripts.js"></script>
+
+<!-- Inline скрипт для инициализации jsTree (можно перенести в scripts.js) -->
 <script th:inline="javascript">
-    document.addEventListener("DOMContentLoaded", function() {
-        window.files = /*[[${files}]]*/ [];
-        window.projectId = /*[[${projectId}]]*/ 0;
+    $(document).ready(function() {
+        // Перемещение инициализации jsTree в отдельный файл или оставьте здесь
 
-        console.log("Список файлов:", window.files);
-        window.files.forEach(filePath => addFileToContainer(filePath));
-
-        // Обработчик для закрытия панели при клике вне ее области
-        document.addEventListener('click', function(event) {
-            const filesContainer = document.getElementById('files-container');
-            const toggleButton = document.getElementById('toggle-button');
-            if (!filesContainer.contains(event.target) && !toggleButton.contains(event.target)) {
-                if (filesContainer.classList.contains('open')) {
-                    toggleFilesContainer();
-                }
-            }
-        });
+        // Инициализация jsTree будет в scripts.js
     });
-
-    function toggleFilesContainer() {
-        const filesContainer = document.getElementById('files-container');
-        const toggleButton = document.getElementById('toggle-button');
-        const bodyElement = document.body;
-
-        filesContainer.classList.toggle('open');
-        if (filesContainer.classList.contains('open')) {
-            bodyElement.style.marginLeft = '300px'; // Сжимаем весь body, когда панель открыта
-            toggleButton.querySelector('i').classList.remove('fa-caret-right');
-            toggleButton.querySelector('i').classList.add('fa-caret-left');
-        } else {
-            bodyElement.style.marginLeft = '0'; // Возвращаем body на место, когда панель закрыта
-            toggleButton.querySelector('i').classList.remove('fa-caret-left');
-            toggleButton.querySelector('i').classList.add('fa-caret-right');
-        }
-    }
-
-    function submitCode() {
-        // Показать контейнер с выводом результата
-        const outputContainer = document.getElementById('output');
-        outputContainer.style.display = 'block';
-
-        // Вызов основной функции отправки
-        submitCodeLogic();
-    }
-
-    function submitCodeLogic() {
-        // Основная логика отправки кода (существующая функция)
-    }
 </script>
 </body>
 </html>
