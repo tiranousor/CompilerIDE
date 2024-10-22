@@ -2,7 +2,9 @@ package com.example.CompilerIDE.controller;
 
 import com.example.CompilerIDE.Dto.ClientDto;
 import com.example.CompilerIDE.providers.Client;
+import com.example.CompilerIDE.providers.LoginTimestamp;
 import com.example.CompilerIDE.providers.Project;
+import com.example.CompilerIDE.repositories.LoginTimestampRepository;
 import com.example.CompilerIDE.services.ClientService;
 import com.example.CompilerIDE.services.MinioService;
 import com.example.CompilerIDE.services.ProjectService;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.*;
 
 @Controller
@@ -35,16 +38,17 @@ public class UserController {
     private final PasswordEncoder passwordEncoder;
     private final ProjectValidator projectValidator;
     private final MinioService minioService;
-
+    private final LoginTimestampRepository loginTimestampRepository;
     @Autowired
     public UserController(ClientService clientService, ProjectService projectService, ClientValidator clientValidator,
-                          PasswordEncoder passwordEncoder, ProjectValidator projectValidator, MinioService minioService) {
+                          PasswordEncoder passwordEncoder, ProjectValidator projectValidator, MinioService minioService, LoginTimestampRepository loginTimestampRepository) {
         this.passwordEncoder = passwordEncoder;
         this.clientService = clientService;
         this.clientValidator = clientValidator;
         this.projectService = projectService;
         this.projectValidator = projectValidator;
         this.minioService = minioService;
+        this.loginTimestampRepository = loginTimestampRepository;
     }
 
     @GetMapping("/")
@@ -64,18 +68,16 @@ public class UserController {
         }
 
         model.addAttribute("projectId", projectId);
+        System.out.println(projectId);
+        List<String> fileNames = minioService.listFiles("projects/" + projectId + "/");
 
-        // Получаем список полных путей файлов из базы данных
-        List<String> filePaths = projectService.getFilePaths(project);
-
-        if (filePaths == null) {
-            filePaths = new ArrayList<>();
+        if (fileNames == null) {
+            fileNames = new ArrayList<>();
         }
-        model.addAttribute("files", filePaths);
+        model.addAttribute("files", fileNames);
 
         return "Compiler";
     }
-
 
     @GetMapping("/login")
     public String showLoginPage() {
@@ -85,29 +87,25 @@ public class UserController {
     public String processLogin(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()) {
             // Получаем текущего пользователя
-            String username = authentication.getName();
-            Optional<Client> client = clientService.findByUsername(username);
+            Client client = clientService.findByUsername(authentication.getName()).orElse(null);
 
-            // Обновляем время последнего входа и добавляем в список всех входов
-            client.ifPresent(c -> {
-                Date now = new Date();
-                c.setLastLoginTime(now);  // для проверки активности
-                c.getLoginTimes().add(now);  // добавляем метку входа в историю
-                clientService.update(c.getId(), c);
-            });
+            if (client != null) {
+                // Записываем время входа
+                LoginTimestamp loginTimestamp = new LoginTimestamp();
+                loginTimestamp.setClient(client);
+                loginTimestamp.setLoginTime(new Timestamp(System.currentTimeMillis()));  // Текущее время
+
+                // Логирование перед сохранением
+                System.out.println("Saving login timestamp for user: " + client.getUsername());
+
+                loginTimestampRepository.save(loginTimestamp);  // Сохраняем запись в базу данных
+            }
 
             return "redirect:/userProfile";
         }
         return "loginAndRegistration";
     }
-    @GetMapping("/userProfile/activity")
-    public String showUserActivity(Model model, Authentication authentication) {
-        Optional<Client> client = clientService.findByUsername(authentication.getName());
-        if (client.isPresent()) {
-            model.addAttribute("loginTimes", client.get().getLoginTimes()); // передаем список временных меток
-        }
-        return "userActivity"; // возвращаем шаблон
-    }
+
 
     @GetMapping("/registration")
     public String registration(@ModelAttribute Client client){
@@ -126,7 +124,7 @@ public class UserController {
         Project project = new Project();
         project.setName("Untitled");
         project.setLanguage("Java");
-       project.setClient(client);
+        project.setClient(client);
 
         // Сохраняем проект
         projectService.save(project);
@@ -186,22 +184,20 @@ public class UserController {
 //    }
 @GetMapping("/userProfile")
 public String ClientProfile(Model model, Authentication authentication) {
-    Client client = clientService.findByUsername(authentication.getName()).orElse(null);
-    if (client == null) {
-        return "redirect:/login";
-    }
+    Client client = clientService.findByUsername(authentication.getName()).get();
 
-    Date currentTime = new Date();
-    boolean isActive = client.getLastLoginTime() != null &&
-            (currentTime.getTime() - client.getLastLoginTime().getTime()) <= (10 * 60 * 1000);
+    // Записываем время посещения профиля
+    LoginTimestamp loginTimestamp = new LoginTimestamp();
+    loginTimestamp.setClient(client);
+    loginTimestamp.setLoginTime(new Timestamp(System.currentTimeMillis()));  // Текущее время
+    loginTimestampRepository.save(loginTimestamp);  // Сохраняем в базу данных
 
+    List<Project> project = projectService.findByClient(client);
     model.addAttribute("client", client);
-    model.addAttribute("projects", projectService.findByClient(client));
-    model.addAttribute("isActive", isActive);  // передаем параметр активности
+    model.addAttribute("projects", project);
 
     return "userProfile";
 }
-
 
     @GetMapping("/edit/{id}")
     public String editProfile(Model model, @PathVariable("id") int id) {

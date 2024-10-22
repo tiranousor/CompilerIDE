@@ -17,8 +17,8 @@
 	<modules>
 		<module>oc-manager</module>
 		<module>oc-agent-javac</module>
-        <module>oc-file-container</module>
-    </modules>
+		<module>oc-file-container</module>
+	</modules>
 
 	<properties>
 		<java.version>21</java.version>
@@ -55,6 +55,33 @@
 				<groupId>org.mapstruct</groupId>
 				<artifactId>mapstruct</artifactId>
 				<version>1.5.5.Final</version>
+			</dependency>
+			<!-- Spring Session JDBC -->
+			<dependency>
+				<groupId>org.springframework.session</groupId>
+				<artifactId>spring-session-jdbc</artifactId>
+				<version>3.1.1</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.session</groupId>
+				<artifactId>spring-session-data-redis</artifactId>
+				<version>3.1.1</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-data-redis</artifactId>
+				<version>3.1.1</version>
+			</dependency>
+			<dependency>
+				<groupId>redis.clients</groupId>
+				<artifactId>jedis</artifactId>
+				<version>4.3.1</version> <!-- Проверьте, чтобы версия соответствовала -->
+			</dependency>
+
+
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-session</artifactId>
 			</dependency>
 			<dependency>
 				<groupId>org.mapstruct</groupId>

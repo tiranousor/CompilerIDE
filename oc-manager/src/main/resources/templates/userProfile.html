@@ -17,7 +17,7 @@
         }
 
         body {
-            background-color: #E6EEF5;
+            background: linear-gradient(70deg, #8EC5FC, #E0C3FC);
             display: flex;
             justify-content: flex-start;
             align-items: flex-start;
@@ -325,11 +325,50 @@
         .settings-menu.active {
             right: 0;
         }
+             .matrix {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .matrix span {
+            position: absolute;
+            top: -10vh;
+            font-size: 18px;
+            color: white;
+            opacity: 0.8;
+            animation: fall 10s linear infinite;
+            white-space: pre;
+        }
+
+        @keyframes fall {
+            0% {
+                top: -10vh;
+                opacity: 0;
+            }
+            20% {
+                opacity: 1;
+            }
+            100% {
+                top: 110vh;
+                opacity: 0;
+            }
+        }
+
+
     </style>
 </head>
 
 
 <body>
+<div class="matrix" id="matrixContainer"></div>
+
+
 <div class="container">
     <!-- Левый контейнер (Профиль пользователя) -->
     <div class="profile-container">
@@ -342,10 +381,6 @@
                 <a th:href="${client.githubProfile}" target="_blank">GitHub Профиль</a>
             </p>
             <p class="info-item" th:text="${client.about}">О себе</p>
-            <p class="info-item">
-                <a th:href="@{/userProfile/activity}">Посмотреть историю активности</a>
-            </p>
-            <p class="info-item" th:text="${isActive ? 'Активен' : 'Неактивен'}"></p>
         </div>
     </div>
 
@@ -382,16 +417,16 @@
                         <p><strong>Имя проекта:</strong> <span th:text="${project.name}">Имя проекта</span></p>
                         <p><strong>ReadMe:</strong> <span th:text="${project.readMe}">ReadMe</span></p>
                         <p><strong>Язык:</strong> <span th:text="${project.language}">Язык</span></p>
-<!--                        <p><strong>Тип проекта:</strong> <span th:text="${project.projectType}">Тип проекта</span></p>-->
+                        <!--                        <p><strong>Тип проекта:</strong> <span th:text="${project.projectType}">Тип проекта</span></p>-->
                         <!-- Кнопки внизу -->
                         <div class="project-details-actions">
                             <a th:href="@{/projects/edit/{id}(id=${project.id})}" class="btn-edit">Редактировать</a>
-<!--                            <a th:href="@{/projects/continue/{id}(id=${project.id})}" class="btn-continue">Продолжить работу</a>-->
-<!--                            <form th:action="@{/userProfile/delete/{id}(id=${project.id})}" method="post" style="display: inline;"-->
-<!--                                  onsubmit="return confirm('Вы действительно хотите удалить проект?');">-->
-<!--                                <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>-->
-<!--                                <button type="submit" class="btn-delete">Удалить проект</button>-->
-<!--                            </form>-->
+                            <!--                            <a th:href="@{/projects/continue/{id}(id=${project.id})}" class="btn-continue">Продолжить работу</a>-->
+                            <!--                            <form th:action="@{/userProfile/delete/{id}(id=${project.id})}" method="post" style="display: inline;"-->
+                            <!--                                  onsubmit="return confirm('Вы действительно хотите удалить проект?');">-->
+                            <!--                                <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>-->
+                            <!--                                <button type="submit" class="btn-delete">Удалить проект</button>-->
+                            <!--                            </form>-->
                         </div>
                     </div>
                 </li>
@@ -463,6 +498,32 @@
             });
         });
     });
+     const matrixContainer = document.getElementById('matrixContainer');
+    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+    function createMatrixSpan() {
+        const span = document.createElement('span');
+        let trailLength = Math.floor(Math.random() * 5) + 5;  // Define length of the trail (5-10 characters)
+        let trailText = '';
+
+        for (let i = 0; i < trailLength; i++) {
+            trailText += characters.charAt(Math.floor(Math.random() * characters.length)) + '\n';
+        }
+
+        span.textContent = trailText;
+        span.style.left = Math.random() * 100 + 'vw';
+        span.style.animationDuration = Math.random() * 5 + 5 + 's';
+        span.style.opacity = Math.random() * 0.5 + 0.5;
+
+        matrixContainer.appendChild(span);
+
+        setTimeout(() => {
+            matrixContainer.removeChild(span);
+        }, 10000); // Remove after animation completes
+    }
+
+    setInterval(createMatrixSpan, 150);
+
 </script>
 
 </body>

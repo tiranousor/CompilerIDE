@@ -9,247 +9,280 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Press Start 2P', cursive;
+           * {
+               margin: 0;
+               padding: 0;
+               box-sizing: border-box;
+               font-family: 'Press Start 2P', cursive;
+           }
 
-        }
+           body {
+               background: linear-gradient(70deg, #E0C3FC, #8EC5FC);
+               display: flex;
+               align-items: center;
+               justify-content: center;
+               flex-direction: column;
+               height: 100vh;
+               overflow: hidden;
+               position: relative;
+           }
 
-        body {
-           background: linear-gradient(70deg, #E0C3FC, #8EC5FC);
+           .container {
+               background-color: rgba(255, 255, 255, 0.9);
+               border: 3px solid #8EC5FC;
+               border-radius: 25px;
+               box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+               position: relative;
+               overflow: hidden;
+               width: 768px;
+               max-width: 100%;
+               min-height: 480px;
+               padding: 20px;
+               z-index: 1;
+           }
 
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            height: 100vh;
-        }
+           .matrix {
+               position: absolute;
+               top: 0;
+               left: 0;
+               width: 100%;
+               height: 100%;
+               z-index: 0;
+               overflow: hidden;
+               pointer-events: none;
+           }
 
-        .container {
-            background-color: rgba(255, 255, 255, 0.9);
-            border: 3px solid #8EC5FC;
-            border-radius: 25px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-            position: relative;
-            overflow: hidden;
-            width: 768px;
-            max-width: 100%;
-            min-height: 480px;
-            padding: 20px;
-        }
+           .matrix span {
+               position: absolute;
+               top: -10vh;
+               font-size: 18px;
+               color: white;
+               opacity: 0.8;
+               animation: fall 10s linear infinite;
+               white-space: pre;
+           }
 
-        .container p {
-            font-size: 12px;
-            line-height: 18px;
-            letter-spacing: 1px;
-            margin: 15px 0;
-            color: #333;
-        }
-        .container span {
-            font-size: 10px;
-            color: #555;
-        }
+           @keyframes fall {
+               0% {
+                   top: -10vh;
+                   opacity: 0;
+               }
+               20% {
+                   opacity: 1;
+               }
+               100% {
+                   top: 110vh;
+                   opacity: 0;
+               }
+           }
+           .container p {
+               font-size: 12px;
+               line-height: 18px;
+               letter-spacing: 1px;
+               margin: 15px 0;
+               color: #333;
+           }
+           .container span {
+               font-size: 10px;
+               color: #555;
+           }
 
-        .container a {
-            color: #8EC5FC;
-            font-size: 13px;
-            text-decoration: none;
-            margin: 15px 0 10px;
-            transition: color 0.3s;
-        }
+           .container a {
+               color: #8EC5FC;
+               font-size: 13px;
+               text-decoration: none;
+               margin: 15px 0 10px;
+               transition: color 0.3s;
+           }
 
-        .container a:hover {
-            color: #17A846;
-        }
+           .container a:hover {
+               color: #17A846;
+           }
 
-           .container button {
-            background-color: #8EC5FC;
-            color: #fff;
-            font-size: 12px;
-            padding: 10px 35px;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-top: 20px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
+              .container button {
+               background-color: #8EC5FC;
+               color: #fff;
+               font-size: 12px;
+               padding: 10px 35px;
+               border: none;
+               border-radius: 12px;
+               font-weight: 600;
+               text-transform: uppercase;
+               margin-top: 20px;
+               cursor: pointer;
+               transition: background-color 0.3s ease;
+           }
 
-        .container button:hover {
-            background-color: #6FA3EF;
-        }
+           .container button:hover {
+               background-color: #6FA3EF;
+           }
 
-        .container button.hidden {
-            background-color: transparent;
-            border: 2px solid #8EC5FC;
-            color: #8EC5FC;
-            padding: 10px 25px;
-            transition: background-color 0.3s, color 0.3s;
-        }
+           .container button.hidden {
+               background-color: transparent;
+               border: 2px solid #8EC5FC;
+               color: #8EC5FC;
+               padding: 10px 25px;
+               transition: background-color 0.3s, color 0.3s;
+           }
 
-        .container button.hidden:hover {
-            background-color: #8EC5FC;
-            color: #fff;
-        }
+           .container button.hidden:hover {
+               background-color: #8EC5FC;
+               color: #fff;
+           }
 
-        .container form {
-            background-color: rgba(255, 255, 255, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            padding: 30px;
-            height: 100%;
-        }
+           .container form {
+               background-color: rgba(255, 255, 255, 0.9);
+               display: flex;
+               align-items: center;
+               justify-content: center;
+               flex-direction: column;
+               padding: 30px;
+               height: 100%;
+           }
 
-        .container input {
-            background-color: #F0F0F0;
-            border: 2px solid #8EC5FC;
-            margin: 10px 0;
-            padding: 12px 20px;
-            font-size: 12px;
-            border-radius: 10px;
-            width: 100%;
-            outline: none;
-            transition: border-color 0.3s;
-}
-        .container input:focus {
-            border-color: #FF69B4;
-        }
-        .form-container {
-            position: absolute;
-            top: 0;
-            height: 100%;
-            transition: all 0.6s ease-in-out;
-        }
+           .container input {
+               background-color: #F0F0F0;
+               border: 2px solid #8EC5FC;
+               margin: 10px 0;
+               padding: 12px 20px;
+               font-size: 12px;
+               border-radius: 10px;
+               width: 100%;
+               outline: none;
+               transition: border-color 0.3s;
+   }
+           .container input:focus {
+               border-color: #FF69B4;
+           }
+           .form-container {
+               position: absolute;
+               top: 0;
+               height: 100%;
+               transition: all 0.6s ease-in-out;
+           }
 
-        .sign-in {
-            left: 0;
-            width: 50%;
-            z-index: 1;
-            opacity: 0;
-        }
+           .sign-in {
+               left: 0;
+               width: 50%;
+               z-index: 1;
+               opacity: 0;
+           }
 
-        .container.active .sign-in {
-            transform: translateX(100%);
-        }
+           .container.active .sign-in {
+               transform: translateX(100%);
+           }
 
-        .sign-up {
-            right: 0;
-            width: 50%;
-            z-index: 2;
-        }
+           .sign-up {
+               right: 0;
+               width: 50%;
+               z-index: 2;
+           }
 
-        .container.active .sign-up {
-            transform: translateX(-100%);
-            opacity: 1;
-            z-index: 5;
-            animation: move 0.6s;
-        }
+           .container.active .sign-up {
+               transform: translateX(-100%);
+               opacity: 1;
+               z-index: 5;
+               animation: move 0.6s;
+           }
 
-   @keyframes fadeIn {
-            0%, 49.99% {
-                opacity: 0;
-                z-index: 1;
-            }
-            50%, 100% {
-                opacity: 1;
-                z-index: 5;
-            }
-        }
+      @keyframes fadeIn {
+               0%, 49.99% {
+                   opacity: 0;
+                   z-index: 1;
+               }
+               50%, 100% {
+                   opacity: 1;
+                   z-index: 5;
+               }
+           }
 
-        .toggle-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 50%;
-            height: 100%;
-            overflow: hidden;
-            transition: all 0.6s ease-in-out;
-            border-radius: 25px;
-            z-index: 1000;
-        }
+           .toggle-container {
+               position: absolute;
+               top: 0;
+               left: 0;
+               width: 50%;
+               height: 100%;
+               overflow: hidden;
+               transition: all 0.6s ease-in-out;
+               border-radius: 20px;
+               z-index: 1000;
+           }
 
-        .container.active .toggle-container {
-            transform: translateX(100%);
-            border-radius: 25px;
-        }
+           .container.active .toggle-container {
+               transform: translateX(100%);
+               border-radius: 20px;
+           }
 
-        .toggle {
-            background-color: #8EC5FC;
-            position: absolute;
+           .toggle {
+               background-color: #8EC5FC;
+               height: 100%;
+               color: #fff;
+               position: relative;
+               left: 0;
+               height: 100%;
+               width: 200%;
+               transform: translateX(0);
+               transition: all 0.6s ease-in-out;
 
-            height: 100%;
-            color: #fff;
-<!--            position: relative;-->
-            left: 0;
-            height: 100%;
-            overflow: hidden;
-            width: 200%;
-            transform: translateX(0);
-            transition: all 0.6s ease-in-out;
-            border-radius: 20px;
+           }
 
-        }
+           .container.active .toggle {
+               transform: translateX(-50%);
 
-        .container.active .toggle {
-            transform: translateX(-50%);
-            border-radius: 20px;
-
-        }
+           }
 
 
-        .toggle-panel {
-            position: absolute;
-            width: 50%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            padding: 0 30px;
-            text-align: center;
-            top: 0;
-            transform: translateX(0);
-            transition: all 0.6s ease-in-out;
-        }
+           .toggle-panel {
+               position: absolute;
+               width: 50%;
+               height: 100%;
+               display: flex;
+               align-items: center;
+               justify-content: center;
+               flex-direction: column;
+               padding: 0 30px;
+               text-align: center;
+               top: 0;
+               transform: translateX(0);
+               transition: all 0.6s ease-in-out;
+           }
 
-        .toggle-left {
-            left: 0;
-            transform: translateX(0);
-        }
+           .toggle-left {
+               left: 0;
+               transform: translateX(0);
+           }
 
-        .container.active .toggle-left {
-            transform: translateX(100%);
-        }
+           .container.active .toggle-left {
+               transform: translateX(100%);
+           }
 
-        .form-error {
-            color: red;
-            white-space: nowrap;
-            padding-bottom: 10px;
-        }
+           .form-error {
+               color: red;
+               white-space: nowrap;
+               padding-bottom: 10px;
+           }
 
-        .error {
-            border-color: red;
-        }
+           .error {
+               border-color: red;
+           }
 
-        .toggle-right {
-            right: 0;
-            transform: translateX(200%);
-        }
+           .toggle-right {
+               right: 0;
+               transform: translateX(200%);
+           }
 
-        .container.active .toggle-right {
-            transform: translateX(0);
-        }
+           .container.active .toggle-right {
+               transform: translateX(0);
+           }
+
     </style>
 </head>
 
 <body>
+<div class="matrix" id="matrixContainer"></div>
 
 <div class="container" id="container">
+
     <div class="form-container sign-in">
         <form action="/process_login" method="post">
             <h1>Sign In</h1>
@@ -311,6 +344,33 @@
     loginBtn.addEventListener('click', () => {
         container.classList.remove("active");
     });
+          const matrixContainer = document.getElementById('matrixContainer');
+    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+    function createMatrixSpan() {
+        const span = document.createElement('span');
+        let trailLength = Math.floor(Math.random() * 5) + 5;  // Define length of the trail (5-10 characters)
+        let trailText = '';
+
+        for (let i = 0; i < trailLength; i++) {
+            trailText += characters.charAt(Math.floor(Math.random() * characters.length)) + '\n';
+        }
+
+        span.textContent = trailText;
+        span.classList.add('falling'); // Add falling class to ensure animation
+        span.style.left = Math.random() * 100 + 'vw';
+        span.style.animationDuration = Math.random() * 5 + 5 + 's';
+        span.style.opacity = Math.random() * 0.5 + 0.5;
+
+        matrixContainer.appendChild(span);
+
+        setTimeout(() => {
+            matrixContainer.removeChild(span);
+        }, 10000); // Remove after animation completes
+    }
+
+    setInterval(createMatrixSpan, 150);
+
 </script>
 </body>
 
