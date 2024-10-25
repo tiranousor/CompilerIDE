@@ -1,6 +1,7 @@
 package com.example.CompilerIDE.controller;
 
 import com.example.CompilerIDE.Dto.ClientDto;
+import com.example.CompilerIDE.Dto.JsTreeNodeDto;
 import com.example.CompilerIDE.providers.Client;
 import com.example.CompilerIDE.providers.Project;
 import com.example.CompilerIDE.services.ClientService;
@@ -9,6 +10,8 @@ import com.example.CompilerIDE.services.ProjectService;
 import com.example.CompilerIDE.util.ClientValidator;
 import com.example.CompilerIDE.util.FileUploadUtil;
 import com.example.CompilerIDE.util.ProjectValidator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,16 +38,19 @@ public class UserController {
     private final PasswordEncoder passwordEncoder;
     private final ProjectValidator projectValidator;
     private final MinioService minioService;
+    private final ObjectMapper objectMapper;
 
     @Autowired
     public UserController(ClientService clientService, ProjectService projectService, ClientValidator clientValidator,
-                          PasswordEncoder passwordEncoder, ProjectValidator projectValidator, MinioService minioService) {
+                          PasswordEncoder passwordEncoder, ProjectValidator projectValidator, MinioService minioService,
+                          ObjectMapper objectMapper) {
         this.passwordEncoder = passwordEncoder;
         this.clientService = clientService;
         this.clientValidator = clientValidator;
         this.projectService = projectService;
         this.projectValidator = projectValidator;
         this.minioService = minioService;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping("/")
@@ -65,14 +71,31 @@ public class UserController {
 
         model.addAttribute("projectId", projectId);
         System.out.println(projectId);
-        List<String> fileNames = minioService.listFiles("projects/" + projectId + "/");
+        List<String> filePaths = minioService.listFiles("projects/" + projectId + "/");
 
-        if (fileNames == null) {
-            fileNames = new ArrayList<>();
+        if (filePaths == null) {
+            filePaths = List.of(); // Используем неизменяемый пустой список
         }
-        model.addAttribute("files", fileNames);
 
-        return "Compiler";
+        // Построение иерархической структуры файлов
+        List<JsTreeNodeDto> fileTree = projectService.buildJsTreeFileStructure(filePaths, String.valueOf(projectId));
+
+        // Сериализация структуры в JSON
+        String fileStructureJson = "[]"; // Значение по умолчанию
+
+        try {
+            fileStructureJson = objectMapper.writeValueAsString(fileTree);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            // Обработка ошибки сериализации (можно добавить сообщение об ошибке)
+        }
+
+        model.addAttribute("fileStructure", fileStructureJson);
+        System.out.println(fileStructureJson);
+        // Удаляем атрибут "files"
+        // model.addAttribute("files", fileNames); // Удалено
+
+        return "Compiler2"; // Имя вашего HTML-шаблона (Compiler2.html)
     }
 
     @GetMapping("/login")

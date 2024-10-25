@@ -1,25 +1,38 @@
-/* Удалены старые стили для .file-item-container, .folder-item-container и т.д. */
-
-#jstree {
-    margin-top: 10px;
+/* Стилизация узлов */
+.jstree-default .jstree-node {
+    margin-left: 5px;
 }
 
-/* Настройка внешнего вида jsTree */
 .jstree-default .jstree-anchor {
-    font-family: 'Montserrat', sans-serif;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+/* При наведении */
+.jstree-default .jstree-anchor:hover {
+    background-color: #e0e0e0;
+}
+
+/* Выбранный узел */
+.jstree-default .jstree-clicked {
+    background-color: #c0c0c0;
+    color: #000;
+}
+
+/* Контекстное меню */
+.jstree-contextmenu {
     font-size: 14px;
 }
 
-.jstree-default .jstree-node .jstree-anchor {
-    padding: 5px 0;
-}
-
 #files-container {
-    /* Остальные стили уже присутствуют */
+    padding-top: 10px; /* Снижаем верхний отступ */
 }
 
-/* Стиль для активного узла */
-#jstree .jstree-node.jstree-clicked > .jstree-anchor {
-    background: #d0d0d0;
-    border-radius: 4px;
+.container-fluid {
+    margin-left: 300px; /* Добавляем отступ для основного контента */
 }
+
+#files-container.closed ~ .container-fluid {
+    margin-left: 0;
+}
+

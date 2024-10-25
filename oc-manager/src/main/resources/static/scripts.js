@@ -4,7 +4,8 @@ const templates = {
     "python3": `print("Hello, Python!")`
 };
 
-// Глобальные переменные
+// Используем window.files для глобальной доступности
+// Получаем CSRF-токен и заголовок из метатегов (глобально)
 const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
 const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 window.files = [];  // Массив для хранения всех файлов пользователя
@@ -24,155 +25,91 @@ function isBinaryFile(filePath) {
     return BINARY_FILE_EXTENSIONS.some(ext => filePath.endsWith(ext));
 }
 
-// Инициализация jsTree
-$(function() {
-    $('#jstree').jstree({
-        'core' : {
-            'data' : {
-                'url' : function (node) {
-                    if(node.id === '#') {
-                        return `/projects/${window.projectId}/files?path=`;
-                    } else {
-                        return `/projects/${window.projectId}/files?path=${encodeURIComponent(node.id)}`;
-                    }
-                },
-                'data' : function (node) {
-                    return { 'path' : node.id };
-                }
-            },
-            'check_callback' : true, // Позволяет выполнять операции
-            'themes': {
-                'responsive': false
-            }
-        },
-        'plugins' : ['contextmenu', 'dnd', 'types', 'search', 'state', 'wholerow', 'unique'],
-        'types' : {
-            'default' : { 'icon' : 'fas fa-folder' },
-            'file' : { 'icon' : 'fas fa-file' }
-        },
-        'contextmenu': {
-            'items': function(node) {
-                var tree = $("#jstree").jstree(true);
-                return {
-                    "Create": {
-                        "separator_before": false,
-                        "separator_after": false,
-                        "label": "Создать",
-                        "action": function (obj) {
-                            tree.create_node(node, {"type":"file"}, "last", function (new_node) {
-                                setTimeout(function () { tree.edit(new_node); },0);
-                            });
-                        }
-                    },
-                    "Rename": {
-                        "separator_before": false,
-                        "separator_after": false,
-                        "label": "Переименовать",
-                        "action": function (obj) { tree.edit(node); }
-                    },
-                    "Remove": {
-                        "separator_before": false,
-                        "separator_after": false,
-                        "label": "Удалить",
-                        "action": function (obj) { tree.delete_node(node); }
-                    }
-                };
-            }
-        }
-    })
-    .on('create_node.jstree', function (e, data) {
-        // Логика создания файла или папки на сервере
-        var nodeType = data.node.type; // 'default' для папок, 'file' для файлов
+// Получение текущего имени файла
+function getCurrentFileName() {
+    var selectedNodes = $('#jstree').jstree('get_selected', true);
+    if (selectedNodes.length > 0 && selectedNodes[0].type === 'file') {
+        return selectedNodes[0].id;
+    }
+    return null;
+}
 
-        $.ajax({
-            type: 'POST',
-            url: `/projects/${window.projectId}/files/create`,
-            headers: {
-                [csrfHeader]: csrfToken
-            },
-            contentType: 'application/json',
-            data: JSON.stringify({
-                'parent': data.parent === '#' ? '' : data.parent,
-                'text': data.node.text,
-                'type': nodeType // 'default' для папок, 'file' для файлов
-            }),
-            success: function(response) {
-                // Обновление id созданного узла
-                data.instance.set_id(data.node, response.id);
-                // Добавить файл в глобальный массив, если это файл
-                if (response.type === 'file') {
-                    window.files.push({ fileName: response.text, content: "" });
-                }
-            },
-            error: function(error) {
-                // Обработка ошибки
-                $('#jstree').jstree(true).delete_node(data.node);
-                alert('Ошибка при создании файла/папки');
-            }
-        });
-    })
-    .on('rename_node.jstree', function (e, data) {
-        $.ajax({
-            type: 'PUT',
-            url: `/projects/${window.projectId}/files/rename`,
-            headers: {
-                [csrfHeader]: csrfToken
-            },
-            contentType: 'application/json',
-            data: JSON.stringify({
-                'path': data.node.id,
-                'newName': data.text
-            }),
-            success: function(response) {
-                // Успешное переименование
-                // Если это файл, обновить имя в глобальном массиве
-                if (data.node.type === 'file') {
-                    let file = window.files.find(f => f.fileName === data.old);
-                    if (file) {
-                        file.fileName = data.text;
+
+// Функция для открытия файла
+function openFile(filePath) {
+    const currentFileName = getCurrentFileName();
+
+    // Сохраняем текущее содержимое открытого файла перед переключением
+    if (currentFileName && openFiles[currentFileName]) {
+        openFiles[currentFileName] = editor.getValue();
+    }
+
+    if (isBinaryFile(filePath)) {
+        // Для бинарных файлов предоставляем возможность скачать их
+        downloadFileByPath(filePath);
+        return;
+    }
+
+    if (isTextFile(filePath)) {
+        // Устанавливаем содержимое выбранного файла
+        if (openFiles[filePath]) {
+            editor.setValue(openFiles[filePath]);
+        } else {
+            const projectId = window.projectId;  // Используем window.projectId
+            fetch(`/projects/${projectId}/files?path=${encodeURIComponent(filePath)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Ошибка при загрузке файла: ${response.statusText}`);
                     }
-                }
-            },
-            error: function(error) {
-                // Обработка ошибки
-                $('#jstree').jstree(true).set_text(data.node, data.old);
-                alert('Ошибка при переименовании файла/папки');
-            }
-        });
-    })
-    .on('delete_node.jstree', function (e, data) {
-        $.ajax({
-            type: 'DELETE',
-            url: `/projects/${window.projectId}/files/delete`,
-            headers: {
-                [csrfHeader]: csrfToken
-            },
-            contentType: 'application/json',
-            data: JSON.stringify({
-                'path': data.node.id
-            }),
-            success: function(response) {
-                // Успешное удаление
-                // Если это файл, удалить из глобального массива
-                if (data.node.type === 'file') {
-                    window.files = window.files.filter(f => f.fileName !== data.node.text);
-                }
-            },
-            error: function(error) {
-                // Обработка ошибки
-                $('#jstree').jstree(true).refresh();
-                alert('Ошибка при удалении файла/папки');
-            }
-        });
-    })
-    .on('select_node.jstree', function (e, data) {
-        // Логика открытия файла в редакторе при выборе узла
-        const selectedNode = data.node;
-        if(selectedNode.type === 'file') {
-            openFile(selectedNode.id);
+                    return response.text();
+                })
+                .then(content => {
+                    editor.setValue(content);
+                    openFiles[filePath] = content;
+                })
+                .catch(error => {
+                    console.error('Ошибка при загрузке файла:', error);
+                    showErrorMessage(`Ошибка при загрузке файла: ${filePath}`);
+                });
         }
+    } else {
+        // Если тип файла неизвестен, можно показать сообщение или предложить скачать
+        showErrorMessage(`Неподдерживаемый тип файла: ${filePath}`);
+    }
+}
+
+// Функция для скачивания файла по пути
+function downloadFileByPath(filePath) {
+    const projectId = window.projectId;
+    fetch(`/projects/${projectId}/files/download`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            [csrfHeader]: csrfToken
+        },
+        body: JSON.stringify({ path: filePath })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Ошибка при скачивании файла: ${response.statusText}`);
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filePath.split('/').pop(); // Извлекаем имя файла
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    })
+    .catch(error => {
+        console.error('Ошибка при скачивании файла:', error);
+        showErrorMessage(`Ошибка при скачивании файла: ${filePath}`);
     });
-});
+}
 
 // Инициализация Monaco Editor
 require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.28.1/min/vs' }});
@@ -213,94 +150,64 @@ function setLanguage(language) {
     editor.pushUndoStop();  // Включаем запись в историю
 }
 
-// Функция для открытия файла
-function openFile(filePath) {
-    const currentFileName = getCurrentFileName();
-
-    // Сохраняем текущее содержимое открытого файла перед переключением
-    if (currentFileName && openFiles[currentFileName]) {
-        openFiles[currentFileName] = editor.getValue();
-    }
-
-    if (isBinaryFile(filePath)) {
-        // Для бинарных файлов предоставляем возможность скачать их
-        downloadFileByPath(filePath);
-        return;
-    }
-
-    if (isTextFile(filePath)) {
-        // Устанавливаем содержимое выбранного файла
-        if (openFiles[filePath]) {
-            editor.setValue(openFiles[filePath]);
-        } else {
-            fetch(`/projects/${window.projectId}/files?path=${encodeURIComponent(filePath)}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`Ошибка при загрузке файла: ${response.statusText}`);
-                    }
-                    return response.text();
-                })
-                .then(content => {
-                    editor.setValue(content);
-                    openFiles[filePath] = content;
-                })
-                .catch(error => {
-                    console.error('Ошибка при загрузке файла:', error);
-                    showErrorMessage(`Ошибка при загрузке файла: ${filePath}`);
-                });
-        }
-    } else {
-        // Если тип файла неизвестен, можно показать сообщение или предложить скачать
-        showErrorMessage(`Неподдерживаемый тип файла: ${filePath}`);
-    }
+// Добавление файла в массив файлов
+function addFile(fileName, content) {
+    window.files.push({ fileName, content });
+    window.openFiles[fileName] = content; // Сохраняем содержимое файла в объект открытых файлов
 }
 
-// Получение текущего имени файла
-function getCurrentFileName() {
-    return editor.getModel()?.uri.path.split('/').pop() || null;
+// Загрузка файла в редактор и добавление его в JsTree
+function uploadFile() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.txt,.java,.py,.cpp';
+
+    input.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+
+        reader.onload = event => {
+            const content = event.target.result;
+            const fileName = file.name;
+
+            // Добавляем файл в массив
+            addFile(fileName, content);
+
+            // Устанавливаем содержимое файла в редактор
+            editor.setValue(content);
+
+            // Отправляем файл на сервер
+            saveProject();
+
+            // Обновляем дерево файлов
+            $('#jstree').jstree('refresh');
+        };
+        reader.readAsText(file);
+    };
+    input.click();
 }
 
-// Функция для скачивания файла по пути
-function downloadFileByPath(filePath) {
-    const projectId = window.projectId;
-    fetch(`/projects/${projectId}/files/download`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            [document.querySelector('meta[name="_csrf_header"]').getAttribute('content')]: document.querySelector('meta[name="_csrf"]').getAttribute('content')
-        },
-        body: JSON.stringify({ 'path': filePath })
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`Ошибка при скачивании файла: ${response.statusText}`);
-        }
-        return response.blob();
-    })
-    .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filePath.split('/').pop(); // Извлекаем имя файла
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-    })
-    .catch(error => {
-        console.error('Ошибка при скачивании файла:', error);
-        showErrorMessage(`Ошибка при скачивании файла: ${filePath}`);
-    });
+// Скачивание содержимого текущего файла
+function downloadCurrentFile() {
+    const content = editor.getValue();
+    const blob = new Blob([content], { type: 'text/plain' });
+
+    const link = document.createElement('a');
+    link.download = `${getCurrentFileName()}`;
+    link.href = window.URL.createObjectURL(blob);
+    link.click();
 }
 
-// Функция для сохранения проекта
+// Обновляем функцию saveProject
 async function saveProject() {
     const language = document.getElementById('languageSelect').value;
 
-    // Получаем содержимое текущего файла и обновляем его в массиве файлов
+    // Получаем содержимое текущего файла и обновляем его в openFiles
     const currentFileName = getCurrentFileName();
-    const currentContent = editor.getValue();
-    updateFileContent(currentFileName, currentContent);
+    if (currentFileName) {
+        const currentContent = editor.getValue();
+        window.openFiles[currentFileName] = currentContent;
+    }
 
     const projectId = window.projectId;
 
@@ -310,35 +217,28 @@ async function saveProject() {
     }
 
     try {
-        // Создаём FormData для отправки файлов
-        const formData = new FormData();
+        // Создаём объект для отправки файлов
+        const filesToSave = [];
 
-        // Добавляем каждый файл в FormData
-        window.files.forEach(file => {
-            // Определяем тип файла
-            let mimeType = 'text/plain';
-            if (isBinaryFile(file.fileName)) {
-                mimeType = 'application/octet-stream';
-            }
-
-            const blob = new Blob([file.content], { type: mimeType });
-            formData.append('files', blob, file.fileName);
-        });
-
-        // Если нужен путь, добавьте его
-        formData.append('basePath', ''); // Укажите путь, если требуется
+        // Проходим по всем открытым файлам и добавляем их в массив
+        for (const [filePath, content] of Object.entries(window.openFiles)) {
+            filesToSave.push({ path: filePath, content: content });
+        }
 
         const response = await fetch(`/projects/${projectId}/save`, {
             method: 'POST',
             headers: {
+                'Content-Type': 'application/json',
                 [csrfHeader]: csrfToken
             },
-            body: formData
+            body: JSON.stringify({ files: filesToSave })
         });
 
         if (response.ok) {
             // Отобразить сообщение об успешном сохранении
             showSuccessMessage("Ваш проект успешно сохранён");
+            // Обновляем дерево файлов
+            $('#jstree').jstree('refresh');
         } else {
             const errorText = await response.text();
             showErrorMessage(`Ошибка при сохранении проекта: ${errorText}`);
@@ -347,6 +247,23 @@ async function saveProject() {
         showErrorMessage(`Ошибка: ${error.message}`);
     }
 }
+
+function toggleFilesContainer() {
+    const filesContainer = document.getElementById('files-container');
+    const containerFluid = document.querySelector('.container-fluid');
+    filesContainer.classList.toggle('closed');
+
+    const toggleButtonIcon = document.querySelector('#toggle-button i');
+    if (filesContainer.classList.contains('closed')) {
+        toggleButtonIcon.classList.remove('fa-caret-left');
+        toggleButtonIcon.classList.add('fa-caret-right');
+    } else {
+        toggleButtonIcon.classList.remove('fa-caret-right');
+        toggleButtonIcon.classList.add('fa-caret-left');
+    }
+}
+
+
 
 // Отправка всех файлов на сервер для компиляции
 async function submitCode() {
@@ -390,11 +307,8 @@ function updateFileContent(fileName, newContent) {
     const file = window.files.find(file => file.fileName === fileName);
     if (file) {
         file.content = newContent;
-    } else {
-        // Если файла нет, добавляем его
-        window.files.push({ fileName: fileName, content: newContent });
     }
-    window.openFiles[fileName] = newContent;  // Обновляем в объекте открытых файлов
+    window.openFiles[fileName] = newContent;  // Обновляем в массиве открытых файлов
 }
 
 // Функция для отображения успешного сообщения
@@ -415,68 +329,214 @@ function showErrorMessage(message) {
     }, 5000);
 }
 
-// Функция для скачивания содержимого текущего файла
-function downloadCurrentFile() {
-    const currentFileName = getCurrentFileName();
-    if (currentFileName) {
-        downloadFileByPath(currentFileName);
-    } else {
-        showErrorMessage("Нет открытого файла для скачивания");
-    }
-}
+// Инициализация JsTree
+$(document).ready(function() {
+    const projectId = window.projectId;
 
-// Переключение панели файлов
-function toggleFilesContainer() {
-    const filesContainer = document.getElementById('files-container');
-    const toggleButton = document.getElementById('toggle-button');
-    const bodyElement = document.body;
+    // Инициализация JsTree с необходимыми плагинами и контекстным меню
+    $('#jstree').jstree({
+        'core': {
+            'data': {
+                'url': `/projects/${projectId}/files`,
+                'data': function (node) {
+                    return { 'path': node.id };
+                }
+            },
+            'check_callback': true
+        },
+        'types': {
+            'default': {
+                'icon': 'fa fa-folder'
+            },
+            'file': {
+                'icon': 'fa fa-file'
+            }
+        },
+        'plugins': ['types', 'contextmenu', 'dnd', 'state', 'unique'],
+        'contextmenu': {
+            'items': customMenu
+        }
+    });
 
-    filesContainer.classList.toggle('open');
-    if (filesContainer.classList.contains('open')) {
-        bodyElement.style.marginLeft = '320px'; // Сжимаем весь body, когда панель открыта
-        toggleButton.querySelector('i').classList.remove('fa-caret-right');
-        toggleButton.querySelector('i').classList.add('fa-caret-left');
-    } else {
-        bodyElement.style.marginLeft = '0'; // Возвращаем body на место, когда панель закрыта
-        toggleButton.querySelector('i').classList.remove('fa-caret-left');
-        toggleButton.querySelector('i').classList.add('fa-caret-right');
-    }
-}
+    // Обработчик события выбора узла
+    $('#jstree').on('select_node.jstree', function(e, data) {
+        var node = data.node;
+        var filePath = node.id;
 
-// Загрузка файла и добавление его в jsTree
-function uploadFile() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.txt,.java,.py,.cpp';
+        if (node.type === 'file') {
+            // Открываем файл
+            openFile(filePath);
+        } else {
+            // Переключаем раскрытие папки
+            $('#jstree').jstree('toggle_node', node);
+        }
+    });
 
-    input.onchange = e => {
-        const file = e.target.files[0];
-        if (!file) return;
+    // Обработчик создания узла
+    $('#jstree').on('create_node.jstree', function (e, data) {
+        $.ajax({
+            type: 'POST',
+            url: `/projects/${projectId}/files/create`,
+            data: JSON.stringify({
+                parent: data.parent,
+                text: data.node.text,
+                type: data.node.type
+            }),
+            contentType: 'application/json',
+            headers: {
+                [csrfHeader]: csrfToken
+            },
+            success: function (d) {
+                data.instance.set_id(data.node, d.id);
+                showSuccessMessage("Узел создан успешно");
+                // Если это файл, добавляем его в openFiles
+                if (data.node.type === 'file') {
+                    window.openFiles[d.id] = '';
+                }
+            },
+            error: function (xhr, status, error) {
+                data.instance.refresh();
+                showErrorMessage("Ошибка при создании узла: " + error);
+            }
+        });
+    });
 
-        const reader = new FileReader();
+    // Обработчик переименования узла
+    $('#jstree').on('rename_node.jstree', function (e, data) {
+        $.ajax({
+            type: 'PUT',
+            url: `/projects/${projectId}/files/rename`,
+            data: JSON.stringify({
+                path: data.node.id,
+                newName: data.text
+            }),
+            contentType: 'application/json',
+            headers: {
+                [csrfHeader]: csrfToken
+            },
+            success: function (d) {
+                showSuccessMessage("Узел переименован успешно");
+            },
+            error: function (xhr, status, error) {
+                data.instance.refresh();
+                showErrorMessage("Ошибка при переименовании узла: " + error);
+            }
+        });
+    });
 
-        reader.onload = event => {
-            const content = event.target.result;
-            const fileName = file.name;
+    // Обработчик удаления узла
+    $('#jstree').on('delete_node.jstree', function (e, data) {
+        $.ajax({
+            type: 'DELETE',
+            url: `/projects/${projectId}/files/delete`,
+            data: JSON.stringify({
+                path: data.node.id
+            }),
+            contentType: 'application/json',
+            headers: {
+                [csrfHeader]: csrfToken
+            },
+            success: function (d) {
+                showSuccessMessage("Узел удалён успешно");
+                // Удаляем файл из openFiles, если это файл
+                if (data.node.type === 'file') {
+                    delete window.openFiles[data.node.id];
+                }
+            },
+            error: function (xhr, status, error) {
+                data.instance.refresh();
+                showErrorMessage("Ошибка при удалении узла: " + error);
+            }
+        });
+    });
 
-            // Добавляем файл в глобальный массив
-            window.files.push({ fileName, content });
-            window.openFiles[fileName] = content;
+    // Обработчик перемещения узла
+    $('#jstree').on('move_node.jstree', function (e, data) {
+        $.ajax({
+            type: 'PUT',
+            url: `/projects/${projectId}/files/move`,
+            data: JSON.stringify({
+                path: data.node.id,
+                newParent: data.parent,
+                oldParent: data.old_parent,
+                position: data.position
+            }),
+            contentType: 'application/json',
+            headers: {
+                [csrfHeader]: csrfToken
+            },
+            success: function (d) {
+                showSuccessMessage("Узел перемещён успешно");
+            },
+            error: function (xhr, status, error) {
+                data.instance.refresh();
+                showErrorMessage("Ошибка при перемещении узла: " + error);
+            }
+        });
+    });
+});
 
-            // Добавляем файл в jsTree
-            $('#jstree').jstree(true).create_node('#', { "text": fileName, "type": "file" }, "last", function(new_node) {
-                $('#jstree').jstree(true).open_node(new_node);
-            });
-
-            // Открываем файл в редакторе
-            openFile(fileName);
-        };
-        reader.readAsText(file);
+function customMenu(node) {
+    var tree = $('#jstree').jstree(true);
+    var items = {
+        'Create': {
+            'separator_before': false,
+            'separator_after': false,
+            'label': 'Создать',
+            'action': false,
+            'submenu': {
+                'create_file': {
+                    'separator_before': false,
+                    'separator_after': false,
+                    'label': 'Файл',
+                    'action': function (obj) {
+                        var newNode = tree.create_node(node, { type: 'file' });
+                        if (newNode) {
+                            tree.edit(newNode);
+                        }
+                    }
+                },
+                'create_folder': {
+                    'separator_before': false,
+                    'separator_after': false,
+                    'label': 'Папку',
+                    'action': function (obj) {
+                        var newNode = tree.create_node(node, { type: 'default' });
+                        if (newNode) {
+                            tree.edit(newNode);
+                        }
+                    }
+                }
+            }
+        },
+        'Rename': {
+            'separator_before': false,
+            'separator_after': false,
+            'label': 'Переименовать',
+            'action': function (obj) {
+                tree.edit(node);
+            }
+        },
+        'Remove': {
+            'separator_before': false,
+            'separator_after': false,
+            'label': 'Удалить',
+            'action': function (obj) {
+                tree.delete_node(node);
+            }
+        }
     };
-    input.click();
+
+    if (node.type === 'file') {
+        // Убираем возможность создавать внутри файла
+        delete items.Create;
+    }
+
+    return items;
 }
 
-// Загрузка папки и добавление файлов в jsTree
+
+// Загрузка папки и добавление файлов в JsTree
 function uploadFolder() {
     const input = document.createElement('input');
     input.type = 'file';
@@ -492,30 +552,42 @@ function uploadFolder() {
                 const content = e.target.result;
                 const filePath = file.webkitRelativePath;  // Это путь к файлу внутри папки
 
-                // Добавляем файл в глобальный массив
-                window.files.push({ fileName: filePath, content: content });
+                // Добавляем файл в массив файлов
+                addFile(filePath, content);
+
+                // Добавляем в массив открытых файлов
                 window.openFiles[filePath] = content;
-
-                // Добавляем в jsTree
-                const pathParts = filePath.split('/');
-                let parent = '#';
-                for (let i = 0; i < pathParts.length - 1; i++) {
-                    const folderPath = pathParts.slice(0, i + 1).join('/');
-                    // Проверяем, существует ли папка в jsTree
-                    if (!$('#jstree').jstree(true).get_node(folderPath)) {
-                        $('#jstree').jstree(true).create_node(parent, { "text": pathParts[i], "type": "default", "id": folderPath }, "last");
-                    }
-                    parent = folderPath;
-                }
-                const fileName = pathParts[pathParts.length - 1];
-                $('#jstree').jstree(true).create_node(parent, { "text": fileName, "type": "file" }, "last");
-
-                // Открываем файл в редакторе
-                openFile(filePath);
             };
             reader.readAsText(file);
         }
+
+        // Отправляем файлы на сервер после загрузки всех файлов
+        saveProject();
+
+        // Обновляем дерево файлов
+        $('#jstree').jstree('refresh');
     };
 
     input.click();
 }
+
+function createFolder() {
+    var ref = $('#jstree').jstree(true),
+        sel = ref.get_selected();
+    if (!sel.length) { sel = '#'; } else { sel = sel[0]; }
+    sel = ref.create_node(sel, { type: 'default' });
+    if (sel) {
+        ref.edit(sel);
+    }
+}
+
+function createFile() {
+    var ref = $('#jstree').jstree(true),
+        sel = ref.get_selected();
+    if (!sel.length) { sel = '#'; } else { sel = sel[0]; }
+    sel = ref.create_node(sel, { type: 'file' });
+    if (sel) {
+        ref.edit(sel);
+    }
+}
+

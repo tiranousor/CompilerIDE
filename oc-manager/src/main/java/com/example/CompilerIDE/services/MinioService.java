@@ -1,9 +1,15 @@
 package com.example.CompilerIDE.services;
 
 import io.minio.*;
+import io.minio.messages.DeleteError;
+import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.io.ByteArrayInputStream;
 import java.util.*;
 import java.io.InputStream;
 
@@ -11,6 +17,7 @@ import java.io.InputStream;
 public class MinioService {
 
     private final MinioClient minioClient;
+    private static final Logger logger = LoggerFactory.getLogger(ProjectService.class);
 
     @Value("${minio.bucket-name}")
     private String bucketName;
@@ -34,68 +41,84 @@ public class MinioService {
                 fileNames.add(item.objectName());
             }
         } catch (Exception e) {
-            System.out.println("Error listing files in MinIO " + e.getMessage());
+            System.out.println("Ошибка при получении списка файлов из MinIO: " + e.getMessage());
+            // Можно выбросить кастомное исключение или обработать иначе
         }
         return fileNames;
     }
 
-    // Создание папки
+    /**
+     * Пакетное удаление всех объектов с заданным префиксом
+     *
+     * @param prefix Префикс (путь) в MinIO
+     * @throws Exception При ошибках взаимодействия с MinIO
+     */
+    public void deleteAllObjectsWithPrefix(String prefix) throws Exception {
+        Iterable<Result<Item>> results = minioClient.listObjects(
+                ListObjectsArgs.builder()
+                        .bucket(bucketName)
+                        .prefix(prefix)
+                        .recursive(true)
+                        .build()
+        );
+
+        List<DeleteObject> objectsToDelete = new ArrayList<>();
+        for (Result<Item> result : results) {
+            Item item = result.get();
+            objectsToDelete.add(new DeleteObject(item.objectName()));
+        }
+
+        if (!objectsToDelete.isEmpty()) {
+            Iterable<Result<DeleteError>> resultsDelete = minioClient.removeObjects(
+                    RemoveObjectsArgs.builder()
+                            .bucket(bucketName)
+                            .objects(objectsToDelete)
+                            .build()
+            );
+
+            for (Result<DeleteError> resultDelete : resultsDelete) {
+                DeleteError error = resultDelete.get();
+                logger.error("Ошибка при удалении объекта {}: {}", error.objectName(), error.message());
+            }
+
+            logger.info("Удалено {} объектов из MinIO с префиксом '{}'", objectsToDelete.size(), prefix);
+        } else {
+            logger.info("Нет объектов для удаления с префиксом '{}'", prefix);
+        }
+    }
+
+
+    public void uploadFileContent(String objectKey, byte[] content) throws Exception {
+        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(content)) {
+            PutObjectArgs putObjectArgs = PutObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(objectKey)
+                    .stream(inputStream, content.length, -1)
+                    .contentType("application/octet-stream") // Можно определить MIME тип по расширению
+                    .build();
+            minioClient.putObject(putObjectArgs);
+        }
+    }
+
     public void createFolder(String objectKey) throws Exception {
+        // Папка в MinIO создаётся при загрузке объекта с названием, заканчивающимся на '/'
         if (!objectKey.endsWith("/")) {
             objectKey += "/";
         }
-        minioClient.putObject(
-                PutObjectArgs.builder()
-                        .bucket(bucketName)
-                        .object(objectKey)
-                        .stream(new java.io.ByteArrayInputStream(new byte[0]), 0, -1)
-                        .contentType("application/x-directory")
-                        .build()
-        );
-    }
-
-    // Создание файла
-    public void createFile(String objectKey, String content) throws Exception {
-        minioClient.putObject(
-                PutObjectArgs.builder()
-                        .bucket(bucketName)
-                        .object(objectKey)
-                        .stream(new java.io.ByteArrayInputStream(content.getBytes()), content.length(), -1)
-                        .contentType("text/plain")
-                        .build()
-        );
-    }
-
-    // Переименование объекта
-    public void renameObject(String oldObjectKey, String newObjectKey) throws Exception {
-        minioClient.copyObject(
-                CopyObjectArgs.builder()
-                        .bucket(bucketName)
-                        .object(newObjectKey)
-                        .source(
-                                CopySource.builder()
-                                        .bucket(bucketName)
-                                        .object(oldObjectKey)
-                                        .build()
-                        )
-                        .build()
-        );
-        minioClient.removeObject(
-                RemoveObjectArgs.builder()
-                        .bucket(bucketName)
-                        .object(oldObjectKey)
-                        .build()
-        );
+        try (ByteArrayInputStream emptyContent = new ByteArrayInputStream(new byte[0])) {
+            PutObjectArgs putObjectArgs = PutObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(objectKey)
+                    .stream(emptyContent, 0, -1)
+                    .contentType("application/x-directory")
+                    .build();
+            minioClient.putObject(putObjectArgs);
+        }
     }
 
     // Удаление объекта
     public void deleteObject(String objectKey) throws Exception {
-        minioClient.removeObject(
-                RemoveObjectArgs.builder()
-                        .bucket(bucketName)
-                        .object(objectKey)
-                        .build()
-        );
+        minioClient.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectKey).build());
     }
 
     // Получение содержимого файла

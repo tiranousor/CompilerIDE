@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet">
     <meta name="projectId" th:content="${projectId}">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     <script>
         window.projectId = document.querySelector('meta[name="projectId"]').content;
     </script>
@@ -32,6 +34,7 @@
             background-color: #E6EEF5;
             padding: 20px;
             transition: margin-left 0.3s ease;
+            margin-left: 300px; /* Добавляем отступ слева для боковой панели */
         }
 
         #editor-container {
@@ -41,14 +44,17 @@
             border-radius: 15px;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            transition: width 0.3s ease;
             font-family: 'Source Code Pro', monospace;
         }
-
+        #files-container.closed ~ .container-fluid #editor-container {
+            width: calc(100% + 300px); /* Увеличиваем ширину на ширину боковой панели */
+        }
         #files-container {
             height: 100%;
             width: 300px;
             position: fixed;
-            left: -300px;
+            left: 0; /* Делаем панель открытой по умолчанию */
             top: 0;
             background-color: #F9FBFC;
             border-radius: 0 15px 15px 0;
@@ -59,14 +65,20 @@
             z-index: 100;
         }
 
+        #files-container.closed {
+            left: -300px; /* При закрытии скрываем панель */
+        }
         #files-container.open {
             left: 0;
+        }
+        #files-container.closed + #toggle-button {
+            left: 0; /* Перемещаем кнопку при закрытой панели */
         }
 
         #toggle-button {
             position: fixed;
             top: 50%;
-            left: 0;
+            left: 300px; /* Располагаем кнопку справа от панели */
             transform: translateY(-50%);
             background-color: #ffffff;
             border-radius: 0 15px 15px 0;
@@ -74,6 +86,7 @@
             padding: 10px;
             cursor: pointer;
             z-index: 101;
+            transition: left 0.3s ease;
         }
 
         #output {
@@ -95,6 +108,9 @@
             border-radius: 15px;
         }
 
+        .files-header .btn {
+            margin-left: 5px;
+        }
         .top-buttons .btn-success:hover {
             background-color: #1AAE48;
         }
@@ -112,11 +128,14 @@
             padding: 8px;
             box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
         }
-
+        #files-container.closed ~ .container-fluid {
+            margin-left: 0; /* Убираем отступ при закрытой панели */
+        }
         .container-fluid {
             background-color: #FFFFFF;
             border-radius: 25px;
             padding: 30px;
+            transition: margin-left 0.3s ease;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
         }
 
@@ -147,16 +166,8 @@
                 <button class="btn btn-secondary" onclick="downloadCurrentFile()" title="Скачать текущий файл">
                     <i class="fas fa-download"></i>
                 </button>
-                <button class="btn btn-secondary" onclick="uploadFile()" title="Выгрузить файл">
-                    <i class="fas fa-upload"></i>
-                </button>
-                <meta name="_csrf" th:content="${_csrf.token}"/>
-                <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
                 <button class="btn btn-success" onclick="submitCode()" title="Запустить код">
                     <i class="fas fa-play"></i>
-                </button>
-                <button class="btn btn-secondary" onclick="uploadFolder()" title="Выгрузить папку">
-                    <i class="fas fa-folder-open"></i>
                 </button>
                 <form sec:authorize="!isAuthenticated()" th:action="@{/login}" th:method="GET">
                     <button type="submit" class="btn btn-secondary">Войти</button>
@@ -191,19 +202,24 @@
 </div>
 
 <!-- Контейнер для jsTree -->
-<div id="files-container">
+<div id="files-container" class="open">
+    <!-- Кнопки для создания файлов и папок -->
+    <div class="files-header">
+        <button class="btn btn-primary btn-sm" onclick="createFolder()">Создать папку</button>
+        <button class="btn btn-primary btn-sm" onclick="createFile()">Создать файл</button>
+    </div>
     <div id="jstree"></div>
 </div>
 
 <div id="toggle-button" onclick="toggleFilesContainer()">
-    <i class="fas fa-caret-right"></i>
+    <i class="fas fa-caret-left"></i> <!-- Изменяем иконку на стрелку влево -->
 </div>
 
 <!-- Подключение необходимых скриптов -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <!-- jsTree JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
-<!-- Bootstrap JS (если необходимы функции Bootstrap) -->
+<!-- Bootstrap JS -->
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <!-- Monaco Editor -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.28.1/min/vs/loader.min.js"></script>
