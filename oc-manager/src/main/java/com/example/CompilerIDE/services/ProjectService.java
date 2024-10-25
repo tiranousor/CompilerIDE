@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -125,20 +126,13 @@ public class ProjectService {
      * @param fileDto DTO узла файла или папки
      * @throws Exception При ошибках взаимодействия с MinIO
      */
-    /**
-     * Рекурсивная обработка узла файла или папки
-     *
-     * @param project Объект Project
-     * @param fileDto DTO узла файла или папки
-     * @throws Exception При ошибках взаимодействия с MinIO
-     */
     private void processFileNode(Project project, FileNodeDto fileDto) throws Exception {
         String path = fileDto.getPath();
 
         // Проверка наличия пути
         if (path == null || path.isEmpty()) {
             logger.warn("Пропущен узел без поля 'path' или с пустым путем");
-            return; // Пропускаем узел без пути
+            return;
         }
 
         // Определение типа узла: файл или папка
@@ -153,6 +147,19 @@ public class ProjectService {
                     newStruct.setPath(path);
                     newStruct.setName(extractNameFromPath(path));
                     newStruct.setType(type);
+                    // Вычисляем hash для файла, если это файл
+                    if (isFile) {
+                        try (InputStream is = new ByteArrayInputStream(fileDto.getContent().getBytes(StandardCharsets.UTF_8))) {
+                            String hash = HashUtil.computeSHA256Hash(is);
+                            newStruct.setHash(hash);
+                        } catch (Exception e) {
+                            logger.error("Ошибка при вычислении хеша для файла: {}", path, e);
+                            throw new RuntimeException("Ошибка при вычислении хеша", e);
+                        }
+                    } else {
+                        // Для папок используем UUID
+                        newStruct.setHash(UUID.randomUUID().toString());
+                    }
                     return newStruct;
                 });
 
@@ -162,25 +169,31 @@ public class ProjectService {
             logger.info("Тип узла '{}' обновлён на '{}'", path, type);
         }
 
-        // Обработка файла
         if (isFile) {
+            // Обработка файла
             String content = fileDto.getContent();
             String objectKey = "projects/" + project.getId() + "/" + path;
 
             // Загрузка содержимого файла в MinIO
-            minioService.uploadFileContent(objectKey, content.getBytes());
+            minioService.uploadFileContent(objectKey, content.getBytes(StandardCharsets.UTF_8));
             logger.info("Содержимое файла '{}' загружено в MinIO по ключу '{}'", path, objectKey);
 
-            struct.setType("file");
+            // Hash уже установлен при создании struct
             projectStructRepository.save(struct);
             logger.info("Запись ProjectStruct обновлена для файла: {}", path);
         } else {
-            // Обработка папки
-            String objectKey = "projects/" + project.getId() + "/" + path + "/";
-            minioService.createFolder(objectKey);
+            // Обработка папки: создание пустого объекта в MinIO
+            String objectKey = "projects/" + project.getId() + "/" + path;
+            // Убедимся, что ключ папки оканчивается на "/"
+            if (!objectKey.endsWith("/")) {
+                objectKey += "/";
+            }
+
+            // Создание пустого объекта для папки
+            minioService.uploadFileContent(objectKey, new byte[0]);
             logger.info("Папка '{}' создана в MinIO по ключу '{}'", path, objectKey);
 
-            struct.setType("folder");
+            // Сохранение структуры папки
             projectStructRepository.save(struct);
             logger.info("Запись ProjectStruct обновлена для папки: {}", path);
         }
@@ -192,6 +205,9 @@ public class ProjectService {
             }
         }
     }
+
+
+
 
     /**
      * Извлечение имени файла или папки из полного пути
@@ -207,61 +223,76 @@ public class ProjectService {
         return lastSlash != -1 ? path.substring(lastSlash + 1) : path;
     }
 
-    /**
-     * Построение иерархического дерева файлов из списка файлов MinIO
-     *
-     * @param filePaths Список путей файлов
-     * @param projectId ID проекта
-     * @return Список корневых узлов (обычно один корневой)
-     */
-    public List<JsTreeNodeDto> buildJsTreeFileStructure(List<String> filePaths, String projectId) {
+    public List<JsTreeNodeDto> buildJsTreeFileStructureFromStructs(Project project, String projectId) {
+        List<ProjectStruct> structs = projectStructRepository.findByProject(project);
+
         JsTreeNodeDto root = new JsTreeNodeDto();
         root.setId("root");
-        root.setText("Проект"); // Название корневой папки
+        root.setText("Проект");
         root.setType("folder");
         root.setChildren(new ArrayList<>());
+        root.setData(null); // Корневой узел не содержит дополнительных данных
 
-        if (filePaths != null) {
-            for (String filePath : filePaths) {
-                String[] parts = filePath.split("/");
-                JsTreeNodeDto current = root;
-                StringBuilder currentPathBuilder = new StringBuilder();
+        Map<String, JsTreeNodeDto> nodeMap = new HashMap<>();
+        nodeMap.put("", root);
 
-                for (int i = 0; i < parts.length; i++) {
-                    String part = parts[i];
-                    boolean isLast = (i == parts.length - 1);
-                    String type = isLast ? "file" : "folder";
-                    if (!currentPathBuilder.isEmpty()) {
-                        currentPathBuilder.append("/").append(part);
+        Map<String, ProjectStruct> structMap = structs.stream()
+                .collect(Collectors.toMap(ProjectStruct::getPath, s -> s));
+
+        for (ProjectStruct struct : structs) {
+            String path = struct.getPath();
+            String[] parts = path.split("/");
+            StringBuilder currentPathBuilder = new StringBuilder();
+
+            JsTreeNodeDto current = root;
+
+            for (String part : parts) {
+                if (!currentPathBuilder.isEmpty()) {
+                    currentPathBuilder.append("/").append(part);
+                } else {
+                    currentPathBuilder.append(part);
+                }
+                String currentPath = currentPathBuilder.toString();
+
+                JsTreeNodeDto node = nodeMap.get(currentPath);
+                if (node == null) {
+                    node = new JsTreeNodeDto();
+                    node.setId(currentPath);
+                    node.setText(part);
+                    node.setChildren(new ArrayList<>());
+                    nodeMap.put(currentPath, node);
+                    current.getChildren().add(node);
+                }
+
+                // Устанавливаем тип узла на основе данных из базы
+                if (node.getType() == null) {
+                    ProjectStruct nodeStruct = structMap.get(currentPath);
+                    if (nodeStruct != null) {
+                        node.setType(nodeStruct.getType());
+                        if ("file".equals(nodeStruct.getType())) {
+                            Map<String, Object> data = new HashMap<>();
+                            data.put("content", getFileContent(projectId, currentPath));
+                            node.setData(data);
+                        } else {
+                            node.setData(null);
+                        }
                     } else {
-                        currentPathBuilder.append(part);
-                    }
-                    String currentPath = currentPathBuilder.toString();
-
-                    // Поиск существующего узла
-                    Optional<JsTreeNodeDto> existing = current.getChildren().stream()
-                            .filter(n -> n.getText().equals(part) && n.getType().equals(type))
-                            .findFirst();
-
-                    if (existing.isPresent()) {
-                        current = existing.get();
-                    } else {
-                        JsTreeNodeDto newNode = new JsTreeNodeDto();
-                        newNode.setId(currentPath); // Используем путь как ID
-                        newNode.setText(part);
-                        newNode.setType(type);
-                        newNode.setChildren(new ArrayList<>());
-                        newNode.setContent(isLast ? getFileContent(projectId, filePath) : null);
-
-                        current.getChildren().add(newNode);
-                        current = newNode;
+                        // Если информации нет, предполагаем, что это папка
+                        node.setType("folder");
+                        node.setData(null);
                     }
                 }
+
+                current = node;
             }
         }
 
-        return Arrays.asList(root);
+        return Collections.singletonList(root);
     }
+
+
+
+
 
 
     /**
@@ -276,7 +307,7 @@ public class ProjectService {
             byte[] contentBytes = minioService.getFileContentAsBytes("projects/" + projectId + "/" + filePath);
             return new String(contentBytes, StandardCharsets.UTF_8);
         } catch (Exception e) {
-            // Обработка ошибок при получении содержимого файла
+            logger.error("Ошибка при получении содержимого файла '{}': {}", filePath, e.getMessage());
             return "";
         }
     }

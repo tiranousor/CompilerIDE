@@ -5,14 +5,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class JsTreeNodeDto {
-    private String id;              // Уникальный идентификатор узла
-    private String text;            // Текст, отображаемый в jsTree
-    private String type;            // "file" или "folder"
-    private List<JsTreeNodeDto> children; // Дочерние узлы
-    private String content;         // Содержимое файла (только для файлов)
+    private String id;
+    private String text;
+    private String type;
+    private List<JsTreeNodeDto> children;
+    private Map<String, Object> data; // Добавлено поле data
 }

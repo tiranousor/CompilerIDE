@@ -78,7 +78,7 @@ public class UserController {
         }
 
         // Построение иерархической структуры файлов
-        List<JsTreeNodeDto> fileTree = projectService.buildJsTreeFileStructure(filePaths, String.valueOf(projectId));
+        List<JsTreeNodeDto> fileTree = projectService.buildJsTreeFileStructureFromStructs(project, String.valueOf(projectId));
 
         // Сериализация структуры в JSON
         String fileStructureJson = "[]"; // Значение по умолчанию

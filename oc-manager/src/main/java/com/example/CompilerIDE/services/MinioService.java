@@ -38,14 +38,20 @@ public class MinioService {
             );
             for (Result<Item> result : results) {
                 Item item = result.get();
-                fileNames.add(item.objectName());
+                if (!item.isDir()) { // Исключаем директории
+                    String objectName = item.objectName();
+                    // Удаляем префикс
+                    String relativePath = objectName.substring(prefix.length());
+                    fileNames.add(relativePath);
+                }
             }
         } catch (Exception e) {
             System.out.println("Ошибка при получении списка файлов из MinIO: " + e.getMessage());
-            // Можно выбросить кастомное исключение или обработать иначе
         }
         return fileNames;
     }
+
+
 
     /**
      * Пакетное удаление всех объектов с заданным префиксом
