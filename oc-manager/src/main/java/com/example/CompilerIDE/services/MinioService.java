@@ -101,5 +101,22 @@ public class MinioService {
             // Бакет уже существует
         }
     }
+    public long getTotalUsedSpace() {
+        try {
+            ListObjectsV2Request listObjectsReqManual = ListObjectsV2Request.builder()
+                    .bucket(defaultBucketName)
+                    .build();
+
+            ListObjectsV2Response listObjResponse = s3Client.listObjectsV2(listObjectsReqManual);
+            long totalSize = 0;
+            for (S3Object content : listObjResponse.contents()) {
+                totalSize += content.size();  // Получаем размер каждого объекта
+            }
+            return totalSize / (1024 * 1024);  // Преобразуем размер в мегабайты
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
 
 }

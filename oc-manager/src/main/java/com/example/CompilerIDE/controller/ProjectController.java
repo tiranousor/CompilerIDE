@@ -2,7 +2,9 @@ package com.example.CompilerIDE.controller;
 
 import com.example.CompilerIDE.providers.Client;
 import com.example.CompilerIDE.providers.Project;
+import com.example.CompilerIDE.providers.ProjectAccessLog;
 import com.example.CompilerIDE.providers.ProjectStruct;
+import com.example.CompilerIDE.repositories.ProjectAccessLogRepository;
 import com.example.CompilerIDE.repositories.ProjectStructRepository;
 import com.example.CompilerIDE.services.ClientService;
 import com.example.CompilerIDE.services.CompilationService;
@@ -17,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.*; // Изменено
 import org.springframework.ui.Model;
@@ -27,10 +30,11 @@ import org.springframework.web.servlet.HandlerMapping;
 
 import java.io.IOException;
 import java.net.URLConnection;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
-@RestController // Изменено с @Controller на @RestController
+@Controller // Изменено с @Controller на @RestController
 @RequestMapping("/projects") // Добавлено
 public class ProjectController {
 
@@ -39,6 +43,7 @@ public class ProjectController {
     private final CompilationService compilationService;
     private final MinioService minioService; // Добавлено
     private final ProjectStructRepository projectStructRepository;
+    private final ProjectAccessLogRepository projectAccessLogRepository;
     private static final Logger logger = LoggerFactory.getLogger(ProjectService.class);
     @Value("${minio.bucket-name}")
     private String bucketName; // Убедитесь, что бакет создан
@@ -46,52 +51,119 @@ public class ProjectController {
     public ProjectController(ProjectService projectService,
                              ClientService clientService,
                              CompilationService compilationService,
-                             MinioService minioService, ProjectStructRepository projectStructRepository) { // Добавлено
+                             MinioService minioService, ProjectStructRepository projectStructRepository, ProjectAccessLogRepository projectAccessLogRepository) { // Добавлено
         this.projectService = projectService;
         this.clientService = clientService;
         this.compilationService = compilationService;
         this.minioService = minioService; // Добавлено
         this.projectStructRepository = projectStructRepository;
+        this.projectAccessLogRepository = projectAccessLogRepository;
     }
 
-    // Отображение формы редактирования проекта
-    @GetMapping("/edit/{id}")
-    public String editProjectForm(@PathVariable("id") int projectId, Model model, Authentication authentication) {
-        // Получаем текущего пользователя
-        Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
+//    // Отображение формы редактирования проекта
+//    @GetMapping("/edit/{id}")
+//    public String editProjectForm(@PathVariable("id") int projectId, Model model, Authentication authentication) {
+//        Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
+//
+//        if (clientOpt.isEmpty()) {
+//            return "redirect:/login";
+//        }
+//
+//        Client client = clientOpt.get();
+//
+//        // Находим проект по ID
+//        Optional<Project> projectOpt = projectService.findById(projectId);
+//
+//        if (projectOpt.isPresent()) {
+//            Project project = projectOpt.get();
+//            // Проверяем, принадлежит ли проект текущему пользователю
+//            if (project.getClient().getId().equals(client.getId())) {
+//                model.addAttribute("project", project);
+//                return "edit_project_form"; // Название шаблона для формы редактирования
+//            } else {
+//                // Если проект не принадлежит пользователю, перенаправляем на профиль
+//                return "redirect:/userProfile";
+//            }
+//        } else {
+//            return "redirect:/userProfile";
+//        }
+//    }
+@GetMapping("/edit/{id}")
+public String editProjectForm(@PathVariable("id") int projectId, Model model, Authentication authentication) {
+    Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
 
-        if (clientOpt.isEmpty()) {
-            return "redirect:/login";
-        }
+    if (clientOpt.isEmpty()) {
+        return "redirect:/login";
+    }
 
-        Client client = clientOpt.get();
+    Client client = clientOpt.get();
 
-        // Находим проект по ID
-        Optional<Project> projectOpt = projectService.findById(projectId);
+    Optional<Project> projectOpt = projectService.findById(projectId);
+    if (projectOpt.isPresent()) {
+        Project project = projectOpt.get();
 
-        if (projectOpt.isPresent()) {
-            Project project = projectOpt.get();
-            // Проверяем, принадлежит ли проект текущему пользователю
-            if (project.getClient().getId().equals(client.getId())) {
-                model.addAttribute("project", project);
-                return "edit_project_form"; // Название шаблона для формы редактирования
-            } else {
-                // Если проект не принадлежит пользователю, перенаправляем на профиль
-                return "redirect:/userProfile";
-            }
+        // Проверяем, принадлежит ли проект текущему пользователю
+        if (project.getClient().getId().equals(client.getId())) {
+
+            // Записываем информацию о том, что проект был открыт
+            ProjectAccessLog accessLog = new ProjectAccessLog();
+            accessLog.setClient(client);
+            accessLog.setProject(project);
+            accessLog.setAccessTime(new Timestamp(System.currentTimeMillis()));  // Текущее время
+            accessLog.setActionType("open");
+            projectAccessLogRepository.save(accessLog);
+
+            model.addAttribute("project", project);
+            return "edit_project_form"; // Страница редактирования проекта
         } else {
             return "redirect:/userProfile";
         }
+    } else {
+        return "redirect:/userProfile";
     }
+}
 
-    // Обработка данных после отправки формы редактирования
+//
+//
+//    @PostMapping("/edit/{id}")
+//    public String updateProject(@PathVariable("id") int projectId,
+//                                @Valid @ModelAttribute("project") Project projectForm,
+//                                BindingResult bindingResult,
+//                                Authentication authentication) {
+//        if (bindingResult.hasErrors()) {
+//            return "edit_project_form"; // Возвращаем обратно на форму, если есть ошибки
+//        }
+//
+//        Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
+//        if (clientOpt.isEmpty()) {
+//            return "redirect:/login";
+//        }
+//
+//        Client client = clientOpt.get();
+//
+//        Optional<Project> projectOpt = projectService.findById(projectId);
+//
+//        if (projectOpt.isPresent()) {
+//            Project existingProject = projectOpt.get();
+//            if (existingProject.getClient().getId().equals(client.getId())) {
+//                existingProject.setName(projectForm.getName());
+//                existingProject.setLanguage(projectForm.getLanguage());
+//                existingProject.setReadMe(projectForm.getReadMe());
+//                existingProject.setRefGit(projectForm.getRefGit());
+//                existingProject.setProjectType(projectForm.getProjectType());
+//                projectService.save(existingProject);
+//            }
+//        }
+//        return "redirect:/userProfile";
+//    }
+
     @PostMapping("/edit/{id}")
     public String updateProject(@PathVariable("id") int projectId,
                                 @Valid @ModelAttribute("project") Project projectForm,
                                 BindingResult bindingResult,
                                 Authentication authentication) {
         if (bindingResult.hasErrors()) {
-            return "edit_project_form"; // Возвращаем обратно на форму, если есть ошибки
+            return "edit_project_form";
         }
 
         Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
@@ -112,12 +184,35 @@ public class ProjectController {
                 existingProject.setRefGit(projectForm.getRefGit());
                 existingProject.setProjectType(projectForm.getProjectType());
                 projectService.save(existingProject);
+
+                // Записываем информацию об изменении проекта
+                ProjectAccessLog accessLog = new ProjectAccessLog();
+                accessLog.setClient(client);
+                accessLog.setProject(existingProject);
+                accessLog.setAccessTime(new Timestamp(System.currentTimeMillis()));  // Текущее время
+                accessLog.setActionType("edit");  // Действие "edit"
+                projectAccessLogRepository.save(accessLog);
             }
         }
         return "redirect:/userProfile";
     }
 
+
+    @GetMapping("/{projectId}/access-logs")
+    @ResponseBody
+    public ResponseEntity<List<ProjectAccessLog>> getProjectAccessLogs(@PathVariable("projectId") int projectId) {
+        Optional<Project> projectOpt = projectService.findById(projectId);
+        if (projectOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        List<ProjectAccessLog> accessLogs = projectAccessLogRepository.findByProject(projectOpt.get());
+        return ResponseEntity.ok(accessLogs);
+    }
+
+
     @GetMapping("/{projectId}/files")
+    @ResponseBody
     public ResponseEntity<?> getFile(
             @PathVariable("projectId") int projectId,
             @RequestParam("path") String filePath) {
@@ -168,6 +263,7 @@ public class ProjectController {
 
 
     @PostMapping("/{projectId}/save")
+    @ResponseBody
     public ResponseEntity<?> saveProjectFiles(@PathVariable Long projectId,
                                               @RequestParam("files") List<MultipartFile> files,
                                               @RequestParam(value = "basePath", required = false, defaultValue = "") String basePath,
@@ -205,6 +301,7 @@ public class ProjectController {
 
     // Компиляция проекта
     @PostMapping("/{projectId}/compile")
+    @ResponseBody
     public ResponseEntity<?> compileProject(@PathVariable int projectId,
                                             Authentication authentication) {
         // Проверяем, авторизован ли пользователь

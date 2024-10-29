@@ -37,7 +37,6 @@
             align-items: flex-start;
         }
 
-        /* Левый контейнер (профиль пользователя) */
         .profile-container {
             width: 270px;
             background-color: #FFFFFF;
@@ -359,6 +358,85 @@
                 opacity: 0;
             }
         }
+/* Левый контейнер (профиль пользователя) */
+.profile-avatar {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 20px;
+    transition: box-shadow 0.3s ease-in-out;
+    box-shadow: none; /* Без подсветки по умолчанию */
+}
+
+.profile-avatar:hover {
+    box-shadow: 0 0 30px rgba(142, 197, 252, 0.8), 0 0 60px rgba(142, 197, 252, 0.6);
+}
+
+/* Подсветка ретро для проекта */
+.project-item {
+    background-color: #F9FBFC;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 15px;
+    transition: box-shadow 0.3s ease-in-out, background-color 0.3s;
+    cursor: pointer;
+    box-shadow: none; /* Без подсветки по умолчанию */
+    border: 2px solid rgba(142, 197, 252, 0.4);
+}
+
+.project-item:hover {
+    box-shadow: 0 0 25px rgba(142, 197, 252, 0.8), 0 0 50px rgba(142, 197, 252, 0.5);
+    border-color: rgba(142, 197, 252, 0.8);
+    background-color: #E8EFF5;
+}
+
+/* Подсветка кнопки "Open" */
+.btn-open {
+    background-color: #1DB954;
+    color: #fff;
+    border-radius: 5px;
+    padding: 8px 12px;
+    border: none;
+    cursor: pointer;
+    transition: box-shadow 0.3s ease-in-out;
+    box-shadow: none; /* Без подсветки по умолчанию */
+}
+
+.btn-open:hover {
+    box-shadow: 0 0 20px rgba(142, 197, 252, 0.8), 0 0 40px rgba(142, 197, 252, 0.6);
+}
+
+/* Подсветка для кнопок настроек */
+.settings-btn, .back-btn {
+    background-color: #E0E0E0;
+    transition: box-shadow 0.3s ease-in-out;
+    box-shadow: none; /* Без подсветки по умолчанию */
+}
+
+.settings-btn:hover, .back-btn:hover {
+    box-shadow: 0 0 25px rgba(142, 197, 252, 0.8), 0 0 50px rgba(142, 197, 252, 0.5);
+}
+
+/* Подсветка для кнопки "Редактировать профиль" и кнопки "Выход" */
+.settings-menu a,
+.edit-profile-btn {
+    padding: 12px;
+    color: #333;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+    border-radius: 8px;
+    display: block;
+    transition: box-shadow 0.3s ease-in-out, background-color 0.3s ease-in-out;
+    box-shadow: none; /* Без подсветки по умолчанию */
+}
+
+.settings-menu a:hover,
+.edit-profile-btn:hover {
+    box-shadow: 0 0 25px rgba(142, 197, 252, 0.8), 0 0 50px rgba(142, 197, 252, 0.5);
+    background-color: rgba(142, 197, 252, 0.1);
+}
 
 
     </style>

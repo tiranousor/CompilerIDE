@@ -18,6 +18,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -32,6 +33,7 @@ import java.util.*;
 
 @Controller
 public class UserController {
+
     private final ClientService clientService;
     private final ProjectService projectService;
     private final ClientValidator clientValidator;
@@ -39,6 +41,7 @@ public class UserController {
     private final ProjectValidator projectValidator;
     private final MinioService minioService;
     private final LoginTimestampRepository loginTimestampRepository;
+
     @Autowired
     public UserController(ClientService clientService, ProjectService projectService, ClientValidator clientValidator,
                           PasswordEncoder passwordEncoder, ProjectValidator projectValidator, MinioService minioService, LoginTimestampRepository loginTimestampRepository) {
@@ -182,22 +185,28 @@ public class UserController {
 //
 //        return "userProfile";
 //    }
-@GetMapping("/userProfile")
-public String ClientProfile(Model model, Authentication authentication) {
-    Client client = clientService.findByUsername(authentication.getName()).get();
 
-    // Записываем время посещения профиля
-    LoginTimestamp loginTimestamp = new LoginTimestamp();
-    loginTimestamp.setClient(client);
-    loginTimestamp.setLoginTime(new Timestamp(System.currentTimeMillis()));  // Текущее время
-    loginTimestampRepository.save(loginTimestamp);  // Сохраняем в базу данных
+    @GetMapping("/userProfile")
+    public String ClientProfile(Model model, Authentication authentication) {
+        String authName = authentication.getName();
+        System.out.println("Authenticated Username: " + authName);
 
-    List<Project> project = projectService.findByClient(client);
-    model.addAttribute("client", client);
-    model.addAttribute("projects", project);
+        Client client = clientService.findByUsername(authName)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + authName));
 
-    return "userProfile";
-}
+        // Record login timestamp
+        LoginTimestamp loginTimestamp = new LoginTimestamp();
+        loginTimestamp.setClient(client);
+        loginTimestamp.setLoginTime(new Timestamp(System.currentTimeMillis()));
+        loginTimestampRepository.save(loginTimestamp);
+
+        List<Project> projects = projectService.findByClient(client);
+        model.addAttribute("client", client);
+        model.addAttribute("projects", projects);
+
+        return "userProfile";
+    }
+
 
     @GetMapping("/edit/{id}")
     public String editProfile(Model model, @PathVariable("id") int id) {
@@ -228,31 +237,32 @@ public String ClientProfile(Model model, Authentication authentication) {
                 FileUploadUtil.saveFile(uploadDir, fileName, avatarFile);
                 existingClient.setAvatarUrl("/" + uploadDir + fileName);
             } catch (IOException e) {
-                bindingResult.rejectValue("avatarUrl","error.avatarUrl", e.getMessage());
+                bindingResult.rejectValue("avatarUrl", "error.avatarUrl", e.getMessage());
                 return "editProfile";
             }
         }
 
+        // Обновляем данные пользователя
         existingClient.setUsername(clientForm.getUsername());
         existingClient.setEmail(clientForm.getEmail());
         existingClient.setGithubProfile(clientForm.getGithubProfile());
         existingClient.setAbout(clientForm.getAbout());
 
-//        if (!clientForm.getPassword().isEmpty()) {
-//            existingClient.setPassword(passwordEncoder.encode(clientForm.getPassword()));
-//        }
-
-
         clientService.update(id, existingClient);
 
+        // Если имя пользователя изменилось, обновляем объект аутентификации
         if (!authentication.getName().equals(existingClient.getUsername())) {
-            Authentication newAuth = new UsernamePasswordAuthenticationToken(existingClient.getUsername(),
-                    authentication.getCredentials(), authentication.getAuthorities());
+            Authentication newAuth = new UsernamePasswordAuthenticationToken(
+                    existingClient.getUsername(),  // новое имя пользователя
+                    authentication.getCredentials(),  // используем старый пароль
+                    authentication.getAuthorities()  // используем те же роли
+            );
             SecurityContextHolder.getContext().setAuthentication(newAuth);
         }
 
         return "redirect:/userProfile";
     }
+
 
 //    @PostMapping("/edit/{id}")
 //    public String updateProfile(Authentication authentication, @PathVariable("id") int id,@ModelAttribute("client") @Valid ClientDto clientDto, BindingResult bindingResult) {

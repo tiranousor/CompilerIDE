@@ -26,7 +26,7 @@ public class Client implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "username", unique = true)
+    @Column(name = "username")
     @NotBlank(message = "Имя пользователя не может быть пустым")
     private String username;
 

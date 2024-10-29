@@ -18,7 +18,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 @EnableWebSecurity
 public class SecurityConfiguration {
     private static final String[] AUTH_WHITELIST = {
-            "/", "/login","/forgot_password", "/reset_password", "/*"
+            "/", "/login","/forgot_password", "/reset_password", "/unbanRequest", "/sendUnbanRequest"
     };
     private final UserDetailsService clientDetailsService;
     @Autowired
@@ -39,9 +39,11 @@ public class SecurityConfiguration {
         http
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/userProfile", "/userProfile/activity").authenticated()
-                        .requestMatchers(AUTH_WHITELIST).permitAll()
-                        .anyRequest().hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/banned").hasAuthority("ROLE_BANNED") // Используем hasAuthority для BANNED
+                        .requestMatchers("/admin/**").hasRole("ADMIN") // Для админов
+                        .requestMatchers("/userProfile").hasRole("USER") // Для обычных пользователей
+                        .requestMatchers(AUTH_WHITELIST).permitAll() // Разрешаем доступ к белому списку URL
+                        .anyRequest().authenticated() // Все остальные запросы требуют аутентификации
                 )
                 .formLogin(form -> form
                         .loginPage("/login") // страница для логина``
