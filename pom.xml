@@ -17,7 +17,6 @@
 	<modules>
 		<module>oc-manager</module>
 		<module>oc-agent-javac</module>
-        <module>oc-file-container</module>
     </modules>
 
 	<properties>

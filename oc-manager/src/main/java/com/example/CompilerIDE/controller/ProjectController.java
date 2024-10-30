@@ -96,37 +96,37 @@ public class ProjectController {
         return "redirect:/userProfile";
     }
 
-    @PostMapping("/{projectId}/compile")
-    public ResponseEntity<?> compileProject(@PathVariable int projectId,
-                                            @RequestBody CompileRequest compileRequest,
-                                            Authentication authentication) {
-        Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
-        if (clientOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Пользователь не авторизован");
-        }
-
-        Client client = clientOpt.get();
-
-        Optional<Project> projectOpt = projectService.findById(projectId);
-        if (projectOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Проект не найден");
-        }
-
-        Project project = projectOpt.get();
-
-        if (!project.getClient().getId().equals(client.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("У вас нет доступа к этому проекту");
-        }
-
-        try {
-            String compilationResult = compilationService.compileProject(project);
-
-            return ResponseEntity.ok(compilationResult);
-        } catch (IOException | InterruptedException e) {
-            logger.error("Error compiling project", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при компиляции проекта");
-        }
-    }
+//    @PostMapping("/{projectId}/compile")
+//    public ResponseEntity<?> compileProject(@PathVariable int projectId,
+//                                            @RequestBody CompileRequest compileRequest,
+//                                            Authentication authentication) {
+//        Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
+//        if (clientOpt.isEmpty()) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Пользователь не авторизован");
+//        }
+//
+//        Client client = clientOpt.get();
+//
+//        Optional<Project> projectOpt = projectService.findById(projectId);
+//        if (projectOpt.isEmpty()) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Проект не найден");
+//        }
+//
+//        Project project = projectOpt.get();
+//
+//        if (!project.getClient().getId().equals(client.getId())) {
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("У вас нет доступа к этому проекту");
+//        }
+//
+//        try {
+//            String compilationResult = compilationService.compileProject(project);
+//
+//            return ResponseEntity.ok(compilationResult);
+//        } catch (IOException | InterruptedException e) {
+//            logger.error("Error compiling project", e);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при компиляции проекта");
+//        }
+//    }
 
     @PostMapping("/{projectId}/save")
     public ResponseEntity<?> saveProjectFiles(
