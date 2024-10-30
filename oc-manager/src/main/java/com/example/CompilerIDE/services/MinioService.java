@@ -1,122 +1,124 @@
 package com.example.CompilerIDE.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import io.minio.*;
+import io.minio.messages.DeleteError;
+import io.minio.messages.DeleteObject;
+import io.minio.messages.Item;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
 
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
+import java.util.*;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class MinioService {
 
-    private final S3Client s3Client;
+    private final MinioClient minioClient;
+    private static final Logger logger = LoggerFactory.getLogger(ProjectService.class);
 
     @Value("${minio.bucket-name}")
-    private String defaultBucketName;
+    private String bucketName;
 
-    @Autowired
-    public MinioService(S3Client s3Client) {
-        this.s3Client = s3Client;
-    }
-
-    public void deleteFile(String objectKey) {
-        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
-                .bucket(defaultBucketName)
-                .key(objectKey)
-                .build();
-
-        s3Client.deleteObject(deleteObjectRequest);
-    }
-
-    public void uploadFile(String objectKey, InputStream inputStream, long contentLength, String contentType) {
-        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                .bucket(defaultBucketName)
-                .key(objectKey)
-                .contentLength(contentLength)
-                .contentType(contentType)
-                .build();
-
-        s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(inputStream, contentLength));
-    }
-
-    public byte[] getFileContentAsBytes(String objectKey) {
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                .bucket(defaultBucketName)
-                .key(objectKey)
-                .build();
-
-        try (InputStream inputStream = s3Client.getObject(getObjectRequest)) {
-            return inputStream.readAllBytes();
-        } catch (IOException | S3Exception e) {
-            return null;
-        }
+    public MinioService(MinioClient minioClient) {
+        this.minioClient = minioClient;
     }
 
     public List<String> listFiles(String prefix) {
-        ListObjectsV2Request listObjectsReqManual = ListObjectsV2Request.builder()
-                .bucket(defaultBucketName)
-                .prefix(prefix)
-                .build();
-
-        ListObjectsV2Response listObjResponse = s3Client.listObjectsV2(listObjectsReqManual);
         List<String> fileNames = new ArrayList<>();
-        for (S3Object content : listObjResponse.contents()) {
-            fileNames.add(content.key().substring(prefix.length()));
+        try {
+            Iterable<Result<Item>> results = minioClient.listObjects(
+                    ListObjectsArgs.builder()
+                            .bucket(bucketName)
+                            .prefix(prefix)
+                            .recursive(true)
+                            .build()
+            );
+            for (Result<Item> result : results) {
+                Item item = result.get();
+                if (!item.isDir()) {
+                    String objectName = item.objectName();
+                    String relativePath = objectName.substring(prefix.length());
+                    fileNames.add(relativePath);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Ошибка при получении списка файлов из MinIO: " + e.getMessage());
         }
         return fileNames;
     }
-    public String getFileContent(String objectKey) {
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                .bucket(defaultBucketName)
-                .key(objectKey)
-                .build();
 
-        try (InputStream inputStream = s3Client.getObject(getObjectRequest)) {
-            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+    public void deleteAllObjectsWithPrefix(String prefix) throws Exception {
+        Iterable<Result<Item>> results = minioClient.listObjects(
+                ListObjectsArgs.builder()
+                        .bucket(bucketName)
+                        .prefix(prefix)
+                        .recursive(true)
+                        .build()
+        );
+
+        List<DeleteObject> objectsToDelete = new ArrayList<>();
+        for (Result<Item> result : results) {
+            Item item = result.get();
+            objectsToDelete.add(new DeleteObject(item.objectName()));
+        }
+
+        if (!objectsToDelete.isEmpty()) {
+            Iterable<Result<DeleteError>> resultsDelete = minioClient.removeObjects(
+                    RemoveObjectsArgs.builder()
+                            .bucket(bucketName)
+                            .objects(objectsToDelete)
+                            .build()
+            );
+
+            for (Result<DeleteError> resultDelete : resultsDelete) {
+                DeleteError error = resultDelete.get();
+                logger.error("Ошибка при удалении объекта {}: {}", error.objectName(), error.message());
+            }
+
+            logger.info("Удалено {} объектов из MinIO с префиксом '{}'", objectsToDelete.size(), prefix);
+        } else {
+            logger.info("Нет объектов для удаления с префиксом '{}'", prefix);
         }
     }
-//    public InputStream downloadFile(String bucketName, String objectKey) {
-//        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-//                .bucket(bucketName)
-//                .key(objectKey)
-//                .build();
-//
-//        return s3Client.getObject(getObjectRequest);
-//    }
+
+
+    public void uploadFileContent(String objectKey, byte[] content) throws Exception {
+        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(content)) {
+            PutObjectArgs putObjectArgs = PutObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(objectKey)
+                    .stream(inputStream, content.length, -1)
+                    .contentType("application/octet-stream")
+                    .build();
+            minioClient.putObject(putObjectArgs);
+        }
+    }
+
+    public byte[] getFileContentAsBytes(String objectKey) throws Exception {
+        try (InputStream stream = minioClient.getObject(
+                GetObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(objectKey)
+                        .build()
+        )) {
+            return stream.readAllBytes();
+        }
+    }
 
     public void createBucket(String bucketName) {
         try {
-            s3Client.createBucket(CreateBucketRequest.builder().bucket(bucketName).build());
-        } catch (BucketAlreadyExistsException | BucketAlreadyOwnedByYouException e) {
-            // Бакет уже существует
-        }
-    }
-    public long getTotalUsedSpace() {
-        try {
-            ListObjectsV2Request listObjectsReqManual = ListObjectsV2Request.builder()
-                    .bucket(defaultBucketName)
-                    .build();
-
-            ListObjectsV2Response listObjResponse = s3Client.listObjectsV2(listObjectsReqManual);
-            long totalSize = 0;
-            for (S3Object content : listObjResponse.contents()) {
-                totalSize += content.size();  // Получаем размер каждого объекта
+            boolean isExist = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+            if (!isExist) {
+                minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+                System.out.println("Bucket '" + bucketName + "' успешно создан.");
+            } else {
+                System.out.println("Bucket '" + bucketName + "' уже существует.");
             }
-            return totalSize / (1024 * 1024);  // Преобразуем размер в мегабайты
         } catch (Exception e) {
-            e.printStackTrace();
-            return 0;
+            System.err.println("Ошибка при создании bucket: " + e.getMessage());
         }
     }
-
 }

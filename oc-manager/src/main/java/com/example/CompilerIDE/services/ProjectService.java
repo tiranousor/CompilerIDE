@@ -1,6 +1,7 @@
 package com.example.CompilerIDE.services;
 
-import com.example.CompilerIDE.client.FileStorageClient;
+import com.example.CompilerIDE.Dto.FileNodeDto;
+import com.example.CompilerIDE.Dto.JsTreeNodeDto;
 import com.example.CompilerIDE.providers.Client;
 import com.example.CompilerIDE.providers.Project;
 import com.example.CompilerIDE.providers.ProjectStruct;
@@ -12,12 +13,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,211 +25,207 @@ import java.util.stream.Collectors;
 public class ProjectService {
     private final ProjectRepository projectRepository;
     private final ProjectStructRepository projectStructRepository;
-    private final FileStorageClient fileStorageClient;
     private final MinioService minioService;
     private static final Logger logger = LoggerFactory.getLogger(ProjectService.class);
+
     @Autowired
     public ProjectService(ProjectRepository projectRepository, ProjectStructRepository projectStructRepository,
-                          FileStorageClient fileStorageClient, MinioService minioService) {
+                          MinioService minioService) {
         this.projectRepository = projectRepository;
         this.minioService = minioService;
         this.projectStructRepository = projectStructRepository;
-        this.fileStorageClient = fileStorageClient;
     }
-    public List<Project> showAllProjects() {
-        return projectRepository.findAll();
-    }
-    public List<Project> findAll() {
-        return projectRepository.findAll();
-    }
-    public Project findOne(int id) {
-        Optional<Project> foundBook = projectRepository.findById(id);
-        return foundBook.orElse(null);
-    }
+
     public Optional<Project> findByNameAndClient(String name, Client client){
-            return projectRepository.findByNameAndClient(name, client);
-    }
-    public List<Project> findOne(String name) {
-        return projectRepository.findByName(name);
-    }
-
-    public List<String> getFilePaths(Project project) {
-        return projectStructRepository.findByProjectAndType(project, "file")
-                .stream()
-                .map(ProjectStruct::getPath)
-                .collect(Collectors.toList());
-    }
-
-    public List<String> getFileNames(Project project) {
-        return projectStructRepository.findByProjectAndType(project, "file")
-                .stream()
-                .map(ProjectStruct::getName)
-                .collect(Collectors.toList());
+        return projectRepository.findByNameAndClient(name, client);
     }
 
     @Transactional
     public void save(Project project) {
         projectRepository.save(project);
     }
-    @Transactional
-    public void update(int id, Project updateProject){
-        updateProject.setId(id);
-        projectRepository.save(updateProject);
-    }
-    // Method to find a project by ID
+
     public Optional<Project> findById(int projectId) {
         return projectRepository.findById(projectId);
     }
 
-    // Method to delete a project
     public void delete(Project project) {
         projectRepository.delete(project);
     }
+
     public List<Project> findByClient(Client client) {
         return projectRepository.findByClient(client);
     }
 
-//    public void saveProjectFiles(Project project, List<MultipartFile> files, String path) {
-//        for (MultipartFile file : files) {
-//            // Сохраняем информацию о файле в БД
-//            ProjectStruct projectStruct = new ProjectStruct();
-//            projectStruct.setProject(project);
-//            projectStruct.setName(file.getOriginalFilename());
-//            projectStruct.setPath(path);
-//            projectStruct.setType("file");
-//            projectStructRepository.save(projectStruct);
-//
-//            // Отправляем файл на File Storage Server
-//            fileStorageClient.uploadFile(project.getId().toString(), file, path);
-//        }
-//    }
+    @Transactional
+    public void saveProjectFilesFromJson(Project project, List<FileNodeDto> files) throws Exception {
+        try {
+            String prefix = "projects/" + project.getId() + "/";
+            minioService.deleteAllObjectsWithPrefix(prefix);
 
+            List<ProjectStruct> existingStructs = projectStructRepository.findByProject(project);
+            projectStructRepository.deleteAll(existingStructs);
+            logger.info("Удалены все записи ProjectStruct для проекта ID: {}", project.getId());
 
-    // Метод для сохранения структуры проекта
-    public void saveProjectStruct(ProjectStruct projectStruct) {
-        projectStructRepository.save(projectStruct);
+            for (FileNodeDto fileDto : files) {
+                processFileNode(project, fileDto);
+            }
+
+            logger.info("Проект ID: {} успешно обновлён.", project.getId());
+        } catch (Exception e) {
+            logger.error("Ошибка при сохранении файлов проекта ID: {}", project.getId(), e);
+            throw e;
+        }
     }
 
-    @Transactional
-    public void saveProjectFiles(Project project, List<MultipartFile> files, String basePath) throws Exception {
-        // Получаем текущие записи ProjectStruct для проекта
-        List<ProjectStruct> existingProjectStructs = projectStructRepository.findByProjectAndType(project, "file");
-        Map<String, ProjectStruct> existingFilesMap = existingProjectStructs.stream()
-                .collect(Collectors.toMap(ProjectStruct::getPath, ps -> ps));
+    private void processFileNode(Project project, FileNodeDto fileDto) throws Exception {
+        String path = fileDto.getPath();
 
-        // Создаём множество путей из новых файлов
-        Set<String> newFilePaths = files.stream()
-                .map(file -> basePath.isEmpty() ? file.getOriginalFilename() : basePath + "/" + file.getOriginalFilename())
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-
-        // Определяем файлы для удаления: существующие в БД, но отсутствующие в новом списке
-        Set<String> filesToDelete = new HashSet<>(existingFilesMap.keySet());
-        filesToDelete.removeAll(newFilePaths);
-
-        // Удаляем файлы, которых нет в новом списке
-        for (String pathToDelete : filesToDelete) {
-            ProjectStruct structToDelete = existingFilesMap.get(pathToDelete);
-            if (structToDelete != null) {
-                String objectKey = "projects/" + project.getId() + "/" + structToDelete.getPath();
-                minioService.deleteFile(objectKey);
-                projectStructRepository.delete(structToDelete);
-                logger.info("Deleted ProjectStruct and MinIO file: {}", objectKey);
-            }
+        if (path == null || path.isEmpty()) {
+            logger.warn("Пропущен узел без поля 'path' или с пустым путем");
+            return;
         }
 
-        // Обрабатываем добавление и обновление файлов
-        for (MultipartFile file : files) {
-            String fullPath = file.getOriginalFilename();
-            if (fullPath == null) {
-                logger.warn("Original filename is null for a file in project {}", project.getId());
-                continue; // Пропускаем текущую итерацию цикла
+        boolean isFile = fileDto.getContent() != null;
+        String type = isFile ? "file" : "folder";
+
+        ProjectStruct struct = projectStructRepository.findByProjectAndPath(project, path)
+                .orElseGet(() -> {
+                    ProjectStruct newStruct = new ProjectStruct();
+                    newStruct.setProject(project);
+                    newStruct.setPath(path);
+                    newStruct.setName(extractNameFromPath(path));
+                    newStruct.setType(type);
+                    if (isFile) {
+                        try (InputStream is = new ByteArrayInputStream(fileDto.getContent().getBytes(StandardCharsets.UTF_8))) {
+                            String hash = HashUtil.computeSHA256Hash(is);
+                            newStruct.setHash(hash);
+                        } catch (Exception e) {
+                            logger.error("Ошибка при вычислении хеша для файла: {}", path, e);
+                            throw new RuntimeException("Ошибка при вычислении хеша", e);
+                        }
+                    } else {
+                        newStruct.setHash(UUID.randomUUID().toString());
+                    }
+                    return newStruct;
+                });
+
+        if (!struct.getType().equals(type)) {
+            struct.setType(type);
+            projectStructRepository.save(struct);
+            logger.info("Тип узла '{}' обновлён на '{}'", path, type);
+        }
+
+        if (isFile) {
+            String content = fileDto.getContent();
+            String objectKey = "projects/" + project.getId() + "/" + path;
+
+            minioService.uploadFileContent(objectKey, content.getBytes(StandardCharsets.UTF_8));
+            logger.info("Содержимое файла '{}' загружено в MinIO по ключу '{}'", path, objectKey);
+
+            projectStructRepository.save(struct);
+            logger.info("Запись ProjectStruct обновлена для файла: {}", path);
+        } else {
+            String objectKey = "projects/" + project.getId() + "/" + path;
+            if (!objectKey.endsWith("/")) {
+                objectKey += "/";
             }
 
-            String relativePath = basePath.isEmpty() ? fullPath : basePath + "/" + fullPath;
-            String objectKey = "projects/" + project.getId() + "/" + relativePath;
+            minioService.uploadFileContent(objectKey, new byte[0]);
+            logger.info("Папка '{}' создана в MinIO по ключу '{}'", path, objectKey);
 
-            // Разбиваем путь на части (папки и файл) и создаём записи для папок, если необходимо
-            Path path = Paths.get(fullPath);
-            Path parent = path.getParent();
-            if (parent != null) {
-                Path cumulativePath = Paths.get("");
-                for (Path part : parent) {
-                    cumulativePath = cumulativePath.resolve(part);
-                    String folderPath = cumulativePath.toString().replace("\\", "/"); // Для Windows-путей
+            projectStructRepository.save(struct);
+            logger.info("Запись ProjectStruct обновлена для папки: {}", path);
+        }
 
-                    // Проверяем, существует ли уже папка
-                    Optional<ProjectStruct> existingFolder = projectStructRepository.findByProjectIdAndPathAndType(
-                            project.getId(),
-                            folderPath,
-                            "folder"
-                    );
-                    if (existingFolder.isEmpty()) {
-                        // Если папки нет, создаём её
-                        ProjectStruct folderStruct = new ProjectStruct();
-                        folderStruct.setProject(project);
-                        folderStruct.setName(part.getFileName().toString()); // Только имя папки
-                        folderStruct.setPath(folderPath); // Полный путь к папке
-                        folderStruct.setType("folder");
-                        projectStructRepository.save(folderStruct);
-                        logger.info("Created folder: {}", folderPath);
+        if (!isFile && fileDto.getFiles() != null) {
+            for (FileNodeDto childFileDto : fileDto.getFiles()) {
+                processFileNode(project, childFileDto);
+            }
+        }
+    }
+
+    private String extractNameFromPath(String path) {
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        int lastSlash = path.lastIndexOf('/');
+        return lastSlash != -1 ? path.substring(lastSlash + 1) : path;
+    }
+
+    public List<JsTreeNodeDto> buildJsTreeFileStructureFromStructs(Project project, String projectId) {
+        List<ProjectStruct> structs = projectStructRepository.findByProject(project);
+
+        JsTreeNodeDto root = new JsTreeNodeDto();
+        root.setId("root");
+        root.setText("Проект");
+        root.setType("folder");
+        root.setChildren(new ArrayList<>());
+        root.setData(null);
+
+        Map<String, JsTreeNodeDto> nodeMap = new HashMap<>();
+        nodeMap.put("", root);
+
+        Map<String, ProjectStruct> structMap = structs.stream()
+                .collect(Collectors.toMap(ProjectStruct::getPath, s -> s));
+
+        for (ProjectStruct struct : structs) {
+            String path = struct.getPath();
+            String[] parts = path.split("/");
+            StringBuilder currentPathBuilder = new StringBuilder();
+
+            JsTreeNodeDto current = root;
+
+            for (String part : parts) {
+                if (!currentPathBuilder.isEmpty()) {
+                    currentPathBuilder.append("/").append(part);
+                } else {
+                    currentPathBuilder.append(part);
+                }
+                String currentPath = currentPathBuilder.toString();
+
+                JsTreeNodeDto node = nodeMap.get(currentPath);
+                if (node == null) {
+                    node = new JsTreeNodeDto();
+                    node.setId(currentPath);
+                    node.setText(part);
+                    node.setChildren(new ArrayList<>());
+                    nodeMap.put(currentPath, node);
+                    current.getChildren().add(node);
+                }
+
+                if (node.getType() == null) {
+                    ProjectStruct nodeStruct = structMap.get(currentPath);
+                    if (nodeStruct != null) {
+                        node.setType(nodeStruct.getType());
+                        if ("file".equals(nodeStruct.getType())) {
+                            Map<String, Object> data = new HashMap<>();
+                            data.put("content", getFileContent(projectId, currentPath));
+                            node.setData(data);
+                        } else {
+                            node.setData(null);
+                        }
+                    } else {
+                        node.setType("folder");
+                        node.setData(null);
                     }
                 }
-            }
 
-            // Проверяем, существует ли уже файл
-            ProjectStruct existingFileStruct = existingFilesMap.get(relativePath);
-            if (existingFileStruct != null) {
-                // Обновляем существующий файл
-                // Загрузка нового файла в MinIO (перезапись)
-                minioService.uploadFile(
-                        objectKey,
-                        file.getInputStream(),
-                        file.getSize(),
-                        file.getContentType()
-                );
-                logger.info("Updated MinIO file: {}", objectKey);
-
-                // Вычисление хеша файла
-                String hash;
-                try (InputStream is = file.getInputStream()) {
-                    hash = HashUtil.computeSHA256Hash(is);
-                }
-
-                // Обновляем запись в базе данных
-                existingFileStruct.setHash(hash);
-                projectStructRepository.save(existingFileStruct);
-                logger.info("Updated ProjectStruct for file: {}", relativePath);
-            } else {
-                // Добавляем новый файл
-                // Загрузка файла в MinIO
-                minioService.uploadFile(
-                        objectKey,
-                        file.getInputStream(),
-                        file.getSize(),
-                        file.getContentType()
-                );
-                logger.info("Uploaded new file to MinIO: {}", objectKey);
-
-                // Вычисление хеша файла
-                String hash;
-                try (InputStream is = file.getInputStream()) {
-                    hash = HashUtil.computeSHA256Hash(is);
-                }
-
-                // Создаём новую запись в базе данных
-                ProjectStruct newFileStruct = new ProjectStruct();
-                newFileStruct.setProject(project);
-                newFileStruct.setName(path.getFileName().toString()); // Только имя файла
-                newFileStruct.setPath(relativePath); // Полный путь к файлу
-                newFileStruct.setType("file");
-                newFileStruct.setHash(hash);
-
-                projectStructRepository.save(newFileStruct);
-                logger.info("Saved new ProjectStruct for file: {}", relativePath);
+                current = node;
             }
         }
+
+        return Collections.singletonList(root);
     }
 
+    private String getFileContent(String projectId, String filePath) {
+        try {
+            byte[] contentBytes = minioService.getFileContentAsBytes("projects/" + projectId + "/" + filePath);
+            return new String(contentBytes, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            logger.error("Ошибка при получении содержимого файла '{}': {}", filePath, e.getMessage());
+            return "";
+        }
+    }
 
 }

@@ -13,20 +13,21 @@ public class ProjectStruct {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long uid; // Уникальный идентификатор структуры проекта (первичный ключ).
+    private Long uid;
 
     @NotBlank(message = "Название файла или папки не может быть пустым")
-    private String name; // Название файла или папки.
+    private String name;
 
     @NotBlank(message = "Путь не может быть пустым")
-    private String path; // Путь к элементу структуры.
+    private String path;
 
     @NotBlank(message = "Тип элемента не может быть пустым")
-    private String type; // Тип элемента (например, файл или папка).
+    private String type;
 
-    private String hash; // Хеш-сумма содержимого файла, используемая для проверки изменений.
+    private String hash;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
-    private Project project; // Связь с проектом.
+    private Project project;
+
 }

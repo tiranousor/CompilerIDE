@@ -15,7 +15,6 @@ public class CodeCompilationService {
     }
 
     public String compileCode(CompileRequest request) {
-
         System.out.println();
         return compileClient.compileCode(request);
     }

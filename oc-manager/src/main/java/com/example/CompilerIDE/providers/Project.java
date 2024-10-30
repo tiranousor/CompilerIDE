@@ -6,10 +6,10 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.validator.constraints.URL;
 
 import java.util.List;
-
 @Entity
 @Data
 @AllArgsConstructor
@@ -25,6 +25,7 @@ public class Project {
 
     @Column(nullable = true, unique = true, name="uuid")
     private String uuid;
+
     @NotBlank(message = "Название проекта не может быть пустым")
     @Size(max = 100, message = "Название проекта должно быть не длиннее 100 символов")
     private String name;
@@ -36,11 +37,17 @@ public class Project {
 
     @URL(message = "Неверный формат URL")
     private String refGit;
+
     @Column(name="project type")
     private String projectType;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @ToString.Exclude
     private Client client;
+
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ToString.Exclude
     private List<ProjectStruct> projectsStruct;
 }
+

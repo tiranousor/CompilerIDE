@@ -10,10 +10,10 @@ import java.util.Optional;
 
 @Repository
 public interface ProjectStructRepository extends JpaRepository<ProjectStruct, Long> {
+
     List<ProjectStruct> findByProject(Project project);
-    Optional<ProjectStruct> findByProjectIdAndName(Long projectId, String name);
-    void deleteByProjectIdAndName(Long projectId, String name);
-    Optional<ProjectStruct> findByProjectIdAndPathAndType(int projectId, String path, String type);
-    void deleteByProject(Project project);
+
+    Optional<ProjectStruct> findByProjectAndPath(Project project, String path);
+
     List<ProjectStruct> findByProjectAndType(Project project, String type);
 }
