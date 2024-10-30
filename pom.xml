@@ -17,6 +17,7 @@
 	<modules>
 		<module>oc-manager</module>
 		<module>oc-agent-javac</module>
+        <module>oc-file-container</module>
     </modules>
 
 	<properties>
@@ -128,11 +129,6 @@
 				<artifactId>spring-boot-starter-test</artifactId>
 				<version>3.3.3</version>
 				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>io.minio</groupId>
-				<artifactId>minio</artifactId>
-				<version>8.5.3</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

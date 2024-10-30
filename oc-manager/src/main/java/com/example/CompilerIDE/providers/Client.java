@@ -8,33 +8,37 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
-import java.util.List;
-
+import java.util.*;
+import java.io.Serializable;
 @Entity
+@Table(name="client")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name="client")
-public class Client {
+public class Client implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     @Id
     @Column(name="user_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "username", unique = true)
+    @Column(name = "username")
     @NotBlank(message = "Имя пользователя не может быть пустым")
     private String username;
+
+//    @Column(name = "last_login_time")
+//    private Date lastLoginTime;
+
+    // Связь с таблицей login_timestamps
+    @OneToMany(mappedBy = "client", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<LoginTimestamp> loginTimes = new ArrayList<>();
 
     @Column(name = "email", unique = true)
     @Email(message = "Введите действительный адрес электронной почты")
     @NotBlank(message = "Email не может быть пустым")
     private String email;
-
-    @Column(name="active")
-    private Boolean active;
 
     @NotEmpty(message = "Пароль не должен быть пустым")
     @Column(name = "password")
@@ -56,7 +60,18 @@ public class Client {
     private String resetPasswordToken;
 
     @OneToMany(mappedBy = "client", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @ToString.Exclude
     private List<Project> projects;
-}
+    @OneToMany(mappedBy = "sender", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<FriendRequest> sentFriendRequests = new ArrayList<>();
 
+    @OneToMany(mappedBy = "receiver", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<FriendRequest> receivedFriendRequests = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "friendships",
+            joinColumns = @JoinColumn(name = "client1_id"),
+            inverseJoinColumns = @JoinColumn(name = "client2_id")
+    )
+    private Set<Client> friends = new HashSet<>();
+}

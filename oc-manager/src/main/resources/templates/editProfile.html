@@ -96,7 +96,7 @@
 <div class="container">
     <h1>Редактировать аккаунт</h1>
 
-    <img id="preview" th:src="${client.avatarUrl != null ? client.avatarUrl : '/static/noAvatar.png'}" alt="Предпросмотр изображения"/>
+    <img id="preview" th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="Предпросмотр изображения"/>
 
     <form th:action="@{/edit/{id}(id=${client.id})}" th:method="POST" th:object="${client}" enctype="multipart/form-data">
         <input type="file" name="avatarFile" class="form-control" accept="image/*" onchange="previewImage(event)" />
