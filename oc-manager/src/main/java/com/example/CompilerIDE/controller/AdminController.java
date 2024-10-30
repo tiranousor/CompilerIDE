@@ -72,12 +72,12 @@ public class AdminController {
     }
 
     // Просмотр использования памяти в MinIO
-    @GetMapping("/storage-usage")
-    public String getStorageUsage(Model model) {
-        long totalUsedSpace = minioService.getTotalUsedSpace(); // Получаем общую информацию о занятой памяти
-        model.addAttribute("usedSpace", totalUsedSpace);
-        return "admin/storage_usage";
-    }
+//    @GetMapping("/storage-usage")
+//    public String getStorageUsage(Model model) {
+//        long totalUsedSpace = minioService.getTotalUsedSpace(); // Получаем общую информацию о занятой памяти
+//        model.addAttribute("usedSpace", totalUsedSpace);
+//        return "admin/storage_usage";
+//    }
     @GetMapping("/users/search")
     public String searchUsers(@RequestParam("username") String username, Model model) {
         List<Client> users = clientRepository.findByUsernameContainingIgnoreCase(username);

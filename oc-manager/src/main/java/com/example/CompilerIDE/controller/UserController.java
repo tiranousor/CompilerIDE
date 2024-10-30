@@ -1,6 +1,7 @@
 package com.example.CompilerIDE.controller;
 
 import com.example.CompilerIDE.Dto.ClientDto;
+import com.example.CompilerIDE.Dto.JsTreeNodeDto;
 import com.example.CompilerIDE.providers.Client;
 import com.example.CompilerIDE.providers.LoginTimestamp;
 import com.example.CompilerIDE.providers.Project;
@@ -12,6 +13,8 @@ import com.example.CompilerIDE.services.ProjectService;
 import com.example.CompilerIDE.util.ClientValidator;
 import com.example.CompilerIDE.util.FileUploadUtil;
 import com.example.CompilerIDE.util.ProjectValidator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,18 +44,22 @@ public class UserController {
     private final PasswordEncoder passwordEncoder;
     private final ProjectValidator projectValidator;
     private final MinioService minioService;
+    private final ObjectMapper objectMapper;
     private final FriendshipService friendshipService;
     private final LoginTimestampRepository loginTimestampRepository;
 
     @Autowired
     public UserController(ClientService clientService, ProjectService projectService, ClientValidator clientValidator,
-                          PasswordEncoder passwordEncoder, ProjectValidator projectValidator, MinioService minioService, FriendshipService friendshipService, LoginTimestampRepository loginTimestampRepository) {
+                          PasswordEncoder passwordEncoder, ProjectValidator projectValidator, MinioService minioService,
+                          ObjectMapper objectMapper, FriendshipService friendshipService,
+                          LoginTimestampRepository loginTimestampRepository) {
         this.passwordEncoder = passwordEncoder;
         this.clientService = clientService;
         this.clientValidator = clientValidator;
         this.projectService = projectService;
         this.projectValidator = projectValidator;
         this.minioService = minioService;
+        this.objectMapper = objectMapper;
         this.friendshipService = friendshipService;
         this.loginTimestampRepository = loginTimestampRepository;
     }
@@ -75,13 +82,23 @@ public class UserController {
 
         model.addAttribute("projectId", projectId);
         System.out.println(projectId);
-        List<String> fileNames = minioService.listFiles("projects/" + projectId + "/");
+        List<String> filePaths = minioService.listFiles("projects/" + projectId + "/");
 
-        if (fileNames == null) {
-            fileNames = new ArrayList<>();
+        if (filePaths == null) {
+            filePaths = List.of();
         }
-        model.addAttribute("files", fileNames);
 
+        List<JsTreeNodeDto> fileTree = projectService.buildJsTreeFileStructureFromStructs(project, String.valueOf(projectId));
+        String fileStructureJson = "[]";
+
+        try {
+            fileStructureJson = objectMapper.writeValueAsString(fileTree);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        model.addAttribute("fileStructure", fileStructureJson);
+        System.out.println(fileStructureJson);
         return "Compiler";
     }
 
