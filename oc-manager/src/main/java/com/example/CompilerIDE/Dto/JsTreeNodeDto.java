@@ -15,5 +15,5 @@ public class JsTreeNodeDto {
     private String text;
     private String type;
     private List<JsTreeNodeDto> children;
-    private Map<String, Object> data; // Добавлено поле data
+    private Map<String, Object> data;
 }

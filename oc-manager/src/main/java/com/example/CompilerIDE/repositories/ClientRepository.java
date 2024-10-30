@@ -12,5 +12,5 @@ public interface ClientRepository extends JpaRepository<Client, Integer> {
 
     Optional <Client> findByEmail(String email);
 
-    public Client findByResetPasswordToken(String token);
+    Client findByResetPasswordToken(String token);
 }

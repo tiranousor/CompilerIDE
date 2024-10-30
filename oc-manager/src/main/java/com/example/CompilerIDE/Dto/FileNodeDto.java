@@ -12,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 public class FileNodeDto {
     private String path;
-    private String content; // Может быть null для папок
-    private String type;    // "folder" для папок, может быть null для файлов
+    private String content;
+    private String type;
     private List<FileNodeDto> files;
 }

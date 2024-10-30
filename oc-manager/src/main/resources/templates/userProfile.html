@@ -331,7 +331,6 @@
 
 <body>
 <div class="container">
-    <!-- Левый контейнер (Профиль пользователя) -->
     <div class="profile-container">
         <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="profile-avatar">
 
@@ -345,7 +344,6 @@
         </div>
     </div>
 
-    <!-- Правый контейнер (Проекты) -->
     <div class="projects-container">
         <div class="projects-header">
             <h2>Projects</h2>
@@ -356,13 +354,10 @@
         <ul class="project-list">
             <th:block th:each="project : ${projects}">
                 <li class="project-item" th:data-project-id="${project.id}">
-                    <!-- Заголовок проекта -->
                     <div class="project-header">
                         <span class="project-name" th:text="${project.name}">Project Name</span>
                         <div class="project-actions">
-                            <!-- Кнопка "Open" для перехода к проекту -->
                             <button class="btn-open">Open</button>
-                            <!-- Кнопка информации -->
                             <button class="btn-info">
                                 <i class='bx bx-info-circle'></i>
                             </button>
@@ -373,21 +368,12 @@
                             </form>
                         </div>
                     </div>
-                    <!-- Раскрывающееся окно с информацией о проекте -->
                     <div class="project-details">
                         <p><strong>Имя проекта:</strong> <span th:text="${project.name}">Имя проекта</span></p>
                         <p><strong>ReadMe:</strong> <span th:text="${project.readMe}">ReadMe</span></p>
                         <p><strong>Язык:</strong> <span th:text="${project.language}">Язык</span></p>
-<!--                        <p><strong>Тип проекта:</strong> <span th:text="${project.projectType}">Тип проекта</span></p>-->
-                        <!-- Кнопки внизу -->
                         <div class="project-details-actions">
                             <a th:href="@{/projects/edit/{id}(id=${project.id})}" class="btn-edit">Редактировать</a>
-<!--                            <a th:href="@{/projects/continue/{id}(id=${project.id})}" class="btn-continue">Продолжить работу</a>-->
-<!--                            <form th:action="@{/userProfile/delete/{id}(id=${project.id})}" method="post" style="display: inline;"-->
-<!--                                  onsubmit="return confirm('Вы действительно хотите удалить проект?');">-->
-<!--                                <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>-->
-<!--                                <button type="submit" class="btn-delete">Удалить проект</button>-->
-<!--                            </form>-->
                         </div>
                     </div>
                 </li>
@@ -396,12 +382,10 @@
     </div>
 </div>
 
-<!-- Кнопка настроек -->
 <div class="settings-btn">
     <i class='bx bx-cog'></i>
 </div>
 
-<!-- Меню настроек -->
 <div class="settings-menu" id="settingsMenu">
     <a th:href="@{/edit/{id}(id=${client.id})}">Редактировать профиль</a>
     <form th:action="@{/logout}" th:method="POST">
@@ -409,11 +393,9 @@
     </form>
 </div>
 
-<!-- Overlay -->
 <div class="overlay" id="overlay"></div>
 
 <script>
-    // Существующий код для меню настроек
     const settingsBtn = document.querySelector('.settings-btn');
     const settingsMenu = document.getElementById('settingsMenu');
     const overlay = document.getElementById('overlay');
@@ -428,7 +410,6 @@
         overlay.classList.remove('active');
     });
 
-    // Код для раскрытия информации о проекте
     const infoButtons = document.querySelectorAll('.btn-info');
 
     infoButtons.forEach(button => {
@@ -440,7 +421,6 @@
         });
     });
 
-    // Код для обработки кнопки "Open"
     document.addEventListener('DOMContentLoaded', function() {
         const openButtons = document.querySelectorAll('.btn-open');
 
@@ -451,7 +431,6 @@
                 const projectId = projectItem.getAttribute('data-project-id');
 
                 if (projectId) {
-                    // Переход на страницу проекта
                     window.location.href = `http://localhost:8080/Compiler/project/${projectId}`;
                 } else {
                     console.error("Project ID не найден");

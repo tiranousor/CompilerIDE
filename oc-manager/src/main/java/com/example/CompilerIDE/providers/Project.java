@@ -43,11 +43,11 @@ public class Project {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    @ToString.Exclude // Исключаем поле client из toString()
+    @ToString.Exclude
     private Client client;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @ToString.Exclude // Исключаем список projectsStruct из toString()
+    @ToString.Exclude
     private List<ProjectStruct> projectsStruct;
 }
 

@@ -38,9 +38,8 @@ public class MinioService {
             );
             for (Result<Item> result : results) {
                 Item item = result.get();
-                if (!item.isDir()) { // Исключаем директории
+                if (!item.isDir()) {
                     String objectName = item.objectName();
-                    // Удаляем префикс
                     String relativePath = objectName.substring(prefix.length());
                     fileNames.add(relativePath);
                 }
@@ -51,14 +50,6 @@ public class MinioService {
         return fileNames;
     }
 
-
-
-    /**
-     * Пакетное удаление всех объектов с заданным префиксом
-     *
-     * @param prefix Префикс (путь) в MinIO
-     * @throws Exception При ошибках взаимодействия с MinIO
-     */
     public void deleteAllObjectsWithPrefix(String prefix) throws Exception {
         Iterable<Result<Item>> results = minioClient.listObjects(
                 ListObjectsArgs.builder()
@@ -100,34 +91,12 @@ public class MinioService {
                     .bucket(bucketName)
                     .object(objectKey)
                     .stream(inputStream, content.length, -1)
-                    .contentType("application/octet-stream") // Можно определить MIME тип по расширению
+                    .contentType("application/octet-stream")
                     .build();
             minioClient.putObject(putObjectArgs);
         }
     }
 
-    public void createFolder(String objectKey) throws Exception {
-        // Папка в MinIO создаётся при загрузке объекта с названием, заканчивающимся на '/'
-        if (!objectKey.endsWith("/")) {
-            objectKey += "/";
-        }
-        try (ByteArrayInputStream emptyContent = new ByteArrayInputStream(new byte[0])) {
-            PutObjectArgs putObjectArgs = PutObjectArgs.builder()
-                    .bucket(bucketName)
-                    .object(objectKey)
-                    .stream(emptyContent, 0, -1)
-                    .contentType("application/x-directory")
-                    .build();
-            minioClient.putObject(putObjectArgs);
-        }
-    }
-
-    // Удаление объекта
-    public void deleteObject(String objectKey) throws Exception {
-        minioClient.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectKey).build());
-    }
-
-    // Получение содержимого файла
     public byte[] getFileContentAsBytes(String objectKey) throws Exception {
         try (InputStream stream = minioClient.getObject(
                 GetObjectArgs.builder()
@@ -137,23 +106,6 @@ public class MinioService {
         )) {
             return stream.readAllBytes();
         }
-    }
-
-    // Загрузка файла в MinIO
-    public void uploadFile(String objectKey, InputStream inputStream, long size, String contentType) throws Exception {
-        minioClient.putObject(
-                PutObjectArgs.builder()
-                        .bucket(bucketName)
-                        .object(objectKey)
-                        .stream(inputStream, size, -1)
-                        .contentType(contentType)
-                        .build()
-        );
-    }
-
-    // Удаление файла (обёртка для deleteObject)
-    public void deleteFile(String objectKey) throws Exception {
-        deleteObject(objectKey);
     }
 
     public void createBucket(String bucketName) {

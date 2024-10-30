@@ -6,7 +6,6 @@ import com.example.CompilerIDE.util.ClientNotFoundException;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.constraints.Email;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -76,7 +75,6 @@ public class ForgotPasswordController {
         helper.setTo(recipientEmail);
         helper.setSubject(EMAIL_SUBJECT);
 
-        // Используем Thymeleaf для генерации содержимого письма
         Context context = new Context();
         context.setVariable("link", link);
         String htmlContent = templateEngine.process("email/reset_password_email", context);
@@ -87,7 +85,6 @@ public class ForgotPasswordController {
     }
 
     private String getSiteURL(HttpServletRequest request) {
-        // Метод для получения базового URL сайта
         String siteURL = request.getRequestURL().toString();
         return siteURL.replace(request.getServletPath(), "");
     }

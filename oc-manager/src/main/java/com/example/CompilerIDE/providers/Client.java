@@ -12,7 +12,6 @@ import lombok.ToString;
 
 import java.util.List;
 
-// Client.java
 @Entity
 @Data
 @AllArgsConstructor
@@ -57,7 +56,7 @@ public class Client {
     private String resetPasswordToken;
 
     @OneToMany(mappedBy = "client", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @ToString.Exclude // Исключаем список projects из toString()
+    @ToString.Exclude
     private List<Project> projects;
 }
 

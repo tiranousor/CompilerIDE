@@ -1,6 +1,5 @@
 package com.example.CompilerIDE.controller;
 
-import com.example.CompilerIDE.Dto.ClientDto;
 import com.example.CompilerIDE.Dto.JsTreeNodeDto;
 import com.example.CompilerIDE.providers.Client;
 import com.example.CompilerIDE.providers.Project;
@@ -13,16 +12,12 @@ import com.example.CompilerIDE.util.ProjectValidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,16 +30,14 @@ public class UserController {
     private final ClientService clientService;
     private final ProjectService projectService;
     private final ClientValidator clientValidator;
-    private final PasswordEncoder passwordEncoder;
     private final ProjectValidator projectValidator;
     private final MinioService minioService;
     private final ObjectMapper objectMapper;
 
     @Autowired
     public UserController(ClientService clientService, ProjectService projectService, ClientValidator clientValidator,
-                          PasswordEncoder passwordEncoder, ProjectValidator projectValidator, MinioService minioService,
+                          ProjectValidator projectValidator, MinioService minioService,
                           ObjectMapper objectMapper) {
-        this.passwordEncoder = passwordEncoder;
         this.clientService = clientService;
         this.clientValidator = clientValidator;
         this.projectService = projectService;
@@ -74,34 +67,28 @@ public class UserController {
         List<String> filePaths = minioService.listFiles("projects/" + projectId + "/");
 
         if (filePaths == null) {
-            filePaths = List.of(); // Используем неизменяемый пустой список
+            filePaths = List.of();
         }
 
-        // Построение иерархической структуры файлов
         List<JsTreeNodeDto> fileTree = projectService.buildJsTreeFileStructureFromStructs(project, String.valueOf(projectId));
-
-        // Сериализация структуры в JSON
-        String fileStructureJson = "[]"; // Значение по умолчанию
+        String fileStructureJson = "[]";
 
         try {
             fileStructureJson = objectMapper.writeValueAsString(fileTree);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
-            // Обработка ошибки сериализации (можно добавить сообщение об ошибке)
         }
 
         model.addAttribute("fileStructure", fileStructureJson);
         System.out.println(fileStructureJson);
-        // Удаляем атрибут "files"
-        // model.addAttribute("files", fileNames); // Удалено
-
-        return "Compiler2"; // Имя вашего HTML-шаблона (Compiler2.html)
+        return "Compiler2";
     }
 
     @GetMapping("/login")
     public String showLoginPage() {
         return "loginAndRegistration";
     }
+
     @PostMapping("/login")
     public String processLogin(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()) {
@@ -109,6 +96,7 @@ public class UserController {
         }
         return "loginAndRegistration";
     }
+
     @GetMapping("/registration")
     public String registration(@ModelAttribute Client client){
         return "registrationPage";
@@ -128,7 +116,6 @@ public class UserController {
         project.setLanguage("Java");
        project.setClient(client);
 
-        // Сохраняем проект
         projectService.save(project);
 
         return "redirect:/login?registration";
@@ -137,18 +124,18 @@ public class UserController {
     @GetMapping("/userProfile/new")
     public String newProjectForm(Authentication authentication, Model model) {
         model.addAttribute("project", new Project());
-        return "new_project_form"; // Ensure this template exists
+        return "new_project_form";
     }
 
     @PostMapping("/userProfile/new")
     public String createProject(@Valid @ModelAttribute("project") Project project, BindingResult bindingResult, Authentication authentication) {
         if (bindingResult.hasErrors()) {
-            return "new_project_form"; // Возвращаем обратно на форму при ошибках
+            return "new_project_form";
         }
         project.setClient(clientService.getClient(authentication.getName()).get());
         projectValidator.validate(project, bindingResult);
         if (bindingResult.hasErrors()) {
-            return "new_project_form"; // Возвращаем обратно на форму при ошибках
+            return "new_project_form";
         }
         projectService.save(project);
 
@@ -156,21 +143,16 @@ public class UserController {
     }
 
 
-    // Delete a project
     @PostMapping("/userProfile/delete/{id}")
     public String deleteProject(@PathVariable("id") int projectId, Authentication authentication) {
-        // Get the logged-in user
         Client client = clientService.findByUsername(authentication.getName()).get();
 
-        // Find the project to delete
         Optional<Project> projectToDelete = projectService.findById(projectId);
 
-        // Ensure the project belongs to the current user
         if (projectToDelete.isPresent() && projectToDelete.get().getClient().getId() == client.getId()) {
-            projectService.delete(projectToDelete.get()); // Delete the project from DB
+            projectService.delete(projectToDelete.get());
         }
 
-        // Redirect back to the user's profile page after deletion
         return "redirect:/userProfile";
     }
 
@@ -190,6 +172,7 @@ public class UserController {
         model.addAttribute("client", clientService.findOne(id));
         return "editProfile";
     }
+
     @PostMapping("/edit/{id}")
     public String updateProfile(Authentication authentication, @PathVariable("id") int id,
                                 @Valid Client clientForm, BindingResult bindingResult,
@@ -223,12 +206,6 @@ public class UserController {
         existingClient.setEmail(clientForm.getEmail());
         existingClient.setGithubProfile(clientForm.getGithubProfile());
         existingClient.setAbout(clientForm.getAbout());
-
-//        if (!clientForm.getPassword().isEmpty()) {
-//            existingClient.setPassword(passwordEncoder.encode(clientForm.getPassword()));
-//        }
-
-
         clientService.update(id, existingClient);
 
         if (!authentication.getName().equals(existingClient.getUsername())) {
@@ -239,23 +216,4 @@ public class UserController {
 
         return "redirect:/userProfile";
     }
-
-//    @PostMapping("/edit/{id}")
-//    public String updateProfile(Authentication authentication, @PathVariable("id") int id,@ModelAttribute("client") @Valid ClientDto clientDto, BindingResult bindingResult) {
-//        if (bindingResult.hasErrors()) {
-//            return "editProfile";
-//        }
-//        Client client = clientService.findOne(id);
-//        client = clientMapper.updateUserFromDto(clientDto,client);
-//        clientService.update(client);
-//        if (!authentication.getName().equals(client.getUsername())) {
-//            Authentication newAuth = new UsernamePasswordAuthenticationToken(client.getUsername(), authentication.getCredentials(), authentication.getAuthorities());
-//            SecurityContextHolder.getContext().setAuthentication(newAuth);
-//        }
-//
-//        return "redirect:/userProfile";
-//    }
-
-
-
 }

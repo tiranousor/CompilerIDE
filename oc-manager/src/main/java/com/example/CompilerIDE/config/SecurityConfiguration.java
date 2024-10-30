@@ -17,10 +17,13 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
+
     private static final String[] AUTH_WHITELIST = {
             "/", "/login","/forgot_password", "/reset_password", "/*"
     };
+
     private final UserDetailsService clientDetailsService;
+
     @Autowired
     public SecurityConfiguration(ClientDetailsService clientDetailsService) {
         this.clientDetailsService = clientDetailsService;

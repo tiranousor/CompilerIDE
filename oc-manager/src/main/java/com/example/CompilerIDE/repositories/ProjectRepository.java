@@ -12,7 +12,6 @@ import java.util.Optional;
 public interface ProjectRepository extends JpaRepository<Project, Integer>{
 
     List<Project> findByClient(Client client);
-//    List<Project> findByClientById(Integer client_id);
     List<Project> findByName(String name);
     Optional<Project> findByNameAndClient(String name, Client client);
 

@@ -5,10 +5,8 @@
     <meta name="projectId" th:content="${projectId}">
     <meta name="_csrf" th:content="${_csrf.token}" />
     <meta name="_csrf_header" th:content="${_csrf.headerName}" />
-    <!-- Используем мета-тег с именем "fileStructure" для передачи JSON -->
     <meta name="fileStructure" th:content="${fileStructure}">
     <title>jsTree и Monaco Editor</title>
-    <!-- Подключение стилей jsTree -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
     <style>
         body, html {
@@ -54,29 +52,32 @@
             width: 100%;
             height: 100%;
         }
-        /* Контекстное меню */
         .jstree-contextmenu {
             z-index: 1000;
         }
-        /* Уведомления */
         #message {
             position: fixed;
             top: 10px;
             right: 10px;
-            background: #f8d7da;
-            color: #721c24;
             padding: 10px;
-            border: 1px solid #f5c6cb;
             border-radius: 5px;
             display: none;
             z-index: 1001;
         }
-        /* Иконки для папок и файлов */
+        .message-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
         .jstree-folder {
             background: url('https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default-folder.png') no-repeat center center;
             background-size: 16px 16px;
         }
-
         .jstree-file {
             background: url('https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default-file.png') no-repeat center center;
             background-size: 16px 16px;
@@ -93,13 +94,9 @@
         <div id="editor"></div>
     </div>
 </div>
-<!-- Уведомления -->
 <div id="message"></div>
-
-<!-- Подключение библиотек -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
-<!-- Monaco Editor -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
 <script>
     $(function() {
@@ -108,16 +105,11 @@
         const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
         const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
         const projectId = document.querySelector('meta[name="projectId"]').content;
-        let isUndoing = false; // Флаг для предотвращения записи действий при выполнении отмены
+        let isUndoing = false;
         const undoStack = [];
-        let pendingCreations = 0; // Счётчик ожидающих операций создания узлов
-        let duplicateNameError = false; // Флаг для отслеживания ошибки дублирования имени
-
-        /**
-         * Функция для определения языка на основе расширения файла
-         * @param {string} filename - Имя файла
-         * @returns {string} - Язык программирования для Monaco Editor
-         */
+        let pendingCreations = 0;
+        let duplicateNameError = false;
+        let isSaving = false;
         const getLanguageFromFilename = (filename) => {
             const extension = filename.split('.').pop().toLowerCase();
             const languageMap = {
@@ -131,23 +123,42 @@
                 'c': 'c',
                 'cpp': 'cpp',
                 'ts': 'typescript',
-                // Добавьте другие расширения и соответствующие языки по мере необходимости
             };
             return languageMap[extension] || 'plaintext';
         };
-
-        /**
-         * Функция для отображения уведомлений
-         * @param {string} msg - Сообщение для отображения
-         */
-        const showMessage = (msg) => {
+        const showMessage = (msg, type = 'error') => {
             const messageDiv = $('#message');
-            messageDiv.text(msg).fadeIn(500).delay(2000).fadeOut(500);
+            messageDiv.text(msg);
+            messageDiv.removeClass('message-success message-error');
+            if (type === 'success') {
+                messageDiv.addClass('message-success');
+            } else {
+                messageDiv.addClass('message-error');
+            }
+            messageDiv.fadeIn(500).delay(2000).fadeOut(500);
         };
-
-        /**
-         * Функция для сохранения текущего файла перед переключением
-         */
+        const isValidName = (name) => {
+            if (!name || typeof name !== 'string') {
+                return false;
+            }
+            const trimmedName = name.trim();
+            if (trimmedName.length === 0) {
+                return false;
+            }
+            const invalidPatterns = ['/', '\\', '..'];
+            for (const pattern of invalidPatterns) {
+                if (trimmedName.startsWith(pattern) || trimmedName.includes(pattern)) {
+                    return false;
+                }
+            }
+            const prohibitedChars = ['<', '>', ':', '"', '|', '?', '*', '\0'];
+            for (const char of prohibitedChars) {
+                if (trimmedName.includes(char)) {
+                    return false;
+                }
+            }
+            return true;
+        };
         const saveCurrentFile = () => {
             if (currentFile && editor) {
                 const newContent = editor.getValue();
@@ -157,21 +168,13 @@
                 }
             }
         };
-
-        /**
-         * Функция для очистки редактора, если удалённый файл был текущим
-         * @param {object} node - Узел jsTree
-         */
         const clearEditorIfDeleted = (node) => {
-            // Проверяем, является ли удаляемый узел текущим файлом
             if (currentFile && node.id === currentFile.id) {
                 editor.setValue('');
                 currentFile = null;
                 console.log(`Файл "${node.text}" удалён. Редактор очищен.`);
                 return;
             }
-
-            // Если удаляется папка, проверяем её содержимое на наличие текущего файла
             if (node.type === 'folder' && node.children && node.children.length > 0) {
                 const tree = $('#jstree').jstree(true);
                 node.children.forEach(childId => {
@@ -180,69 +183,38 @@
                 });
             }
         };
-
-        /**
-         * Функция для проверки уникальности имени при создании/переименовании
-         * @param {object} node - Родительский узел
-         * @param {string} name - Имя файла/папки
-         * @param {string} type - Тип узла ('file' или 'folder')
-         * @param {string} [excludeId] - ID узла, который должен быть исключен из проверки (например, при перемещении)
-         * @returns {boolean} - true, если имя уникально для данного типа, иначе false
-         */
         const checkUniqueName = (node, name, type, excludeId = null) => {
             const tree = $('#jstree').jstree(true);
-            const children = tree.get_children_dom(node.id);
+            const childIds = tree.get_node(node.id).children;
             let isUnique = true;
-
-            children.each(function() {
-                const childId = $(this).attr('id');
+            childIds.forEach(function(childId) {
                 const childNode = tree.get_node(childId);
                 const childText = childNode.text.trim();
                 const childType = childNode.type;
-
                 if (childText.toLowerCase() === name.trim().toLowerCase() && childType === type) {
                     if (excludeId && childId === excludeId) {
-                        // Это тот же узел, поэтому не считаем его дубликатом
                         return;
                     }
                     isUnique = false;
-                    return false; // Прерываем цикл
+                    return false;
                 }
             });
-
             return isUnique;
         };
-
-        /**
-         * Функция для получения полного пути узла
-         * @param {object} node - Узел jsTree
-         * @returns {string} - Полный путь узла
-         */
         const getFullPath = (node) => {
             const tree = $('#jstree').jstree(true);
             const path = [];
             let current = node;
-
             while (current && current.id !== "#") {
                 path.unshift(current.text);
                 current = tree.get_node(current.parent);
             }
-
-            // Удаляем корневую папку из пути
             path.shift();
-
             return path.join('/');
         };
-
-        /**
-         * Рекурсивная функция для сбора информации о файлах и папках
-         * @param {object} node - Узел jsTree
-         * @returns {Array} - Массив объектов с информацией о файлах и папках
-         */
         const gatherFiles = (node) => {
             const tree = $('#jstree').jstree(true);
             const files = [];
-
             node.children.forEach(childId => {
                 const child = tree.get_node(childId);
                 const fileObj = {
@@ -254,18 +226,10 @@
                     state: child.state,
                     files: child.type === 'folder' ? gatherFiles(child) : undefined
                 };
-
                 files.push(fileObj);
             });
-
             return files;
         };
-
-        /**
-         * Функция для преобразования данных из gatherFiles в формат, ожидаемый бэкэндом
-         * @param {Array} gatheredFiles - Массив файлов и папок, собранных функцией gatherFiles
-         * @returns {Array} - Преобразованный массив без поля state
-         */
         const mapToBackendFormat = (gatheredFiles) => {
             return gatheredFiles.map(fileObj => {
                 const mappedObj = {
@@ -273,19 +237,12 @@
                     content: fileObj.type === 'file' ? fileObj.data.content : null,
                     type: fileObj.type === 'folder' ? 'folder' : null
                 };
-
                 if (fileObj.type === 'folder') {
                     mappedObj.files = fileObj.files && fileObj.files.length > 0 ? mapToBackendFormat(fileObj.files) : [];
                 }
-
                 return mappedObj;
             });
         };
-
-        /**
-         * Функция для получения JSON объекта проекта, готового для отправки на бэкэнд
-         * @returns {object} - JSON объект проекта без поля state
-         */
         const getProjectJSON = () => {
             const tree = $('#jstree').jstree(true);
             const root = tree.get_node("root");
@@ -296,17 +253,20 @@
             };
             return project;
         };
-
-        /**
-         * Функция для отправки проекта на бэкэнд
-         */
-        const saveProject = () => {
-            // Сохранение текущего файла перед сборкой JSON
+        const saveProject = (showSuccessMessage = true) => {
+            if (isSaving) {
+                console.log("Сохранение уже выполняется, пропуск текущего цикла автосохранения.");
+                return;
+            }
+            isSaving = true;
             saveCurrentFile();
-
             const projectJSON = getProjectJSON();
             console.log("Сформированный JSON проекта:", JSON.stringify(projectJSON, null, 2));
-
+            if (!projectJSON.files || projectJSON.files.length === 0) {
+                console.log("Проект пустой, сохранение не требуется.");
+                isSaving = false;
+                return;
+            }
             $.ajax({
                 url: `/projects/${projectId}/save`,
                 type: 'POST',
@@ -316,31 +276,25 @@
                 },
                 data: JSON.stringify(projectJSON),
                 success: function(response) {
-                    showMessage("Проект успешно сохранён!");
-                    console.log("Ответ от сервера:", response);
+                    console.log("Проект успешно сохранён!");
+                    if (showSuccessMessage) {
+                        showMessage("Проект успешно сохранён!", "success");
+                    }
                 },
                 error: function(xhr, status, error) {
-                    showMessage("Ошибка при сохранении проекта.");
-                    console.error("Ошибка:", error);
+                    console.error("Ошибка при сохранении проекта:", error);
+                    showMessage("Ошибка при сохранении проекта.", "error");
+                },
+                complete: function() {
+                    isSaving = false;
                 }
             });
         };
-
-        /**
-         * Рекурсивная функция для создания узлов и их дочерних элементов
-         * @param {string} parent - ID родительского узла
-         * @param {object} nodeData - Данные узла для создания
-         * @param {number|string} position - Позиция для вставки узла
-         */
         const createNodeRecursively = (parent, nodeData, position) => {
             const tree = $('#jstree').jstree(true);
             position = (typeof position === 'number' && position < 0) ? 'last' : position;
-
             pendingCreations++;
-
-            // Добавим логирование для отладки
             console.log(`Восстанавливаем узел: ${nodeData.text}, Тип: ${nodeData.type}, ID: ${nodeData.id}`);
-
             tree.create_node(parent, {
                 id: nodeData.id,
                 text: nodeData.text,
@@ -349,13 +303,11 @@
                 state: nodeData.state
             }, position, function(new_node) {
                 console.log(`Узел "${new_node.text}" восстановлен.`);
-
                 if (nodeData.files && nodeData.files.length > 0) {
                     nodeData.files.forEach(child => {
                         createNodeRecursively(new_node.id, child, 'last');
                     });
                 }
-
                 pendingCreations--;
                 if (pendingCreations === 0) {
                     isUndoing = false;
@@ -363,35 +315,23 @@
                 }
             });
         };
-
-        /**
-         * Функция для загрузки файла в редактор
-         * @param {object} node - Узел jsTree
-         */
         const loadFile = (node) => {
             if (node.type === 'file') {
                 const content = node.data && node.data.content ? node.data.content : "";
                 const language = getLanguageFromFilename(node.text);
-
                 if (editor) {
-                    isUndoing = true; // Устанавливаем флаг перед изменением модели
+                    isUndoing = true;
                     const currentModel = editor.getModel();
                     if (currentModel) {
                         monaco.editor.setModelLanguage(currentModel, language);
                         editor.setValue(content);
                     }
-                    isUndoing = false; // Сбрасываем флаг после изменения модели
+                    isUndoing = false;
                     console.log(`Файл "${node.text}" загружен в редактор с языком "${language}".`);
                 }
-
                 currentFile = node;
             }
-            // При выборе папки ничего не делаем с редактором
         };
-
-        /**
-         * Функция Отмены (Undo)
-         */
         const undo = () => {
             if (undoStack.length === 0) {
                 console.log("Undo Stack пуст.");
@@ -399,16 +339,13 @@
             }
             const lastAction = undoStack.pop();
             console.log("Undoing Action:", lastAction);
-            isUndoing = true; // Устанавливаем флаг
-
+            isUndoing = true;
             const tree = $('#jstree').jstree(true);
-
             switch(lastAction.action) {
                 case 'delete':
                     tree.delete_node(lastAction.node);
                     break;
                 case 'create':
-                    // Восстанавливаем узел и его детей
                     createNodeRecursively(lastAction.parent, lastAction.node, lastAction.position);
                     break;
                 case 'rename':
@@ -421,49 +358,39 @@
                     console.warn('Неизвестное действие для отмены:', lastAction.action);
             }
         };
-
-        /**
-         * Функция для обработки переименования узла
-         * @param {object} data - Данные события
-         */
         const handleRename = (data) => {
-            console.log(`handleRename вызван для узла: ${data.node.id}, Тип: ${data.node.type}, Старое имя: ${data.old}, Новое имя: ${data.text}`); // Добавлено
-
+            console.log(`handleRename вызван для узла: ${data.node.id}, Тип: ${data.node.type}, Старое имя: ${data.old}, Новое имя: ${data.text}`);
             if (!isUndoing) {
-                // Предотвращение переименования корневой папки
                 if (data.node.id === "root") {
                     showMessage("Нельзя переименовывать корневую папку!");
                     const tree = $('#jstree').jstree(true);
                     tree.rename_node(data.node, data.old);
                     return;
                 }
-
-                // Проверка уникальности имени при переименовании
-                const parent = data.node.parent;
-                const tree = $('#jstree').jstree(true);
-                const siblings = tree.get_children_dom(parent);
-                let isUnique = true;
-
-                siblings.each(function() {
-                    const childId = $(this).attr('id');
-                    const childNode = tree.get_node(childId);
-                    const childText = childNode.text.trim();
-                    const childType = childNode.type;
-
-                    if (childText.toLowerCase() === data.text.trim().toLowerCase() && childType === data.node.type && childId !== data.node.id) {
-                        isUnique = false;
-                        return false; // Прерываем цикл
-                    }
-                });
-
-                if (!isUnique) {
-                    showMessage("Узел с таким именем уже существует в этой папке.");
-                    // Откатываем переименование, возвращая старое имя
+                if (!isValidName(data.text)) {
+                    showMessage("Недопустимое имя.");
+                    const tree = $('#jstree').jstree(true);
                     tree.rename_node(data.node, data.old);
                     return;
                 }
-
-                // Записываем обратное действие в стек отмены
+                const parent = data.node.parent;
+                const tree = $('#jstree').jstree(true);
+                const siblings = tree.get_node(parent).children;
+                let isUnique = true;
+                siblings.forEach(function(childId) {
+                    const childNode = tree.get_node(childId);
+                    const childText = childNode.text.trim();
+                    const childType = childNode.type;
+                    if (childText.toLowerCase() === data.text.trim().toLowerCase() && childType === data.node.type && childId !== data.node.id) {
+                        isUnique = false;
+                        return false;
+                    }
+                });
+                if (!isUnique) {
+                    showMessage("Узел с таким именем уже существует в этой папке.");
+                    tree.rename_node(data.node, data.old);
+                    return;
+                }
                 undoStack.push({
                     action: 'rename',
                     node: data.node.id,
@@ -472,52 +399,33 @@
                 });
                 console.log("Action Recorded to Undo Stack:", { action: 'rename', node: data.node.id, old_text: data.old, new_text: data.text });
             }
-
-            // Если переименовываемый узел — текущий файл, обновляем язык синтаксиса
             if (currentFile && data.node.id === currentFile.id && currentFile.type === 'file') {
                 const newLanguage = getLanguageFromFilename(data.text);
                 monaco.editor.setModelLanguage(editor.getModel(), newLanguage);
                 console.log(`Язык синтаксиса обновлён на "${newLanguage}" для файла "${data.text}".`);
             }
         };
-
-        /**
-         * Функция для проверки уникальности имени при перемещении узла
-         * @param {object} targetNode - Целевой узел jsTree
-         * @param {object} node - Перемещаемый узел jsTree
-         * @returns {boolean} - true, если имя уникально в целевой папке для данного типа, иначе false
-         */
         const isMoveNameUnique = (targetNode, node) => {
             const tree = $('#jstree').jstree(true);
-            const children = tree.get_children_dom(targetNode.id);
+            const childIds = tree.get_node(targetNode.id).children;
             let isUnique = true;
-
-            children.each(function() {
-                const childId = $(this).attr('id');
+            childIds.forEach(function(childId) {
                 const childNode = tree.get_node(childId);
                 const childText = childNode.text.trim();
                 const childType = childNode.type;
-
                 if (childText.toLowerCase() === node.text.trim().toLowerCase() && childType === node.type) {
                     if (childId === node.id) {
-                        // Это тот же узел, поэтому не считаем его дубликатом
                         return;
                     }
                     isUnique = false;
-                    return false; // Прерываем цикл
+                    return false;
                 }
             });
-
             return isUnique;
         };
-
-        /**
-         * Функция для инициализации jsTree с данными из бэкенда
-         */
         const initializeJsTree = () => {
             const fileStructureJson = document.querySelector('meta[name="fileStructure"]').getAttribute('content');
             let fileTreeData = [];
-
             if (fileStructureJson) {
                 try {
                     fileTreeData = JSON.parse(fileStructureJson);
@@ -525,8 +433,6 @@
                     console.error("Ошибка при парсинге JSON для fileStructure:", e);
                 }
             }
-
-            // Если fileStructure пуст или не содержит данных, инициализируем только корневую папку
             if (!fileTreeData || fileTreeData.length === 0) {
                 fileTreeData = [{
                     id: "root",
@@ -536,38 +442,27 @@
                     state: { opened: true }
                 }];
             }
-
             $('#jstree').jstree({
                 core: {
                     check_callback: function (operation, node, parent, position, more) {
                         const tree = $('#jstree').jstree(true);
-
                         if (operation === "move_node") {
                             const movingNode = node;
                             const targetParentNode = tree.get_node(parent);
-
-                            // 1. Запрет на перемещение корневой папки
                             if (movingNode.id === "root") {
                                 return false;
                             }
-
-                            // 2. Запрет на перемещение в файлы
                             if (targetParentNode.type !== "folder") {
                                 return false;
                             }
-
-                            // 3. Запрет на перемещение за корневую папку
                             if (parent === "#") {
                                 return false;
                             }
-
-                            // 4. Проверка уникальности имени в целевой папке для данного типа
                             if (!isMoveNameUnique(targetParentNode, movingNode)) {
                                 return false;
                             }
                         }
-
-                        return true; // Разрешаем все остальные операции
+                        return true;
                     },
                     data: fileTreeData
                 },
@@ -580,9 +475,7 @@
                     items: function(node) {
                         const tree = $("#jstree").jstree(true);
                         const menuItems = {};
-
                         if (node.type !== 'folder') {
-                            // Действия для файлов
                             menuItems.Rename = {
                                 separator_before: false,
                                 separator_after: false,
@@ -600,7 +493,6 @@
                                     const parent = node.parent;
                                     const parentNode = tree.get_node(parent);
                                     const position = parentNode.children.indexOf(node.id) !== -1 ? parentNode.children.indexOf(node.id) : 'last';
-
                                     if (!isUndoing) {
                                         const fullNodeData = {
                                             id: node.id,
@@ -618,15 +510,11 @@
                                         });
                                         console.log("Action Recorded to Undo Stack:", { action: 'create', node: fullNodeData, parent: parent, position: position });
                                     }
-
-                                    // Очистка редактора, если удаляется текущий файл
                                     clearEditorIfDeleted(node);
-
                                     tree.delete_node(node);
                                 }
                             };
                         } else {
-                            // Действия для папок
                             menuItems.Create = {
                                 separator_before: false,
                                 separator_after: false,
@@ -636,21 +524,19 @@
                                     CreateFile: {
                                         label: "Файл",
                                         action: function () {
-                                            // Запрашиваем имя файла у пользователя
                                             const newFileName = prompt("Введите имя нового файла:", "Новый файл.js");
                                             if (!newFileName) {
-                                                // Пользователь отменил создание файла
                                                 return;
                                             }
-
-                                            // Проверка уникальности имени
+                                            if (!isValidName(newFileName)) {
+                                                showMessage("Недопустимое имя файла.");
+                                                return;
+                                            }
                                             if (!checkUniqueName(node, newFileName, 'file')) {
                                                 showMessage("Файл с таким именем уже существует в этой папке.");
                                                 return;
                                             }
-
                                             const newId = 'file_' + Date.now();
-
                                             tree.create_node(node, {
                                                 id: newId,
                                                 text: newFileName,
@@ -659,8 +545,7 @@
                                                 state: { opened: true }
                                             }, "last", function(new_node) {
                                                 setTimeout(function() {
-                                                    // Не открываем окно редактирования
-                                                    tree.select_node(new_node); // Автоматически выбрать новый файл (опционально)
+                                                    tree.select_node(new_node);
                                                 }, 0);
                                             });
                                         }
@@ -668,21 +553,19 @@
                                     CreateFolder: {
                                         label: "Папка",
                                         action: function () {
-                                            // Запрашиваем имя новой папки у пользователя
                                             const newFolderName = prompt("Введите имя новой папки:", "Новая папка");
                                             if (!newFolderName) {
-                                                // Пользователь отменил создание папки
                                                 return;
                                             }
-
-                                            // Проверка уникальности имени
+                                            if (!isValidName(newFolderName)) {
+                                                showMessage("Недопустимое имя папки.");
+                                                return;
+                                            }
                                             if (!checkUniqueName(node, newFolderName, 'folder')) {
                                                 showMessage("Папка с таким именем уже существует в этой папке.");
                                                 return;
                                             }
-
                                             const newId = 'folder_' + Date.now();
-
                                             tree.create_node(node, {
                                                 id: newId,
                                                 text: newFolderName,
@@ -690,15 +573,13 @@
                                                 state: { opened: true }
                                             }, "last", function(new_node) {
                                                 setTimeout(function() {
-                                                    tree.select_node(new_node); // Автоматически выбрать новую папку (опционально)
+                                                    tree.select_node(new_node);
                                                 }, 0);
                                             });
                                         }
                                     }
                                 }
                             };
-
-                            // Добавляем "Переименовать" и "Удалить" только если узел не корневой
                             if (node.id !== "root") {
                                 menuItems.Rename = {
                                     separator_before: false,
@@ -719,7 +600,6 @@
                                         const parent = node.parent;
                                         const parentNode = tree.get_node(parent);
                                         const position = parentNode.children.indexOf(node.id) !== -1 ? parentNode.children.indexOf(node.id) : 'last';
-
                                         if (!isUndoing) {
                                             const fullNodeData = {
                                                 id: node.id,
@@ -737,16 +617,12 @@
                                             });
                                             console.log("Action Recorded to Undo Stack:", { action: 'create', node: fullNodeData, parent: parent, position: position });
                                         }
-
-                                        // Очистка редактора, если удаляется текущий файл или файл внутри удаляемой папки
                                         clearEditorIfDeleted(node);
-
                                         tree.delete_node(node);
                                     }
                                 };
                             }
                         }
-
                         return menuItems;
                     }
                 }
@@ -755,7 +631,6 @@
                 if (data.node.type === 'file' && !isUndoing) {
                     data.node.data = { "content": "" };
                 }
-
                 if (!isUndoing) {
                     undoStack.push({
                         action: 'delete',
@@ -768,10 +643,8 @@
                 handleRename(data);
             })
             .on('delete_node.jstree', function (e, data) {
-                // Обработка очистки редактора при удалении узла
                 clearEditorIfDeleted(data.node);
             })
-            // Обработчик события перемещения узла
             .on('move_node.jstree', function (e, data) {
                 if (!isUndoing) {
                     undoStack.push({
@@ -783,11 +656,10 @@
                     console.log("Action Recorded to Undo Stack:", { action: 'move', node: data.node.id, old_parent: data.old_parent, old_position: data.old_position });
                 }
             })
-            // Добавление обработчика завершения операции drag-and-drop
             .on('dnd_stop.vakata', function (e, data) {
                 if (duplicateNameError) {
                     showMessage("В целевой папке уже существует узел с таким именем.");
-                    duplicateNameError = false; // Сбросить флаг после отображения сообщения
+                    duplicateNameError = false;
                 }
             })
             .on('select_node.jstree', function (e, data) {
@@ -795,10 +667,7 @@
                 if (data.node.type === 'file') {
                     loadFile(data.node);
                 }
-                // При выборе папки ничего не делаем с редактором
             });
-
-            // Добавление обработчика для Ctrl+Z (или Cmd+Z на Mac)
             $(document).on('keydown', function(e) {
                 if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
                     e.preventDefault();
@@ -806,13 +675,9 @@
                     undo();
                 }
             });
-
-            // Добавление обработчика для кнопки "Сохранить проект"
             $('#save-button').on('click', function() {
                 saveProject();
             });
-
-            // Инициализация Monaco Editor
             require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs' }});
             require(['vs/editor/editor.main'], function() {
                 editor = monaco.editor.create(document.getElementById('editor'), {
@@ -821,25 +686,23 @@
                     theme: 'vs-dark',
                     automaticLayout: true
                 });
-
-                // Обработка изменений в редакторе
                 editor.onDidChangeModelContent(function() {
                     if (isUndoing) {
-                        // Игнорируем изменения, вызванные программным обновлением модели
                         return;
                     }
                     if (currentFile) {
                         currentFile.data.content = editor.getValue();
                         console.log(`Содержимое файла "${currentFile.text}" обновлено.`);
-                        // Дополнительно: можно добавить авто-сохранение или уведомления
                     }
                 });
             });
         };
-
-        // Инициализация jsTree с данными из бэкенда
         initializeJsTree();
-    }); // Закрываем jQuery document ready
+        setInterval(function() {
+            console.log("Автосохранение проекта...");
+            saveProject(false);
+        }, 15000);
+    });
 </script>
 </body>
 </html>

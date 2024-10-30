@@ -2,7 +2,6 @@ package com.example.CompilerIDE.util;
 
 import java.io.InputStream;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 public class HashUtil {
 
@@ -15,7 +14,6 @@ public class HashUtil {
         }
         byte[] hashBytes = digest.digest();
 
-        // Преобразуем байты в шестнадцатеричную строку
         StringBuilder sb = new StringBuilder();
         for (byte b : hashBytes) {
             sb.append(String.format("%02x", b));
