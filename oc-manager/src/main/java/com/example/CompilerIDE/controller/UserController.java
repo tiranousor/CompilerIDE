@@ -6,6 +6,7 @@ import com.example.CompilerIDE.providers.LoginTimestamp;
 import com.example.CompilerIDE.providers.Project;
 import com.example.CompilerIDE.repositories.LoginTimestampRepository;
 import com.example.CompilerIDE.services.ClientService;
+import com.example.CompilerIDE.services.FriendshipService;
 import com.example.CompilerIDE.services.MinioService;
 import com.example.CompilerIDE.services.ProjectService;
 import com.example.CompilerIDE.util.ClientValidator;
@@ -40,17 +41,19 @@ public class UserController {
     private final PasswordEncoder passwordEncoder;
     private final ProjectValidator projectValidator;
     private final MinioService minioService;
+    private final FriendshipService friendshipService;
     private final LoginTimestampRepository loginTimestampRepository;
 
     @Autowired
     public UserController(ClientService clientService, ProjectService projectService, ClientValidator clientValidator,
-                          PasswordEncoder passwordEncoder, ProjectValidator projectValidator, MinioService minioService, LoginTimestampRepository loginTimestampRepository) {
+                          PasswordEncoder passwordEncoder, ProjectValidator projectValidator, MinioService minioService, FriendshipService friendshipService, LoginTimestampRepository loginTimestampRepository) {
         this.passwordEncoder = passwordEncoder;
         this.clientService = clientService;
         this.clientValidator = clientValidator;
         this.projectService = projectService;
         this.projectValidator = projectValidator;
         this.minioService = minioService;
+        this.friendshipService = friendshipService;
         this.loginTimestampRepository = loginTimestampRepository;
     }
 
@@ -201,12 +204,14 @@ public class UserController {
         loginTimestampRepository.save(loginTimestamp);
 
         List<Project> projects = projectService.findByClient(client);
+        List<Client> friends = friendshipService.getFriends(client);
+
         model.addAttribute("client", client);
         model.addAttribute("projects", projects);
+        model.addAttribute("friendsCount", friends.size());
 
         return "userProfile";
     }
-
 
     @GetMapping("/edit/{id}")
     public String editProfile(Model model, @PathVariable("id") int id) {
@@ -280,6 +285,31 @@ public class UserController {
 //        return "redirect:/userProfile";
 //    }
 
+    @GetMapping("/userProfile/{id}")
+    public String viewUserProfile(@PathVariable("id") int id, Model model, Authentication authentication) {
+        // Получаем текущего пользователя
+        String authName = authentication.getName();
+        Client currentUser = clientService.findByUsername(authName)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + authName));
+
+        // Получаем пользователя, чей профиль просматривается
+        Client viewedUser = clientService.findOne(id);
+        if (viewedUser == null) {
+            model.addAttribute("error", "User not found.");
+            return "error"; // Убедитесь, что у вас есть шаблон error.html
+        }
+
+        // Проверяем, просматривает ли пользователь свой профиль или профиль другого пользователя
+        boolean isOwnProfile = viewedUser.getId() == currentUser.getId();
+        model.addAttribute("isOwnProfile", isOwnProfile);
+
+        // Добавляем данные профиля в модель
+        model.addAttribute("client", viewedUser);
+        model.addAttribute("friendsCount", friendshipService.getFriends(viewedUser).size());
+        model.addAttribute("projects", projectService.findByClient(viewedUser));
+
+        return "userProfile";
+    }
 
 
 }

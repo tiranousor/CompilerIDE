@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -32,6 +33,9 @@ public class ClientService {
     public void save(Client client){
         client.setPassword(passwordEncoder.encode(client.getPassword()));
         clientRepository.save(client);
+    }
+    public List<Client> findByUsernameContainingIgnoreCase(String username) {
+        return clientRepository.findByUsernameContainingIgnoreCase(username);
     }
     public Optional<Client> getClientByEmail(String email) {
         return clientRepository.findByEmail(email);
@@ -77,5 +81,6 @@ public class ClientService {
         updateClient.setId(id);
         clientRepository.save(updateClient);
     }
+
 
 }

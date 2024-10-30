@@ -9,9 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.io.Serializable;
 @Entity
 @Table(name="client")
@@ -63,4 +61,17 @@ public class Client implements Serializable {
 
     @OneToMany(mappedBy = "client", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Project> projects;
+    @OneToMany(mappedBy = "sender", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<FriendRequest> sentFriendRequests = new ArrayList<>();
+
+    @OneToMany(mappedBy = "receiver", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<FriendRequest> receivedFriendRequests = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "friendships",
+            joinColumns = @JoinColumn(name = "client1_id"),
+            inverseJoinColumns = @JoinColumn(name = "client2_id")
+    )
+    private Set<Client> friends = new HashSet<>();
 }
