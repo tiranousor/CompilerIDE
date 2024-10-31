@@ -2,9 +2,8 @@ package com.example.CompilerIDE.services;
 
 import com.example.CompilerIDE.Dto.FileNodeDto;
 import com.example.CompilerIDE.Dto.JsTreeNodeDto;
-import com.example.CompilerIDE.providers.Client;
-import com.example.CompilerIDE.providers.Project;
-import com.example.CompilerIDE.providers.ProjectStruct;
+import com.example.CompilerIDE.providers.*;
+import com.example.CompilerIDE.repositories.ProjectInvitationRepository;
 import com.example.CompilerIDE.repositories.ProjectRepository;
 import com.example.CompilerIDE.repositories.ProjectStructRepository;
 import com.example.CompilerIDE.util.HashUtil;
@@ -18,22 +17,32 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.example.CompilerIDE.repositories.ProjectTeamRepository;
+import com.example.CompilerIDE.providers.Notification;
+import com.example.CompilerIDE.providers.NotificationType;
+import com.example.CompilerIDE.repositories.NotificationRepository;
 @Service
 public class ProjectService {
     private final ProjectRepository projectRepository;
     private final ProjectStructRepository projectStructRepository;
     private final MinioService minioService;
+    private final ProjectTeamRepository projectTeamRepository;
     private static final Logger logger = LoggerFactory.getLogger(ProjectService.class);
-
+    private final ProjectInvitationRepository projectInvitationRepository;
+    private final NotificationRepository notificationRepository;
     @Autowired
     public ProjectService(ProjectRepository projectRepository, ProjectStructRepository projectStructRepository,
-                          MinioService minioService) {
+                          MinioService minioService, ProjectTeamRepository projectTeamRepository, ProjectInvitationRepository projectInvitationRepository, NotificationRepository notificationRepository) {
         this.projectRepository = projectRepository;
         this.minioService = minioService;
         this.projectStructRepository = projectStructRepository;
+        this.projectTeamRepository = projectTeamRepository;
+        this.projectInvitationRepository = projectInvitationRepository;
+        this.notificationRepository = notificationRepository;
     }
 
     public Optional<Project> findByNameAndClient(String name, Client client){
@@ -227,5 +236,117 @@ public class ProjectService {
             return "";
         }
     }
+    @Transactional
+    public void addMemberToProject(Project project, Client client, Role role) {
+        Optional<ProjectTeam> existing = projectTeamRepository.findByProjectAndClient(project, client);
+        if (existing.isPresent()) {
+            throw new RuntimeException("User is already a member of the project.");
+        }
+        ProjectTeam projectTeam = new ProjectTeam();
+        projectTeam.setProject(project);
+        projectTeam.setClient(client);
+        projectTeam.setRole(role);
+        projectTeamRepository.save(projectTeam);
+    }
+    @Transactional
+    public void removeMemberFromProject(Project project, Client client) {
+        Optional<ProjectTeam> existing = projectTeamRepository.findByProjectAndClient(project, client);
+        existing.ifPresent(projectTeamRepository::delete);
+    }
+    public List<ProjectTeam> getProjectMembers(Project project) {
+        return projectTeamRepository.findByProject(project);
+    }
+    public List<ProjectTeam> getProjectMembersByRole(Project project, Role role) {
+        return projectTeamRepository.findByProjectAndRole(project, role);
+    }
+    public boolean isMember(Project project, Client client) {
+        return projectTeamRepository.findByProjectAndClient(project, client).isPresent();
+    }
+    public Optional<Role> getUserRoleInProject(Project project, Client client) {
+        return projectTeamRepository.findByProjectAndClient(project, client)
+                .map(ProjectTeam::getRole);
+    }
+    @Transactional
+    public void sendInvitation(Project project, Client invitedUser, Client invitedBy) {
+        // ... existing code ...
 
+        // Create and save the invitation
+        ProjectInvitation invitation = new ProjectInvitation();
+        invitation.setProject(project);
+        invitation.setInvitedUser(invitedUser);
+        invitation.setInvitedBy(invitedBy);
+        invitation.setStatus(InvitationStatus.PENDING);
+        invitation.setInvitationTime(new Timestamp(System.currentTimeMillis()));
+        projectInvitationRepository.save(invitation);
+
+        // Create a notification for the invitee
+        Notification notification = new Notification();
+        notification.setRecipient(invitedUser);
+        notification.setType(NotificationType.PROJECT_INVITATION);
+        notification.setMessage(invitedBy.getUsername() + " has invited you to join the project \"" + project.getName() + "\".");
+        notification.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+        notification.setRead(false);
+        notificationRepository.save(notification);
+    }
+
+    /**
+     * Accepts an invitation and creates a notification for the inviter.
+     */
+    @Transactional
+    public void acceptInvitation(Long invitationId, Client invitedUser) {
+        ProjectInvitation invitation = projectInvitationRepository.findByIdAndInvitedUser(invitationId, invitedUser)
+                .orElseThrow(() -> new RuntimeException("Invitation not found."));
+        if (invitation.getStatus() != InvitationStatus.PENDING) {
+            throw new RuntimeException("Invitation is not pending.");
+        }
+
+        // Add the user to the project as an EDITOR
+        addMemberToProject(invitation.getProject(), invitedUser, Role.EDITOR);
+
+        // Update the invitation status
+        invitation.setStatus(InvitationStatus.ACCEPTED);
+        projectInvitationRepository.save(invitation);
+
+        // Notify the inviter about the acceptance
+        Notification notification = new Notification();
+        notification.setRecipient(invitation.getInvitedBy());
+        notification.setType(NotificationType.PROJECT_INVITATION);
+        notification.setMessage(invitedUser.getUsername() + " has accepted your invitation to join the project \"" + invitation.getProject().getName() + "\".");
+        notification.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+        notification.setRead(false);
+        notificationRepository.save(notification);
+    }
+
+    /**
+     * Rejects an invitation and notifies the inviter.
+     */
+    @Transactional
+    public void rejectInvitation(Long invitationId, Client invitedUser) {
+        ProjectInvitation invitation = projectInvitationRepository.findByIdAndInvitedUser(invitationId, invitedUser)
+                .orElseThrow(() -> new RuntimeException("Invitation not found."));
+        if (invitation.getStatus() != InvitationStatus.PENDING) {
+            throw new RuntimeException("Invitation is not pending.");
+        }
+
+        // Update the invitation status
+        invitation.setStatus(InvitationStatus.REJECTED);
+        projectInvitationRepository.save(invitation);
+
+        // Notify the inviter about the rejection
+        Notification notification = new Notification();
+        notification.setRecipient(invitation.getInvitedBy());
+        notification.setType(NotificationType.PROJECT_INVITATION);
+        notification.setMessage(invitedUser.getUsername() + " has rejected your invitation to join the project \"" + invitation.getProject().getName() + "\".");
+        notification.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+        notification.setRead(false);
+        notificationRepository.save(notification);
+    }
+    public List<ProjectInvitation> getPendingInvitations(Client receiver) {
+        return projectInvitationRepository.findByReceiverAndStatus(receiver, InvitationStatus.PENDING);
+    }
+
+    public List<Notification> getNotifications(Client receiver) {
+        // Здесь реализуйте метод для получения уведомлений по логике вашего проекта
+        return List.of(); // Предположим, возвращается пустой список как пример
+    }
 }

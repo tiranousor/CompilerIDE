@@ -2,10 +2,7 @@ package com.example.CompilerIDE.controller;
 
 import com.example.CompilerIDE.Dto.FileNodeDto;
 import com.example.CompilerIDE.Dto.SaveProjectRequest;
-import com.example.CompilerIDE.providers.Client;
-import com.example.CompilerIDE.providers.Project;
-import com.example.CompilerIDE.providers.ProjectAccessLog;
-import com.example.CompilerIDE.providers.ProjectStruct;
+import com.example.CompilerIDE.providers.*;
 import com.example.CompilerIDE.repositories.ProjectAccessLogRepository;
 import com.example.CompilerIDE.repositories.ProjectStructRepository;
 import com.example.CompilerIDE.services.ClientService;
@@ -90,40 +87,72 @@ public class ProjectController {
 //            return "redirect:/userProfile";
 //        }
 //    }
-@GetMapping("/edit/{id}")
-public String editProjectForm(@PathVariable("id") int projectId, Model model, Authentication authentication) {
-    Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
+@GetMapping("/{projectId}/edit")
+public String editProjectForm(@PathVariable("projectId") int projectId, Model model, Authentication authentication) {
+    Client currentUser = clientService.findByUsername(authentication.getName()).orElse(null);
 
-    if (clientOpt.isEmpty()) {
+    if (currentUser == null) {
         return "redirect:/login";
     }
 
-    Client client = clientOpt.get();
+    Project project = projectService.findById(projectId).orElse(null);
+    if (project == null) {
+        return "redirect:/userProfile";
+    }
 
-    Optional<Project> projectOpt = projectService.findById(projectId);
-    if (projectOpt.isPresent()) {
-        Project project = projectOpt.get();
+    Optional<Role> userRoleOpt = projectService.getUserRoleInProject(project, currentUser);
+    if (userRoleOpt.isEmpty()) {
+        return "redirect:/userProfile";
+    }
 
-        // Проверяем, принадлежит ли проект текущему пользователю
-        if (project.getClient().getId().equals(client.getId())) {
-
-            // Записываем информацию о том, что проект был открыт
-            ProjectAccessLog accessLog = new ProjectAccessLog();
-            accessLog.setClient(client);
-            accessLog.setProject(project);
-            accessLog.setAccessTime(new Timestamp(System.currentTimeMillis()));  // Текущее время
-            accessLog.setActionType("open");
-            projectAccessLogRepository.save(accessLog);
-
-            model.addAttribute("project", project);
-            return "edit_project_form"; // Страница редактирования проекта
-        } else {
-            return "redirect:/userProfile";
-        }
+    Role userRole = userRoleOpt.get();
+    if (userRole == Role.OWNER || userRole == Role.EDITOR) {
+        // Proceed to show edit form
+        model.addAttribute("project", project);
+        return "edit_project_form";
     } else {
         return "redirect:/userProfile";
     }
 }
+
+    /**
+     * Handle POST requests to save project edits
+     * Ensure that the user has the right role.
+     */
+    @PostMapping("/{projectId}/save")
+    public ResponseEntity<?> saveProjectEdits(@PathVariable int projectId,
+                                              @Valid @RequestBody SaveProjectRequest saveRequest,
+                                              Authentication authentication) {
+
+        Client currentUser = clientService.findByUsername(authentication.getName()).orElse(null);
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+
+        Project project = projectService.findById(projectId).orElse(null);
+        if (project == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Project not found");
+        }
+
+        Optional<Role> userRoleOpt = projectService.getUserRoleInProject(project, currentUser);
+        if (userRoleOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+        }
+
+        Role userRole = userRoleOpt.get();
+        if (userRole != Role.OWNER && userRole != Role.EDITOR) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
+        }
+
+        // Proceed to save project edits
+        try {
+            projectService.saveProjectFilesFromJson(project, saveRequest.getFiles());
+            return ResponseEntity.ok("Project saved successfully");
+        } catch (Exception e) {
+            logger.error("Error saving project", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error saving project");
+        }
+    }
 
 //
 //

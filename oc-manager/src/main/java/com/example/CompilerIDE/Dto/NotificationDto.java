@@ -14,4 +14,5 @@ import java.util.List;
 public class NotificationDto {
     private Integer requestId;
     private String senderUsername;
+
 }

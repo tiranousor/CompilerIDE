@@ -1,10 +1,10 @@
 package com.example.CompilerIDE.controller;
 
-import com.example.CompilerIDE.providers.Client;
-import com.example.CompilerIDE.providers.FriendRequest;
+import com.example.CompilerIDE.providers.*;
 import com.example.CompilerIDE.services.ClientService;
 import com.example.CompilerIDE.services.FriendRequestService;
 import com.example.CompilerIDE.services.FriendshipService;
+import com.example.CompilerIDE.services.ProjectService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +13,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
@@ -23,12 +25,13 @@ public class FriendController {
     private final ClientService clientService;
     private final FriendRequestService friendRequestService;
     private final FriendshipService friendshipService;
-
+    private final ProjectService projectService;
     @Autowired
-    public FriendController(ClientService clientService, FriendRequestService friendRequestService, FriendshipService friendshipService) {
+    public FriendController(ClientService clientService, FriendRequestService friendRequestService, FriendshipService friendshipService, ProjectService projectService) {
         this.clientService = clientService;
         this.friendRequestService = friendRequestService;
         this.friendshipService = friendshipService;
+        this.projectService = projectService;
     }
 
     /**
@@ -200,19 +203,91 @@ public class FriendController {
         }
     }
 
+    @PostMapping("/invite/{projectId}/{friendId}")
+    public @ResponseBody String inviteToProject(@PathVariable("projectId") Integer projectId,
+                                                @PathVariable("friendId") Integer friendId,
+                                                Authentication authentication) {
+        Client inviter = clientService.findByUsername(authentication.getName()).orElse(null);
+        Client invitee = clientService.findOne(friendId);
+        Project project = projectService.findById(projectId).orElse(null);
+
+        if (inviter == null || invitee == null || project == null) {
+            return "Invalid inviter, invitee, or project.";
+        }
+
+        // Check if inviter is the OWNER of the project
+        Optional<Role> inviterRoleOpt = projectService.getUserRoleInProject(project, inviter);
+        if (inviterRoleOpt.isEmpty() || inviterRoleOpt.get() != Role.OWNER) {
+            return "Only project owners can invite members.";
+        }
+
+        try {
+            projectService.sendInvitation(project, invitee, inviter);
+            return "Invitation sent successfully.";
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+    }
+
     /**
-     * Endpoint для получения уведомлений через AJAX.
+     * Accept an invitation to join a project.
+     */
+    @PostMapping("/acceptInvite/{invitationId}")
+    public @ResponseBody String acceptInvite(@PathVariable("invitationId") Long invitationId,
+                                             Authentication authentication) {
+        Client invitee = clientService.findByUsername(authentication.getName()).orElse(null);
+        if (invitee == null) {
+            return "User not found.";
+        }
+
+        try {
+            projectService.acceptInvitation(invitationId, invitee);
+            return "Invitation accepted.";
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+    }
+
+    /**
+     * Reject an invitation to join a project.
+     */
+    @PostMapping("/rejectInvite/{invitationId}")
+    public @ResponseBody String rejectInvite(@PathVariable("invitationId") Long invitationId,
+                                             Authentication authentication) {
+        Client invitee = clientService.findByUsername(authentication.getName()).orElse(null);
+        if (invitee == null) {
+            return "User not found.";
+        }
+
+        try {
+            projectService.rejectInvitation(invitationId, invitee);
+            return "Invitation rejected.";
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+    }
+
+    /**
+     * Endpoint to fetch notifications via AJAX.
      */
     @GetMapping("/notifications")
     public @ResponseBody List<NotificationDto> getNotifications(Authentication authentication) {
         Client currentUser = clientService.findByUsername(authentication.getName()).orElse(null);
         if (currentUser == null) {
-            return List.of(); // Возвращаем пустой список, если пользователь не найден
+            return List.of(); // Return empty list if user not found
         }
-        List<FriendRequest> receivedRequests = friendRequestService.getPendingReceivedRequests(currentUser);
-        return receivedRequests.stream()
-                .map(req -> new NotificationDto(req.getId(), req.getSender().getUsername()))
-                .collect(Collectors.toList());
+        List<ProjectInvitation> pendingInvitations = projectService.getPendingInvitations(currentUser);
+        List<Notification> notifications = projectService.getNotifications(currentUser);
+        List<NotificationDto> notificationDtos = new ArrayList<>();
+
+        // Convert ProjectInvitations to NotificationDto
+        for (ProjectInvitation invitation : pendingInvitations) {
+            notificationDtos.add(new NotificationDto(invitation.getId(), invitation.getInvitedBy().getUsername(), invitation.getProject().getName()));
+        }
+
+        // Add other notification types if necessary
+
+        return notificationDtos;
     }
 
 

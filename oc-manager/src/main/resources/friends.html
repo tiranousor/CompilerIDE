@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Your Friends and Requests</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        /* Базовые стили */
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(70deg, #8EC5FC, #E0C3FC);
+            padding: 20px;
+            margin: 0;
+        }
+
+        .friends-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #FFFFFF;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /* Стили для вкладок */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            position: relative;
+            font-weight: 600;
+            color: #333;
+            transition: color 0.3s;
+        }
+
+        .tab:hover {
+            color: #1DB954;
+        }
+
+        .tab.active {
+            color: #1DB954;
+            border-bottom: 3px solid #1DB954;
+        }
+
+        /* Индикатор количества заявок */
+        .tab.requests .badge {
+            position: absolute;
+            top: -5px;
+            right: -10px;
+            background-color: #1DB954;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+            display: none;
+        }
+
+        /* Показать индикатор, если есть заявки */
+        .tab.requests.has-requests .badge {
+            display: inline-block;
+        }
+
+        /* Стили списка друзей и заявок */
+        .list-container {
+            display: none;
+        }
+
+        .list-container.active {
+            display: block;
+        }
+
+        ul.friends-list, ul.requests-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        ul.friends-list li, ul.requests-list li {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        ul.friends-list li:last-child, ul.requests-list li:last-child {
+            border-bottom: none;
+        }
+
+        .friend-avatar, .request-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .friend-username, .request-username {
+            font-size: 18px;
+            color: #333;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .friend-username:hover, .request-username:hover {
+            color: #1DB954;
+        }
+
+        /* Стили кнопок */
+        .btn-accept, .btn-reject {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #fff;
+            transition: background-color 0.3s;
+        }
+
+        .btn-accept {
+            background-color: #1DB954;
+            margin-right: 5px;
+        }
+
+        .btn-accept:hover {
+            background-color: #17a44c;
+        }
+
+        .btn-reject {
+            background-color: #FF4D4F;
+        }
+
+        .btn-reject:hover {
+            background-color: #e60000;
+        }
+
+        /* Стили кнопки отправки запроса */
+        .btn-request {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #fff;
+            transition: background-color 0.3s;
+            background-color: #1DB954;
+        }
+
+        .btn-request.sent {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+
+        .btn-request:hover:not(.sent) {
+            background-color: #17a44c;
+        }
+
+    </style>
+</head>
+
+<body>
+<div class="friends-container">
+    <h1>Your Friends and Requests</h1>
+
+    <!-- Вкладки "Friends" и "Requests" -->
+    <div class="tabs">
+        <div class="tab friends active" onclick="switchTab('friends')">Friends</div>
+        <div class="tab requests" onclick="switchTab('requests')" th:classappend="${receivedRequests.size() > 0} ? ' has-requests' : ''">
+            Requests
+            <span class="badge" th:text="${receivedRequests.size()}"></span>
+        </div>
+    </div>
+
+    <!-- Список друзей -->
+    <div id="friends" class="list-container active">
+        <ul class="friends-list">
+            <th:block th:each="friend : ${friends}">
+                <li>
+                    <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar" class="friend-avatar">
+                    <a th:href="@{/userProfile/{id}(id=${friend.id})}" th:text="${friend.username}" class="friend-username">Friend Username</a>
+                </li>
+            </th:block>
+        </ul>
+    </div>
+
+    <!-- Список заявок -->
+    <div id="requests" class="list-container">
+        <ul class="requests-list">
+            <th:block th:each="request : ${receivedRequests}">
+                <li>
+                    <img th:src="${request.sender.avatarUrl != null ? request.sender.avatarUrl : '/noAvatar.png'}" alt="Avatar" class="request-avatar">
+                    <span th:text="${request.sender.username}" class="request-username">Username</span>
+                    <button class="btn-accept" th:data-request-id="${request.id}">Accept</button>
+                    <button class="btn-reject" th:data-request-id="${request.id}">Reject</button>
+                </li>
+            </th:block>
+        </ul>
+    </div>
+</div>
+
+<script>
+    // Функция переключения вкладок
+    function switchTab(tabName) {
+        const tabs = document.querySelectorAll('.tab');
+        const listContainers = document.querySelectorAll('.list-container');
+
+        tabs.forEach(tab => {
+            if (tab.classList.contains(tabName)) {
+                tab.classList.add('active');
+            } else {
+                tab.classList.remove('active');
+            }
+        });
+
+        listContainers.forEach(container => {
+            if (container.id === tabName) {
+                container.classList.add('active');
+            } else {
+                container.classList.remove('active');
+            }
+        });
+    }
+
+    // Функции для принятия и отклонения запросов
+    document.querySelectorAll('.btn-accept').forEach(button => {
+        button.addEventListener('click', function () {
+            const requestId = this.getAttribute('data-request-id');
+            acceptFriendRequest(requestId, this.parentElement);
+        });
+    });
+
+    document.querySelectorAll('.btn-reject').forEach(button => {
+        button.addEventListener('click', function () {
+            const requestId = this.getAttribute('data-request-id');
+            rejectFriendRequest(requestId, this.parentElement);
+        });
+    });
+
+    function acceptFriendRequest(requestId, listItem) {
+        fetch(`/friends/acceptRequest`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-TOKEN': getCsrfToken()
+            },
+            body: `requestId=${requestId}`
+        })
+        .then(response => response.text())
+        .then(data => {
+            if (data.trim() === 'success') {
+                listItem.remove();
+                updateBadge();
+                alert('Friend request accepted.');
+            } else {
+                alert('Error: ' + data);
+            }
+        })
+        .catch(error => console.error('Error accepting friend request:', error));
+    }
+
+    function rejectFriendRequest(requestId, listItem) {
+        fetch(`/friends/rejectRequest`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-TOKEN': getCsrfToken()
+            },
+            body: `requestId=${requestId}`
+        })
+        .then(response => response.text())
+        .then(data => {
+            if (data.trim() === 'success') {
+                listItem.remove();
+                updateBadge();
+                alert('Friend request rejected.');
+            } else {
+                alert('Error: ' + data);
+            }
+        })
+        .catch(error => console.error('Error rejecting friend request:', error));
+    }
+
+    // Функция для получения CSRF токена из скрытого поля
+    function getCsrfToken() {
+        const token = document.querySelector('input[name="_csrf"]').value;
+        return token;
+    }
+
+    // Функция для обновления индикатора заявок
+    function updateBadge() {
+        const badge = document.querySelector('.tab.requests .badge');
+        const requestsCount = document.querySelectorAll('.requests-list li').length;
+        if (requestsCount > 0) {
+            badge.textContent = requestsCount;
+            badge.style.display = 'inline-block';
+            document.querySelector('.tab.requests').classList.add('has-requests');
+        } else {
+            badge.style.display = 'none';
+            document.querySelector('.tab.requests').classList.remove('has-requests');
+        }
+    }
+
+    // Инициализация индикатора при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function () {
+        updateBadge();
+    });
+</script>
+</body>
+</html>

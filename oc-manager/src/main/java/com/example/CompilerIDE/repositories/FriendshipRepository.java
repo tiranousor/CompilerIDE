@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface FriendshipRepository extends JpaRepository<Friendship, Integer> {
     List<Friendship> findByClient1OrClient2(Client client1, Client client2);
     Optional<Friendship> findByClient1AndClient2(Client client1, Client client2);
+
 }
