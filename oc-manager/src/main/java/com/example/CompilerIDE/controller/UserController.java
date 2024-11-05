@@ -114,6 +114,7 @@ public class UserController {
     public String showLoginPage() {
         return "loginAndRegistration";
     }
+
     @PostMapping("/login")
     public String processLogin(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()) {
@@ -169,8 +170,11 @@ public class UserController {
         String authName = authentication.getName();
         System.out.println("Authenticated Username: " + authName);
 
-        Client client = clientService.findByUsername(authName)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + authName));
+        Optional<Client> clientOpt = clientService.findByUsername(authName);
+        if (clientOpt.isEmpty()) {
+            return "redirect:/loginAndRegistration";
+        }
+        Client client = clientOpt.get();
 
         // Запись времени входа
         LoginTimestamp loginTimestamp = new LoginTimestamp();
@@ -180,11 +184,13 @@ public class UserController {
 
         List<Project> projects = projectService.findByClient(client);
         List<Client> friends = friendshipService.getFriends(client);
+        List<ProjectTeam> collaboratorProjects = projectTeamService.findCollaboratorProjects(client);
 
         model.addAttribute("client", client);
         model.addAttribute("projects", projects);
         model.addAttribute("friendsCount", friends.size());
         model.addAttribute("friends", friends);
+        model.addAttribute("collaboratorProjects", collaboratorProjects);
 
         return "userProfile";
     }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -109,11 +109,14 @@
 <div class="container">
     <h2>Добавить новый проект</h2>
     <form th:action="@{/projects/userProfile/new}" method="post" th:object="${project}">
+        <!-- Поле Название проекта -->
         <div class="form-input">
             <label for="name">Название проекта:</label>
             <input type="text" class="form-control" id="name" name="name" required th:field="*{name}">
             <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
         </div>
+
+        <!-- Поле Язык программирования -->
         <div class="form-input">
             <label for="language">Язык программирования:</label>
             <select class="form-control" id="language" name="language" required th:field="*{language}">
@@ -124,9 +127,22 @@
             </select>
             <div class="form-error" th:if="${#fields.hasErrors('language')}" th:errors="*{language}">Ошибка в языке программирования</div>
         </div>
+
+        <!-- Поле Read Me -->
         <div class="form-input">
             <label for="readMe">Read Me:</label>
             <textarea class="form-control" id="readMe" name="readMe" th:field="*{readMe}" rows="3"></textarea>
+        </div>
+
+        <!-- Поле Уровень доступа -->
+        <div class="form-input">
+            <label for="accessLevel">Доступ:</label>
+            <select class="form-control" id="accessLevel" name="accessLevel" required th:field="*{accessLevel}">
+                <option value="">Выберите доступ</option>
+                <option value="PUBLIC" th:selected="${project.accessLevel == 'PUBLIC'}">Публичный</option>
+                <option value="PRIVATE" th:selected="${project.accessLevel == 'PRIVATE'}">Приватный</option>
+            </select>
+            <div class="form-error" th:if="${#fields.hasErrors('accessLevel')}" th:errors="*{accessLevel}">Ошибка в доступе</div>
         </div>
 
         <button type="submit" class="btn btn-primary">Создать</button>
@@ -136,4 +152,5 @@
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
+
 </html>

@@ -107,11 +107,14 @@
 <div class="container">
     <h2>Редактировать проект</h2>
     <form th:action="@{/projects/edit/{id}(id=${project.id})}" method="post" th:object="${project}">
+        <!-- Поле Название проекта -->
         <div class="form-input">
             <label for="name">Название проекта:</label>
             <input type="text" class="form-control" id="name" name="name" th:field="*{name}" required>
             <div class="form-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Ошибка в названии проекта</div>
         </div>
+
+        <!-- Поле Язык программирования -->
         <div class="form-input">
             <label for="language">Язык программирования:</label>
             <select class="form-control" id="language" name="language" required th:field="*{language}">
@@ -122,12 +125,24 @@
             </select>
             <div class="form-error" th:if="${#fields.hasErrors('language')}" th:errors="*{language}">Ошибка в языке программирования</div>
         </div>
+
+        <!-- Поле Read Me -->
         <div class="form-input">
             <label for="readMe">Read Me:</label>
             <textarea class="form-control" id="readMe" name="readMe" th:field="*{readMe}" rows="3"></textarea>
             <div class="form-error" th:if="${#fields.hasErrors('readMe')}" th:errors="*{readMe}">Ошибка в поле Read Me</div>
         </div>
 
+        <!-- Поле Уровень доступа -->
+        <div class="form-input">
+            <label for="accessLevel">Доступ:</label>
+            <select class="form-control" id="accessLevel" name="accessLevel" required th:field="*{accessLevel}">
+                <option value="">Выберите доступ</option>
+                <option value="PUBLIC" th:selected="${project.accessLevel == 'PUBLIC'}">Публичный</option>
+                <option value="PRIVATE" th:selected="${project.accessLevel == 'PRIVATE'}">Приватный</option>
+            </select>
+            <div class="form-error" th:if="${#fields.hasErrors('accessLevel')}" th:errors="*{accessLevel}">Ошибка в доступе</div>
+        </div>
 
         <button type="submit" class="btn btn-primary">Сохранить изменения</button>
     </form>
@@ -136,4 +151,5 @@
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
+
 </html>

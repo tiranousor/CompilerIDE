@@ -626,7 +626,7 @@
                 <a th:href="${client.githubProfile}" target="_blank">GitHub Профиль</a>
             </p>
             <p class="info-item" th:text="${client.about}">О себе</p>
-            <p>Friends: <span th:text="${friendsCount}">0</span></p>
+            <p>Друзья: <span th:text="${friendsCount}">0</span></p>
         </div>
 
 <!--        &lt;!&ndash; Кнопка редактирования профиля видна только владельцу профиля &ndash;&gt;-->
@@ -687,8 +687,9 @@
                     <!-- Раскрывающееся окно с информацией о проекте -->
                     <div class="project-details" style="display: none;">
                         <p><strong>Имя проекта:</strong> <span th:text="${project.name}">Имя проекта</span></p>
-                        <p><strong>ReadMe:</strong> <span th:text="${project.readMe}">ReadMe</span></p>
+                        <p><strong>Доступ:</strong> <span th:text="${project.accessLevel}">Доступ</span></p>
                         <p><strong>Язык:</strong> <span th:text="${project.language}">Язык</span></p>
+                        <p><strong>ReadMe:</strong> <span th:text="${project.readMe}">ReadMe</span></p>
                         <!-- Кнопки внизу -->
                         <div class="project-details-actions">
                             <a th:href="@{/projects/edit/{id}(id=${project.id})}" class="btn-edit">Редактировать</a>

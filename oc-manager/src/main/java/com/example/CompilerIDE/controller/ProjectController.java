@@ -95,7 +95,7 @@ public class ProjectController {
     @GetMapping("/userProfile/new")
     public String newProjectForm(Authentication authentication, Model model) {
         model.addAttribute("project", new Project());
-        return "new_project_form"; // Ensure this template exists
+        return "new_project_form";
     }
 
     @PostMapping("/userProfile/new")
@@ -109,7 +109,7 @@ public class ProjectController {
             return "new_project_form";
         }
         projectService.save(project);
-//        projectTeamService.addCreator(project, clientService.getClient(authentication.getName()).get());
+        projectTeamService.addCreator(project, clientService.getClient(authentication.getName()).get());
         return "redirect:/userProfile";
     }
 
@@ -188,6 +188,7 @@ public String editProjectForm(@PathVariable("id") int projectId, Model model, Au
                 existingProject.setReadMe(projectForm.getReadMe());
                 existingProject.setRefGit(projectForm.getRefGit());
                 existingProject.setProjectType(projectForm.getProjectType());
+                existingProject.setAccessLevel(projectForm.getAccessLevel());
                 projectService.save(existingProject);
 
                 // Записываем информацию об изменении проекта

@@ -16,4 +16,5 @@ public interface ProjectTeamRepository extends JpaRepository<ProjectTeam, Intege
     List<ProjectTeam> findByProject(Project project);
     List<ProjectTeam> findByClient(Client client);
     List<ProjectTeam> findByProjectAndRole(Project project, Role role);
+    List<ProjectTeam> findByClientAndRole(Client client, Role role);
 }

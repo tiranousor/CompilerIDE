@@ -10,6 +10,7 @@ import lombok.ToString;
 import org.hibernate.validator.constraints.URL;
 
 import java.util.List;
+
 @Entity
 @Data
 @AllArgsConstructor
@@ -33,13 +34,17 @@ public class Project {
     @NotBlank(message = "Язык программирования не может быть пустым")
     private String language;
 
-    private String readMe;
+    private String readMe = "Мой первый проект";
 
     @URL(message = "Неверный формат URL")
     private String refGit;
 
     @Column(name="project type")
     private String projectType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "access_level", nullable = false)
+    private AccessLevel accessLevel = AccessLevel.PUBLIC; // Значение по умолчанию
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -53,4 +58,3 @@ public class Project {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ProjectTeam> projectTeams;
 }
-

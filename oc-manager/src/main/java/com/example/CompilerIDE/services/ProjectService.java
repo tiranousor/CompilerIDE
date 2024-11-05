@@ -47,6 +47,7 @@ public class ProjectService {
     public ProjectTeamService getProjectTeamService() {
         return this.projectTeamService;
     }
+
     @Transactional
     public void save(Project project) {
         projectRepository.save(project);
