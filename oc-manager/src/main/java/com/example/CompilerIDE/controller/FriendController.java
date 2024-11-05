@@ -2,18 +2,20 @@ package com.example.CompilerIDE.controller;
 
 import com.example.CompilerIDE.providers.Client;
 import com.example.CompilerIDE.providers.FriendRequest;
-import com.example.CompilerIDE.services.ClientService;
-import com.example.CompilerIDE.services.FriendRequestService;
-import com.example.CompilerIDE.services.FriendshipService;
+import com.example.CompilerIDE.providers.Project;
+import com.example.CompilerIDE.providers.ProjectTeam;
+import com.example.CompilerIDE.services.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
@@ -23,19 +25,20 @@ public class FriendController {
     private final ClientService clientService;
     private final FriendRequestService friendRequestService;
     private final FriendshipService friendshipService;
-
+    private final ProjectService projectService;
+    private final ProjectInvitationService projectInvitationService;
+    private final ProjectTeamService projectTeamService;
     @Autowired
-    public FriendController(ClientService clientService, FriendRequestService friendRequestService, FriendshipService friendshipService) {
+    public FriendController(ClientService clientService, FriendRequestService friendRequestService, FriendshipService friendshipService, ProjectService projectService, ProjectInvitationService projectInvitationService, ProjectTeamService projectTeamService) {
         this.clientService = clientService;
         this.friendRequestService = friendRequestService;
         this.friendshipService = friendshipService;
+        this.projectService = projectService;
+        this.projectInvitationService = projectInvitationService;
+        this.projectTeamService = projectTeamService;
     }
 
-    /**
-     * Handle GET requests to /friends/search
-     * - If 'username' parameter is present, perform the search.
-     * - If 'username' parameter is absent, display the search form.
-     */
+
     @GetMapping("/search")
     public String searchUsers(@RequestParam(value = "username", required = false) String username, Model model, Authentication authentication) {
         Client currentUser = clientService.findByUsername(authentication.getName()).orElse(null);
@@ -215,5 +218,88 @@ public class FriendController {
                 .collect(Collectors.toList());
     }
 
+    @GetMapping("/{friendId}")
+    public String viewFriendProfile(@PathVariable("friendId") int friendId,
+                                    Model model,
+                                    Authentication authentication) {
+        Client currentUser = clientService.findByUsername(authentication.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + authentication.getName()));
+
+        Client friend = clientService.findOne(friendId);
+        if (friend == null) {
+            model.addAttribute("error", "Пользователь не найден.");
+            return "error"; // Убедитесь, что у вас есть шаблон error.html
+        }
+
+        // Проверка, что текущий пользователь является другом
+        if (!friendshipService.areFriends(currentUser, friend)) {
+            model.addAttribute("error", "Вы не являетесь другом этого пользователя.");
+            return "error";
+        }
+
+        List<Project> friendsProjects = projectService.findByClient(friend);
+        List<ProjectInfo> projectsWithRoles = friendsProjects.stream().map(project -> {
+            boolean isOwner = projectTeamService.findByClient(currentUser).equals(currentUser.getId());
+
+            Optional<ProjectTeam> team = projectTeamService.findByProjectAndClient(project, currentUser);
+            System.out.println(team);
+            boolean isCollaborator = team.map(t -> t.getRole() == ProjectTeam.Role.COLLABORATOR).orElse(false);
+            System.out.println("Project: " + project.getName() + ", Is Owner: " + isOwner + ", Is Collaborator: " + isCollaborator);
+
+            return new ProjectInfo(project, isOwner, isCollaborator);
+        }).collect(Collectors.toList());
+
+        model.addAttribute("friend", friend);
+        model.addAttribute("projects", friendsProjects);
+        model.addAttribute("projectsWithRoles", projectsWithRoles);
+
+        return "friendProfile";
+    }
+    @Data
+    @AllArgsConstructor
+    public static class ProjectInfo {
+        private Project project;
+        private boolean isOwner;
+        private boolean isCollaborator;
+    }
+    /**
+     * Отправить приглашение на проект друга.
+     */
+    @PostMapping("/inviteProject/{friendId}")
+    public String inviteToProjectAlternative(@PathVariable("friendId") int friendId,
+                                             @RequestParam("projectId") int projectId,
+                                             Authentication authentication,
+                                             Model model) {
+        return inviteToProject(friendId, projectId, authentication, model);
+    }
+    @PostMapping("/{friendId}/invite")
+    public String inviteToProject(@PathVariable("friendId") int friendId,
+                                  @RequestParam("projectId") int projectId,
+                                  Authentication authentication,
+                                  Model model) {
+        try {
+            Client sender = clientService.findByUsername(authentication.getName())
+                    .orElseThrow(() -> new Exception("Отправитель не найден."));
+            Client receiver = clientService.findOne(friendId);
+            if (receiver == null) {
+                throw new Exception("Получатель не найден.");
+            }
+            Project project = projectService.findById(projectId)
+                    .orElseThrow(() -> new Exception("Проект не найден."));
+
+            // Проверка, что отправитель является создателем проекта
+            if (!projectService.isProjectCreator(project, sender)) {
+                throw new Exception("Только создатель проекта может отправлять приглашения.");
+            }
+
+            projectInvitationService.sendInvitation(project, sender, receiver);
+            model.addAttribute("success", "Приглашение на проект успешно отправлено.");
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+        }
+
+        // Перенаправление обратно на страницу профиля друга
+        return "redirect:/friends/" + friendId;
+    }
 
 }

@@ -566,6 +566,50 @@
         .btn-edit-profile:hover {
             background-color: #17a44c;
         }
+        .friends-section {
+            margin-top: 30px;
+        }
+
+        .friends-section h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .friends-list {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .friend-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 120px;
+            text-align: center;
+        }
+
+        .friend-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .friend-username {
+            text-decoration: none;
+            color: #1DB954;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .friend-username:hover {
+            color: #14833b;
+        }
     </style>
 </head>
 
@@ -588,31 +632,39 @@
             </p>
             <p class="info-item" th:text="${client.about}">О себе</p>
             <p>Friends: <span th:text="${friendsCount}">0</span></p>
-
-            <!-- Новая секция для ссылок "View Friends" и "Find Friends" -->
-            <div class="friends-links">
-                <a th:href="@{/friends/list}">View Friends</a>
-                <a th:href="@{/friends/search}">Find Friends</a>
-            </div>
         </div>
 
-        <!-- Кнопка редактирования профиля видна только владельцу профиля -->
-        <div th:if="${isOwnProfile}">
-            <a th:href="@{/edit/{id}(id=${client.id})}" class="btn-edit-profile">Редактировать профиль</a>
+<!--        &lt;!&ndash; Кнопка редактирования профиля видна только владельцу профиля &ndash;&gt;-->
+<!--        <div th:if="${isOwnProfile}">-->
+<!--            <a th:href="@{/edit/{id}(id=${client.id})}" class="btn-edit-profile">Редактировать профиль</a>-->
+<!--        </div>-->
+        <div class="invitations-section">
+            <h2>Полученные Приглашения на Проекты</h2>
+            <a th:href="@{/invitations/received}" class="btn-invitations">Просмотреть приглашения</a>
         </div>
 
-        <h2>Notifications</h2>
-        <ul id="notificationsList">
-            <!-- Notifications will be loaded here via AJAX -->
-        </ul>
-
+        <!-- Раздел друзей -->
+        <div class="friends-section">
+            <h2>Мои Друзья</h2>
+            <ul class="friends-list">
+                <th:block th:each="friend : ${friends}">
+                    <li class="friend-item">
+                        <a th:href="@{/friends/{id}(id=${friend.id})}">View Profile</a>
+                            <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}"
+                                 alt="Friend Avatar" class="friend-avatar">
+                            <span th:text="${friend.username}">Имя друга</span>
+                        </a>
+                    </li>
+                </th:block>
+            </ul>
+        </div>
     </div>
 
-    <!-- Правый контейнер (Проекты) -->
+    <!-- Правый контейнер (Список моих проектов) -->
     <div class="projects-container">
         <div class="projects-header">
-            <h2>Projects</h2>
-            <a th:href="@{/userProfile/new}" class="add-btn">
+            <h2>Мои Проекты</h2>
+            <a th:href="@{/projects/userProfile/new}" class="add-btn">
                 <i class='bx bx-plus'></i>
             </a>
         </div>
@@ -629,7 +681,7 @@
                             <button class="btn-info">
                                 <i class='bx bx-info-circle'></i>
                             </button>
-                            <form th:action="@{/userProfile/delete/{id}(id=${project.id})}" method="post" style="display: inline;"
+                            <form th:action="@{/projects/delete/{id}(id=${project.id})}" method="post" style="display: inline;"
                                   onsubmit="return confirm('Вы действительно хотите удалить проект?');">
                                 <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
                                 <button type="submit" class="btn-delete">Delete</button>
@@ -637,7 +689,7 @@
                         </div>
                     </div>
                     <!-- Раскрывающееся окно с информацией о проекте -->
-                    <div class="project-details">
+                    <div class="project-details" style="display: none;">
                         <p><strong>Имя проекта:</strong> <span th:text="${project.name}">Имя проекта</span></p>
                         <p><strong>ReadMe:</strong> <span th:text="${project.readMe}">ReadMe</span></p>
                         <p><strong>Язык:</strong> <span th:text="${project.language}">Язык</span></p>

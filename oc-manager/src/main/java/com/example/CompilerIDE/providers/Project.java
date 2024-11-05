@@ -49,5 +49,8 @@ public class Project {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @ToString.Exclude
     private List<ProjectStruct> projectsStruct;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<ProjectTeam> projectTeams;
 }
 

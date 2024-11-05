@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,17 +23,20 @@ public class FriendshipService {
 
     public List<Client> getFriends(Client client) {
         List<Friendship> friendships = friendshipRepository.findByClient1OrClient2(client, client);
-        List<Client> friends = new ArrayList<>();
-        for (Friendship friendship : friendships) {
-            if (friendship.getClient1().equals(client)) {
-                friends.add(friendship.getClient2());
-            } else {
-                friends.add(friendship.getClient1());
-            }
-        }
+        List<Client> friends = friendships.stream()
+                .map(f -> f.getClient1().equals(client) ? f.getClient2() : f.getClient1())
+                .collect(Collectors.toList());
         return friends;
     }
-
+    public boolean areFriends(Client client1, Client client2) {
+        Optional<Friendship> friendshipOpt = friendshipRepository.findByClient1AndClient2(client1, client2);
+        if (friendshipOpt.isPresent()) {
+            return true;
+        }
+        // Также проверяем обратную связь
+        friendshipOpt = friendshipRepository.findByClient1AndClient2(client2, client1);
+        return friendshipOpt.isPresent();
+    }
     public void removeFriendship(Integer friendshipId, Client client) throws Exception {
         Friendship friendship = friendshipRepository.findById(friendshipId)
                 .orElseThrow(() -> new Exception("Friendship not found."));

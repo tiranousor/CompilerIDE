@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Профиль Друга</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        /* Стили для профиля друга */
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(70deg, #8EC5FC, #E0C3FC);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #FFFFFF;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .profile-info p {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .projects-section {
+            margin-top: 20px;
+        }
+
+        .projects-section h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .projects-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .project-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .project-item:last-child {
+            border-bottom: none;
+        }
+
+        .project-name {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .invite-btn {
+            background-color: #1DB954;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .invite-btn:hover {
+            background-color: #17a44c;
+        }
+
+        .success-message, .error-message {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+           .btn-open {
+            background-color: #1DB954;
+            color: #fff;
+            border-radius: 5px;
+            padding: 8px 12px;
+            border: none;
+            cursor: pointer;
+            transition: box-shadow 0.3s ease-in-out;
+            box-shadow: none; /* Без подсветки по умолчанию */
+        }
+
+        .btn-open:hover {
+            box-shadow: 0 0 20px rgba(142, 197, 252, 0.8), 0 0 40px rgba(142, 197, 252, 0.6);
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <div class="profile-header">
+        <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar" class="profile-avatar">
+        <div class="profile-info">
+            <p><strong th:text="${friend.username}">Имя друга</strong></p>
+            <p th:text="${friend.email}">example@example.com</p>
+            <p>
+                <a th:href="${friend.githubProfile}" target="_blank">GitHub Профиль</a>
+            </p>
+            <p th:text="${friend.about}">О себе</p>
+            <p>Friends: <span th:text="${friend.friends.size()}">0</span></p>
+        </div>
+    </div>
+
+    <!-- Сообщения об успехе или ошибке -->
+    <div th:if="${success}">
+        <div class="success-message" th:text="${success}"></div>
+    </div>
+    <div th:if="${error}">
+        <div class="error-message" th:text="${error}"></div>
+    </div>
+
+    <!-- Список проектов друга -->
+    <div class="projects-section">
+        <h2>Проекты Друга</h2>
+        <ul class="projects-list">
+            <th:block th:each="project : ${projects}">
+                <li class="project-item">
+                    <span class="project-name" th:text="${project.name}">Название проекта</span>
+                    <form th:action="@{/invitations/send}" method="post" style="display: inline;">
+                        <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+                        <input type="hidden" name="receiverId" th:value="${friend.id}" />
+                        <input type="hidden" name="projectId" th:value="${project.id}" />
+                        <button type="submit" class="invite-btn">Присоединиться к проекту</button>
+
+                    </form>
+
+                </li>
+            </th:block>
+        </ul>
+        <ul class="project-list">
+            <th:block th:each="projectInfo : ${projectsWithRoles}">
+<!--                <div th:if = "${projectInfo.isCollaborator}">-->
+                <li class="project-item" th:data-project-id="${projectInfo.project.id}">
+                    <!-- Заголовок проекта -->
+                    <div class="project-header">
+                        <span class="project-name" th:text="${projectInfo.project.name}">Project Name</span>
+                        <div class="project-actions">
+                            <!-- Кнопка "Открыть проект", если текущий пользователь является коллаборатором -->
+                            <a th:href="@{/Compiler/project/{id}(id=${projectInfo.project.id})}"
+                               th:if="${projectInfo.isOwner || projectInfo.isCollaborator}" class="btn-open">
+                                Open Project
+                            </a>
+                        </div>
+                    </div>
+                </li>
+<!--                </div>-->
+            </th:block>
+        </ul>
+    </div>
+</div>
+<script>
+
+</script>
+</body>
+
+</html>

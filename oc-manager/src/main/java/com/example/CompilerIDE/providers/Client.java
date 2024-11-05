@@ -74,4 +74,6 @@ public class Client implements Serializable {
             inverseJoinColumns = @JoinColumn(name = "client2_id")
     )
     private Set<Client> friends = new HashSet<>();
+    @OneToMany(mappedBy = "client", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<ProjectTeam> projectTeams;
 }

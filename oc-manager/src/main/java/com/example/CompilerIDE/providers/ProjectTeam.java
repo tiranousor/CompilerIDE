@@ -1,15 +1,14 @@
 package com.example.CompilerIDE.providers;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "project_team")
+@AllArgsConstructor
+@Table(name = "project_team",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"project_id", "client_id"}))
 public class ProjectTeam {
 
     @Id
@@ -17,10 +16,19 @@ public class ProjectTeam {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_uid", nullable = false)
+    @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "client_id", nullable = false)
     private Client client;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    private Role role;
+
+    public enum Role {
+        CREATOR,
+        COLLABORATOR
+    }
 }

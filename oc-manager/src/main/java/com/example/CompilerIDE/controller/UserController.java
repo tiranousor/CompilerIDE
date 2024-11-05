@@ -5,11 +5,9 @@ import com.example.CompilerIDE.Dto.JsTreeNodeDto;
 import com.example.CompilerIDE.providers.Client;
 import com.example.CompilerIDE.providers.LoginTimestamp;
 import com.example.CompilerIDE.providers.Project;
+import com.example.CompilerIDE.providers.ProjectTeam;
 import com.example.CompilerIDE.repositories.LoginTimestampRepository;
-import com.example.CompilerIDE.services.ClientService;
-import com.example.CompilerIDE.services.FriendshipService;
-import com.example.CompilerIDE.services.MinioService;
-import com.example.CompilerIDE.services.ProjectService;
+import com.example.CompilerIDE.services.*;
 import com.example.CompilerIDE.util.ClientValidator;
 import com.example.CompilerIDE.util.FileUploadUtil;
 import com.example.CompilerIDE.util.ProjectValidator;
@@ -47,12 +45,13 @@ public class UserController {
     private final ObjectMapper objectMapper;
     private final FriendshipService friendshipService;
     private final LoginTimestampRepository loginTimestampRepository;
+    private final ProjectTeamService projectTeamService;
 
     @Autowired
     public UserController(ClientService clientService, ProjectService projectService, ClientValidator clientValidator,
                           PasswordEncoder passwordEncoder, ProjectValidator projectValidator, MinioService minioService,
                           ObjectMapper objectMapper, FriendshipService friendshipService,
-                          LoginTimestampRepository loginTimestampRepository) {
+                          LoginTimestampRepository loginTimestampRepository, ProjectTeamService projectTeamService) {
         this.passwordEncoder = passwordEncoder;
         this.clientService = clientService;
         this.clientValidator = clientValidator;
@@ -62,6 +61,7 @@ public class UserController {
         this.objectMapper = objectMapper;
         this.friendshipService = friendshipService;
         this.loginTimestampRepository = loginTimestampRepository;
+        this.projectTeamService = projectTeamService;
     }
 
     @GetMapping("/")
@@ -71,26 +71,35 @@ public class UserController {
 
     @GetMapping("Compiler/project/{projectId}")
     public String compiler(@PathVariable("projectId") int projectId, Authentication authentication, Model model) {
-        Project project = projectService.findById(projectId).orElse(null);
-        if (project == null) {
+        Optional<Project> projectOpt = projectService.findById(projectId);
+        if (projectOpt.isEmpty()) {
             return "redirect:/userProfile";
         }
 
-        if (!project.getClient().getUsername().equals(authentication.getName())) {
+        Project project = projectOpt.get();
+        Client currentUser = clientService.findByUsername(authentication.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + authentication.getName()));
+
+        // Check if the current user is the owner or a collaborator
+        boolean isOwner = project.getClient().getId().equals(currentUser.getId());
+        boolean isCollaborator = projectTeamService.findByProjectAndClient(project, currentUser)
+                .map(team -> team.getRole() == ProjectTeam.Role.COLLABORATOR)
+                .orElse(false);
+
+        if (!isOwner && !isCollaborator) {
             return "redirect:/userProfile";
         }
 
         model.addAttribute("projectId", projectId);
-        System.out.println(projectId);
-        List<String> filePaths = minioService.listFiles("projects/" + projectId + "/");
 
+        // Load the file structure for the project
+        List<String> filePaths = minioService.listFiles("projects/" + projectId + "/");
         if (filePaths == null) {
             filePaths = List.of();
         }
 
         List<JsTreeNodeDto> fileTree = projectService.buildJsTreeFileStructureFromStructs(project, String.valueOf(projectId));
         String fileStructureJson = "[]";
-
         try {
             fileStructureJson = objectMapper.writeValueAsString(fileTree);
         } catch (JsonProcessingException e) {
@@ -98,7 +107,6 @@ public class UserController {
         }
 
         model.addAttribute("fileStructure", fileStructureJson);
-        System.out.println(fileStructureJson);
         return "Compiler";
     }
 
@@ -155,56 +163,6 @@ public class UserController {
         return "redirect:/login?registration";
     }
 
-    @GetMapping("/userProfile/new")
-    public String newProjectForm(Authentication authentication, Model model) {
-        model.addAttribute("project", new Project());
-        return "new_project_form"; // Ensure this template exists
-    }
-
-    @PostMapping("/userProfile/new")
-    public String createProject(@Valid @ModelAttribute("project") Project project, BindingResult bindingResult, Authentication authentication) {
-        if (bindingResult.hasErrors()) {
-            return "new_project_form"; // Возвращаем обратно на форму при ошибках
-        }
-        project.setClient(clientService.getClient(authentication.getName()).get());
-        projectValidator.validate(project, bindingResult);
-        if (bindingResult.hasErrors()) {
-            return "new_project_form"; // Возвращаем обратно на форму при ошибках
-        }
-        projectService.save(project);
-
-        return "redirect:/userProfile";
-    }
-
-
-    // Delete a project
-    @PostMapping("/userProfile/delete/{id}")
-    public String deleteProject(@PathVariable("id") int projectId, Authentication authentication) {
-        // Get the logged-in user
-        Client client = clientService.findByUsername(authentication.getName()).get();
-
-        // Find the project to delete
-        Optional<Project> projectToDelete = projectService.findById(projectId);
-
-        // Ensure the project belongs to the current user
-        if (projectToDelete.isPresent() && projectToDelete.get().getClient().getId() == client.getId()) {
-            projectService.delete(projectToDelete.get()); // Delete the project from DB
-        }
-
-        // Redirect back to the user's profile page after deletion
-        return "redirect:/userProfile";
-    }
-
-//    @GetMapping("/userProfile")
-//    public String ClientProfile(Model model, Authentication authentication) {
-//        Client client = clientService.findByUsername(authentication.getName()).get();
-//
-//        List<Project> project = projectService.findByClient(client);
-//        model.addAttribute("client", client);
-//        model.addAttribute("projects", project);
-//
-//        return "userProfile";
-//    }
 
     @GetMapping("/userProfile")
     public String ClientProfile(Model model, Authentication authentication) {
@@ -214,7 +172,7 @@ public class UserController {
         Client client = clientService.findByUsername(authName)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + authName));
 
-        // Record login timestamp
+        // Запись времени входа
         LoginTimestamp loginTimestamp = new LoginTimestamp();
         loginTimestamp.setClient(client);
         loginTimestamp.setLoginTime(new Timestamp(System.currentTimeMillis()));
@@ -226,10 +184,10 @@ public class UserController {
         model.addAttribute("client", client);
         model.addAttribute("projects", projects);
         model.addAttribute("friendsCount", friends.size());
+        model.addAttribute("friends", friends);
 
         return "userProfile";
     }
-
     @GetMapping("/edit/{id}")
     public String editProfile(Model model, @PathVariable("id") int id) {
         model.addAttribute("client", clientService.findOne(id));
@@ -275,9 +233,9 @@ public class UserController {
         // Если имя пользователя изменилось, обновляем объект аутентификации
         if (!authentication.getName().equals(existingClient.getUsername())) {
             Authentication newAuth = new UsernamePasswordAuthenticationToken(
-                    existingClient.getUsername(),  // новое имя пользователя
-                    authentication.getCredentials(),  // используем старый пароль
-                    authentication.getAuthorities()  // используем те же роли
+                    existingClient.getUsername(),
+                    authentication.getCredentials(),
+                    authentication.getAuthorities()
             );
             SecurityContextHolder.getContext().setAuthentication(newAuth);
         }
@@ -285,42 +243,21 @@ public class UserController {
         return "redirect:/userProfile";
     }
 
-
-//    @PostMapping("/edit/{id}")
-//    public String updateProfile(Authentication authentication, @PathVariable("id") int id,@ModelAttribute("client") @Valid ClientDto clientDto, BindingResult bindingResult) {
-//        if (bindingResult.hasErrors()) {
-//            return "editProfile";
-//        }
-//        Client client = clientService.findOne(id);
-//        client = clientMapper.updateUserFromDto(clientDto,client);
-//        clientService.update(client);
-//        if (!authentication.getName().equals(client.getUsername())) {
-//            Authentication newAuth = new UsernamePasswordAuthenticationToken(client.getUsername(), authentication.getCredentials(), authentication.getAuthorities());
-//            SecurityContextHolder.getContext().setAuthentication(newAuth);
-//        }
-//
-//        return "redirect:/userProfile";
-//    }
-
     @GetMapping("/userProfile/{id}")
     public String viewUserProfile(@PathVariable("id") int id, Model model, Authentication authentication) {
-        // Получаем текущего пользователя
+
         String authName = authentication.getName();
         Client currentUser = clientService.findByUsername(authName)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + authName));
 
-        // Получаем пользователя, чей профиль просматривается
         Client viewedUser = clientService.findOne(id);
         if (viewedUser == null) {
             model.addAttribute("error", "User not found.");
             return "error"; // Убедитесь, что у вас есть шаблон error.html
         }
-
-        // Проверяем, просматривает ли пользователь свой профиль или профиль другого пользователя
         boolean isOwnProfile = viewedUser.getId() == currentUser.getId();
         model.addAttribute("isOwnProfile", isOwnProfile);
 
-        // Добавляем данные профиля в модель
         model.addAttribute("client", viewedUser);
         model.addAttribute("friendsCount", friendshipService.getFriends(viewedUser).size());
         model.addAttribute("projects", projectService.findByClient(viewedUser));

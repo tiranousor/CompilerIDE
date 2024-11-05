@@ -5,6 +5,7 @@ import com.example.CompilerIDE.Dto.JsTreeNodeDto;
 import com.example.CompilerIDE.providers.Client;
 import com.example.CompilerIDE.providers.Project;
 import com.example.CompilerIDE.providers.ProjectStruct;
+import com.example.CompilerIDE.providers.ProjectTeam;
 import com.example.CompilerIDE.repositories.ProjectRepository;
 import com.example.CompilerIDE.repositories.ProjectStructRepository;
 import com.example.CompilerIDE.util.HashUtil;
@@ -28,18 +29,24 @@ public class ProjectService {
     private final MinioService minioService;
     private static final Logger logger = LoggerFactory.getLogger(ProjectService.class);
 
+    private final ProjectTeamService projectTeamService;
     @Autowired
     public ProjectService(ProjectRepository projectRepository, ProjectStructRepository projectStructRepository,
-                          MinioService minioService) {
+                          MinioService minioService, ProjectTeamService projectTeamService) {
         this.projectRepository = projectRepository;
         this.minioService = minioService;
         this.projectStructRepository = projectStructRepository;
+        this.projectTeamService = projectTeamService;
     }
-
+    public boolean isProjectCreator(Project project, Client client) {
+        return project.getClient().equals(client);
+    }
     public Optional<Project> findByNameAndClient(String name, Client client){
         return projectRepository.findByNameAndClient(name, client);
     }
-
+    public ProjectTeamService getProjectTeamService() {
+        return this.projectTeamService;
+    }
     @Transactional
     public void save(Project project) {
         projectRepository.save(project);
@@ -227,5 +234,8 @@ public class ProjectService {
             return "";
         }
     }
-
+    public boolean canEditProject(Project project, Client client) {
+        Optional<ProjectTeam> team = projectTeamService.findByProjectAndClient(project, client);
+        return team.isPresent() && (team.get().getRole() == ProjectTeam.Role.CREATOR || team.get().getRole() == ProjectTeam.Role.COLLABORATOR);
+    }
 }

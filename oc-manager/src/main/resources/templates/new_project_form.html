@@ -108,7 +108,7 @@
 
 <div class="container">
     <h2>Добавить новый проект</h2>
-    <form th:action="@{/userProfile/new}" method="post" th:object="${project}">
+    <form th:action="@{/projects/userProfile/new}" method="post" th:object="${project}">
         <div class="form-input">
             <label for="name">Название проекта:</label>
             <input type="text" class="form-control" id="name" name="name" required th:field="*{name}">

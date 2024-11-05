@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Информация о проекте</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        /* Добавьте стили по своему усмотрению */
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(70deg, #8EC5FC, #E0C3FC);
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #FFFFFF;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .project-details {
+            margin-bottom: 20px;
+        }
+        .project-details p {
+            margin-bottom: 10px;
+            color: #555;
+        }
+        .invite-form {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .invite-form select, .invite-form button {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .invite-form button {
+            background-color: #1DB954;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        .invite-form button:hover {
+            background-color: #17a44c;
+        }
+        .success-message, .error-message {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 th:text="${project.name}">Название проекта</h1>
+    <div class="project-details">
+        <p><strong>Описание:</strong> <span th:text="${project.readMe}">ReadMe</span></p>
+        <p><strong>Язык:</strong> <span th:text="${project.language}">Язык</span></p>
+        <p><strong>GitHub:</strong> <a th:href="${project.refGit}" target="_blank" th:text="${project.refGit}">Ссылка</a></p>
+        <p><strong>Тип проекта:</strong> <span th:text="${project.projectType}">Тип</span></p>
+    </div>
+    <div th:if="${isOwner}">
+        <h2>Пригласить друга к проекту</h2>
+        <div th:if="${success}">
+            <div class="success-message" th:text="${success}"></div>
+        </div>
+        <div th:if="${error}">
+            <div class="error-message" th:text="${error}"></div>
+        </div>
+        <form th:action="@{/invitations/send}" method="post" class="invite-form">
+            <input type="hidden" name="projectId" th:value="${project.id}" />
+            <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+            <select name="receiverId" required>
+                <option value="" disabled selected>Выберите друга</option>
+                <th:block th:each="friend : ${friends}">
+                    <option th:value="${friend.id}" th:text="${friend.username}">Имя друга</option>
+                </th:block>
+            </select>
+            <button type="submit">Отправить приглашение</button>
+        </form>
+    </div>
+    <div th:if="${isCollaborator}">
+        <p>Вы являетесь соавтором этого проекта. Вы можете его редактировать и сохранять.</p>
+        <a th:href="@{/Compiler/project/{id}(id=${project.id})}">Перейти к проекту</a>
+    </div>
+    <div th:if="!${isOwner} && !${isCollaborator}">
+        <p>Вы не являетесь участником этого проекта.</p>
+    </div>
+</div>
+</body>
+</html>
