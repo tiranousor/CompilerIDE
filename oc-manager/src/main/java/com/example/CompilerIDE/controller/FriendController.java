@@ -69,23 +69,21 @@ public class FriendController {
      * Send a friend request to a user.
      */
     @PostMapping("/sendRequest/{receiverId}")
-    public String sendFriendRequest(@PathVariable("receiverId") Integer receiverId, Authentication authentication, Model model) {
+    @ResponseBody
+    public String sendFriendRequest(@PathVariable("receiverId") Integer receiverId, Authentication authentication) {
         Client sender = clientService.findByUsername(authentication.getName()).orElse(null);
         Client receiver = clientService.findOne(receiverId);
+
         if (sender == null || receiver == null) {
-            model.addAttribute("error", "User not found.");
-            return "redirect:/friends/search";
+            return "User not found.";
         }
 
         try {
             friendRequestService.sendFriendRequest(sender, receiver);
-            model.addAttribute("success", "Friend request sent.");
+            return "success";
         } catch (Exception e) {
-            model.addAttribute("error", e.getMessage());
+            return e.getMessage();
         }
-
-        // Redirect back to the search page with the original query
-        return "redirect:/friends/search?username=" + sender.getUsername();
     }
 
     /**
@@ -98,7 +96,28 @@ public class FriendController {
         model.addAttribute("receivedRequests", receivedRequests);
         return "friendRequests";
     }
+    @GetMapping("/list")
+    public String viewFriendsAndRequests(@RequestParam(value = "username", required = false) String username, Model model, Authentication authentication) {
+        Client currentUser = clientService.findByUsername(authentication.getName()).orElse(null);
 
+        // Load friend requests
+        List<FriendRequest> receivedRequests = friendRequestService.getPendingReceivedRequests(currentUser);
+        model.addAttribute("receivedRequests", receivedRequests);
+
+        // Search for users
+        List<Client> users = (username == null || username.trim().isEmpty()) ? List.of() : clientService.findByUsernameContainingIgnoreCase(username);
+        if (currentUser != null) {
+            users = users.stream().filter(user -> !user.equals(currentUser)).collect(Collectors.toList());
+        }
+        model.addAttribute("users", users);
+        model.addAttribute("searchQuery", username);
+
+        // Load friends list
+        List<Client> friends = friendshipService.getFriends(currentUser);
+        model.addAttribute("friends", friends);
+
+        return "friendsList";
+    }
     /**
      * Accept a friend request.
      */
@@ -113,13 +132,14 @@ public class FriendController {
             model.addAttribute("error", e.getMessage());
         }
 
-        return "redirect:/friends/requests";
+        return "redirect:/friends/list";
     }
 
     /**
      * Reject a friend request.
      */
     @PostMapping("/rejectRequest/{requestId}")
+    @ResponseBody
     public String rejectFriendRequest(@PathVariable("requestId") Integer requestId, Authentication authentication, Model model) {
         Client currentUser = clientService.findByUsername(authentication.getName()).orElse(null);
 
@@ -130,19 +150,19 @@ public class FriendController {
             model.addAttribute("error", e.getMessage());
         }
 
-        return "redirect:/friends/requests";
+        return "redirect:/friends/list";
     }
 
     /**
      * View the list of friends.
      */
-    @GetMapping("/list")
-    public String viewFriends(Model model, Authentication authentication) {
-        Client currentUser = clientService.findByUsername(authentication.getName()).orElse(null);
-        List<Client> friends = friendshipService.getFriends(currentUser);
-        model.addAttribute("friends", friends);
-        return "friendsList";
-    }
+//    @GetMapping("/list")
+//    public String viewFriends(Model model, Authentication authentication) {
+//        Client currentUser = clientService.findByUsername(authentication.getName()).orElse(null);
+//        List<Client> friends = friendshipService.getFriends(currentUser);
+//        model.addAttribute("friends", friends);
+//        return "friendsList";
+//    }
 
     /**
      * Notification DTO for AJAX responses.
@@ -171,7 +191,8 @@ public class FriendController {
      * Принимает запрос на дружбу.
      */
     @PostMapping("/acceptRequest")
-    public @ResponseBody String acceptFriendRequest(@RequestParam("requestId") Integer requestId, Authentication authentication) {
+    @ResponseBody
+    public  String acceptFriendRequest(@RequestParam("requestId") Integer requestId, Authentication authentication) {
         Client receiver = clientService.findByUsername(authentication.getName()).orElse(null);
         if (receiver == null) {
             return "User not found.";
@@ -189,7 +210,8 @@ public class FriendController {
      * Отклоняет запрос на дружбу.
      */
     @PostMapping("/rejectRequest")
-    public @ResponseBody String rejectFriendRequest(@RequestParam("requestId") Integer requestId, Authentication authentication) {
+    @ResponseBody
+    public String rejectFriendRequest(@RequestParam("requestId") Integer requestId, Authentication authentication) {
         Client receiver = clientService.findByUsername(authentication.getName()).orElse(null);
         if (receiver == null) {
             return "User not found.";
@@ -207,7 +229,8 @@ public class FriendController {
      * Endpoint для получения уведомлений через AJAX.
      */
     @GetMapping("/notifications")
-    public @ResponseBody List<NotificationDto> getNotifications(Authentication authentication) {
+    @ResponseBody
+    public List<NotificationDto> getNotifications(Authentication authentication) {
         Client currentUser = clientService.findByUsername(authentication.getName()).orElse(null);
         if (currentUser == null) {
             return List.of(); // Возвращаем пустой список, если пользователь не найден

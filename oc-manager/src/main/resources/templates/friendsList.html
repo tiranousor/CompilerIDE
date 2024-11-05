@@ -1,19 +1,17 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="UTF-8">
-    <title>Your Friends</title>
+    <title>Friends & Requests</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <style>
-        /* Базовые стили для списка друзей */
+        /* General styles */
         body {
             font-family: 'Montserrat', sans-serif;
             background: linear-gradient(70deg, #8EC5FC, #E0C3FC);
             padding: 20px;
         }
-
-        .friends-container {
+        .container {
             max-width: 800px;
             margin: 0 auto;
             background-color: #FFFFFF;
@@ -21,63 +19,106 @@
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
             padding: 30px;
         }
-
-        h1 {
+        h1, h2 {
             text-align: center;
-            margin-bottom: 20px;
             color: #333;
         }
-
-        ul.friends-list {
+        .section {
+            margin-bottom: 30px;
+        }
+        ul {
             list-style: none;
             padding: 0;
         }
-
-        ul.friends-list li {
+        li {
             display: flex;
             align-items: center;
             gap: 15px;
             padding: 10px;
             border-bottom: 1px solid #ddd;
         }
-
-        ul.friends-list li:last-child {
+        li:last-child {
             border-bottom: none;
         }
-
-        .friend-avatar {
+        img {
             width: 50px;
             height: 50px;
             border-radius: 50%;
             object-fit: cover;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
-
-        .friend-username {
-            font-size: 18px;
-            color: #333;
-            text-decoration: none;
-            transition: color 0.3s;
+        button {
+            cursor: pointer;
         }
-
-        .friend-username:hover {
-            color: #1DB954;
+        .search-form {
+            text-align: center;
+            margin-bottom: 20px;
         }
     </style>
 </head>
-
 <body>
-<div class="friends-container">
-    <h1>Your Friends</h1>
-    <ul class="friends-list">
-        <th:block th:each="friend : ${friends}">
-            <li>
-                <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar" class="friend-avatar">
-                <a th:href="@{/userProfile/{id}(id=${friend.id})}" th:text="${friend.username}" class="friend-username">Friend Username</a>
-            </li>
-        </th:block>
-    </ul>
+<div class="container">
+    <h1>Friends & Requests</h1>
+
+    <!-- Friend Requests Section -->
+    <div class="section">
+        <h2>Incoming Friend Requests</h2>
+        <div th:if="${error}" style="color: red;">
+            <p th:text="${error}"></p>
+        </div>
+        <div th:if="${success}" style="color: green;">
+            <p th:text="${success}"></p>
+        </div>
+        <ul>
+            <th:block th:each="request : ${receivedRequests}">
+                <li>
+                    <img th:src="${request.sender.avatarUrl != null ? request.sender.avatarUrl : '/noAvatar.png'}" alt="Avatar">
+                    <span th:text="${request.sender.username}">Username</span>
+                    <form th:action="@{/friends/acceptRequest/{requestId}(requestId=${request.id})}" method="post" style="display: inline;">
+                        <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+                        <button type="submit">Accept</button>
+                    </form>
+                    <form th:action="@{/friends/rejectRequest/{requestId}(requestId=${request.id})}" method="post" style="display: inline;">
+                        <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+                        <button type="submit">Reject</button>
+                    </form>
+                </li>
+            </th:block>
+        </ul>
+    </div>
+
+    <!-- Search Users Section -->
+    <div class="section">
+        <h2>Search Users</h2>
+        <form class="search-form" th:action="@{/friends/list}" method="get">
+            <input type="text" name="username" placeholder="Enter username" th:value="${searchQuery}" required>
+            <button type="submit">Search</button>
+        </form>
+        <ul>
+            <th:block th:each="user : ${users}">
+                <li>
+                    <img th:src="${user.avatarUrl != null ? user.avatarUrl : '/noAvatar.png'}" alt="Avatar">
+                    <span th:text="${user.username}">Username</span>
+                    <form th:action="@{/friends/sendRequest/{receiverId}(receiverId=${user.id})}" method="post" style="display: inline;">
+                        <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+                        <button type="submit">Add Friend</button>
+                    </form>
+                </li>
+            </th:block>
+        </ul>
+    </div>
+
+    <!-- Friends List Section -->
+    <div class="section">
+        <h2>Your Friends</h2>
+        <ul>
+            <th:block th:each="friend : ${friends}">
+                <li>
+                    <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar">
+                    <a th:href="@{/userProfile/{id}(id=${friend.id})}" th:text="${friend.username}">Friend Username</a>
+                </li>
+            </th:block>
+        </ul>
+    </div>
 </div>
 </body>
-
 </html>

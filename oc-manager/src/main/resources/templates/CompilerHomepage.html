@@ -16,7 +16,8 @@
         }
 
         body {
-            background: linear-gradient(135deg, #8EC5FC, #E0C3FC);
+            background: #000000;
+            color: #FFEA00;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -24,6 +25,7 @@
             height: 100vh;
             overflow: hidden;
             position: relative;
+            transition: background-color 0.5s ease, color 0.5s ease;
         }
 
         .nav-buttons {
@@ -38,23 +40,23 @@
             padding: 10px 20px;
             font-size: 14px;
             border-radius: 5px;
-            border: 2px solid rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(255, 234, 0, 0.8);
             background-color: transparent;
-            color: #ffffff;
+            color: #FFEA00;
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .nav-buttons .btn:hover {
-            background-color: rgba(255, 255, 255, 0.9);
-            color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(255, 234, 0, 0.9);
+            color: #000000;
         }
 
         .logo {
             font-size: 64px;
             font-weight: 700;
-            color: #ffffff;
+            color: #FFEA00;
             text-shadow: 3px 3px 0px #000000;
             display: flex;
             justify-content: center;
@@ -99,12 +101,31 @@
 
         .description {
             font-size: 18px;
-            color: #ffffff;
             line-height: 1.6;
             text-align: center;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
             margin-top: 40px;
             max-width: 800px;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: 2px solid rgba(255, 234, 0, 0.8);
+            background-color: transparent;
+            color: #FFEA00;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background-color: rgba(255, 234, 0, 0.9);
+            color: #000000;
         }
     </style>
 </head>
@@ -117,5 +138,33 @@
 <p class="description">
     Добро пожаловать в наш компилятор! Мы предоставляем удобный и мощный инструмент для написания, тестирования и компиляции вашего кода. Независимо от того, являетесь ли вы студентом, профессионалом или любителем программирования — наш инструмент упрощает работу с кодом, позволяя вам сосредоточиться на создании великих вещей.
 </p>
+<button class="theme-toggle" onclick="toggleTheme()">Поменять тему</button>
+<script>
+    function toggleTheme() {
+        const body = document.body;
+        const isDark = body.style.backgroundColor === 'rgb(0, 0, 0)';
+
+        if (isDark) {
+            body.style.backgroundColor = '#8EC5FC';
+            body.style.color = '#000000';
+        } else {
+            body.style.backgroundColor = '#000000';
+            body.style.color = '#FFEA00';
+        }
+
+        const buttons = document.querySelectorAll('.btn, .theme-toggle');
+        buttons.forEach(button => {
+            if (isDark) {
+                button.style.backgroundColor = 'transparent';
+                button.style.color = '#000000';
+                button.style.borderColor = 'rgba(0, 0, 0, 0.8)';
+            } else {
+                button.style.backgroundColor = 'transparent';
+                button.style.color = '#FFEA00';
+                button.style.borderColor = 'rgba(255, 234, 0, 0.8)';
+            }
+        });
+    }
+</script>
 </body>
 </html>

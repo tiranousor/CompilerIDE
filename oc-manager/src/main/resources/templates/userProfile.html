@@ -37,76 +37,7 @@
             align-items: flex-start;
         }
 
-        .profile-container {
-            width: 270px;
-            background-color: #FFFFFF;
-            border-radius: 25px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            flex-shrink: 0;
-        }
 
-        .profile-avatar {
-            width: 130px;
-            height: 130px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-            transition: box-shadow 0.3s ease-in-out;
-            box-shadow: none; /* Без подсветки по умолчанию */
-        }
-
-        .profile-avatar:hover {
-            box-shadow: 0 0 30px rgba(142, 197, 252, 0.8), 0 0 60px rgba(142, 197, 252, 0.6);
-        }
-
-        .profile-info {
-            text-align: center;
-        }
-
-        .profile-info p {
-            margin-bottom: 10px;
-            font-size: 16px;
-            color: #333;
-        }
-
-        .profile-info a {
-            text-decoration: none;
-            color: #1DB954;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .profile-info a:hover {
-            text-decoration: underline;
-        }
-
-        /* Новые стили для ссылок "View Friends" и "Find Friends" */
-        .friends-links {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            margin-top: 10px;
-        }
-
-        .friends-links a {
-            text-decoration: none;
-            color: #1DB954;
-            font-weight: 600;
-            padding: 8px 12px;
-            border: 2px solid #1DB954;
-            border-radius: 5px;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        .friends-links a:hover {
-            background-color: #1DB954;
-            color: #fff;
-        }
 
         /* Правый контейнер (список проектов) */
         .projects-container {
@@ -566,8 +497,53 @@
         .btn-edit-profile:hover {
             background-color: #17a44c;
         }
+
+
+        .profile-container {
+            width: 270px;
+            background-color: #FFFFFF;
+            border-radius: 25px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .profile-avatar {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .profile-info {
+            text-align: center;
+        }
+
+        .profile-info p {
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .profile-info a {
+            text-decoration: none;
+            color: #1DB954;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .profile-info a:hover {
+            text-decoration: underline;
+        }
+
         .friends-section {
             margin-top: 30px;
+            text-align: center;
         }
 
         .friends-section h2 {
@@ -576,40 +552,59 @@
         }
 
         .friends-list {
-            list-style: none;
-            padding: 0;
             display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
         }
 
         .friend-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 120px;
+            width: 60px;
             text-align: center;
         }
 
         .friend-avatar {
-            width: 80px;
-            height: 80px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             object-fit: cover;
-            margin-bottom: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            margin-bottom: 5px;
+            cursor: pointer;
         }
 
         .friend-username {
             text-decoration: none;
             color: #1DB954;
             font-weight: 600;
-            transition: color 0.3s;
+            font-size: 12px;
         }
 
         .friend-username:hover {
             color: #14833b;
         }
+
+        .view-all-friends {
+            text-decoration: none;
+            color: #1DB954;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .view-all-friends:hover {
+            text-decoration: underline;
+        }
+         .settings-btn, .search-btn { position: absolute; top: 20px; background-color: #E0E0E0; width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; border-radius: 50%; cursor: pointer; }
+        .settings-btn { right: 80px; } /* Отодвигаем вправо для иконки поиска */
+        .search-btn { right: 20px; } /* Иконка поиска */
+
+        /* Подсветка при наведении */
+        .settings-btn:hover, .search-btn:hover { box-shadow: 0 0 25px rgba(142, 197, 252, 0.8), 0 0 50px rgba(142, 197, 252, 0.5); }
+
+
     </style>
 </head>
 
@@ -638,25 +633,26 @@
 <!--        <div th:if="${isOwnProfile}">-->
 <!--            <a th:href="@{/edit/{id}(id=${client.id})}" class="btn-edit-profile">Редактировать профиль</a>-->
 <!--        </div>-->
-        <div class="invitations-section">
-            <h2>Полученные Приглашения на Проекты</h2>
-            <a th:href="@{/invitations/received}" class="btn-invitations">Просмотреть приглашения</a>
-        </div>
+<!--        <div class="invitations-section">-->
+<!--            <h2>Полученные Приглашения на Проекты</h2>-->
+<!--            <a th:href="@{/invitations/received}" class="btn-invitations">Просмотреть приглашения</a>-->
+<!--        </div>-->
 
-        <!-- Раздел друзей -->
         <div class="friends-section">
-            <h2>Мои Друзья</h2>
-            <ul class="friends-list">
-                <th:block th:each="friend : ${friends}">
-                    <li class="friend-item">
-                        <a th:href="@{/friends/{id}(id=${friend.id})}">View Profile</a>
-                            <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}"
-                                 alt="Friend Avatar" class="friend-avatar">
-                            <span th:text="${friend.username}">Имя друга</span>
-                        </a>
-                    </li>
+            <a th:href="@{/friends/list}" class="view-all-friends">Друзья</a>
+
+            <div class="friends-list">
+                <th:block th:each="friend, iterStat : ${friends}">
+                    <th:block th:if="${iterStat.index < 4}">
+                        <div class="friend-item">
+                            <a th:href="@{/friends/{id}(id=${friend.id})}">
+                                <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar" class="friend-avatar">
+                                <span th:text="${friend.username}" class="friend-username">Имя друга</span>
+                            </a>
+                        </div>
+                    </th:block>
                 </th:block>
-            </ul>
+            </div>
         </div>
     </div>
 
@@ -709,7 +705,11 @@
 <div class="settings-btn">
     <i class='bx bx-cog'></i>
 </div>
-
+<div class="search-btn">
+    <a th:href="@{/friends/search}">
+        <i class='bx bx-search'></i>
+    </a>
+</div>
 <!-- Меню настроек -->
 <div class="settings-menu" id="settingsMenu">
     <a th:href="@{/edit/{id}(id=${client.id})}">Редактировать профиль</a>
