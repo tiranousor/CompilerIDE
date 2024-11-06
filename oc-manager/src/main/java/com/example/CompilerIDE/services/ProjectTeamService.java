@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ProjectTeamService {
@@ -61,5 +62,12 @@ public class ProjectTeamService {
 
     public List<ProjectTeam> findByProjectAndRole(Project project, ProjectTeam.Role role) {
         return projectTeamRepository.findByProjectAndRole(project, role);
+    }
+
+    public List<Project> findProjectsByClient(Client viewedUser, Client currentUser, ProjectTeam.Role role) {
+        return projectTeamRepository.findByProject_ClientAndClientAndRole(viewedUser, currentUser, role)
+                .stream()
+                .map(ProjectTeam::getProject)
+                .collect(Collectors.toList());
     }
 }

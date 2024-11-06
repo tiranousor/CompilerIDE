@@ -30,7 +30,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         } else if (roles.contains("ROLE_ADMIN")) {
             response.sendRedirect("/admin/users");
         } else if (roles.contains("ROLE_USER")) {
-            response.sendRedirect("/userProfile");
+            response.sendRedirect("/userProfile/" + client.getId());
         } else {
             // В случае отсутствия подходящей роли можно направить на страницу ошибки
             response.sendRedirect("/login?error");

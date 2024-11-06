@@ -23,11 +23,11 @@ public class FriendshipService {
 
     public List<Client> getFriends(Client client) {
         List<Friendship> friendships = friendshipRepository.findByClient1OrClient2(client, client);
-        List<Client> friends = friendships.stream()
+        return friendships.stream()
                 .map(f -> f.getClient1().equals(client) ? f.getClient2() : f.getClient1())
                 .collect(Collectors.toList());
-        return friends;
     }
+
     public boolean areFriends(Client client1, Client client2) {
         Optional<Friendship> friendshipOpt = friendshipRepository.findByClient1AndClient2(client1, client2);
         if (friendshipOpt.isPresent()) {

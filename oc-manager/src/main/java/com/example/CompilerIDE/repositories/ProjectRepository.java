@@ -1,5 +1,6 @@
 package com.example.CompilerIDE.repositories;
 
+import com.example.CompilerIDE.providers.AccessLevel;
 import com.example.CompilerIDE.providers.Client;
 import com.example.CompilerIDE.providers.Project;
 import com.example.CompilerIDE.providers.ProjectTeam;
@@ -15,4 +16,6 @@ public interface ProjectRepository extends JpaRepository<Project, Integer>{
     List<Project> findByClient(Client client);
     List<Project> findByName(String name);
     Optional<Project> findByNameAndClient(String name, Client client);
+
+    List<Project> findByClientAndAccessLevel(Client viewedUser, AccessLevel accessLevel);
 }

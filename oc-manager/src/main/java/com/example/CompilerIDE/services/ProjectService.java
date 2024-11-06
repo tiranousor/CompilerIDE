@@ -2,10 +2,7 @@ package com.example.CompilerIDE.services;
 
 import com.example.CompilerIDE.Dto.FileNodeDto;
 import com.example.CompilerIDE.Dto.JsTreeNodeDto;
-import com.example.CompilerIDE.providers.Client;
-import com.example.CompilerIDE.providers.Project;
-import com.example.CompilerIDE.providers.ProjectStruct;
-import com.example.CompilerIDE.providers.ProjectTeam;
+import com.example.CompilerIDE.providers.*;
 import com.example.CompilerIDE.repositories.ProjectRepository;
 import com.example.CompilerIDE.repositories.ProjectStructRepository;
 import com.example.CompilerIDE.util.HashUtil;
@@ -21,6 +18,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class ProjectService {
@@ -238,5 +236,13 @@ public class ProjectService {
     public boolean canEditProject(Project project, Client client) {
         Optional<ProjectTeam> team = projectTeamService.findByProjectAndClient(project, client);
         return team.isPresent() && (team.get().getRole() == ProjectTeam.Role.CREATOR || team.get().getRole() == ProjectTeam.Role.COLLABORATOR);
+    }
+
+    public List<Project> findAccessibleProjects(Client viewedUser, Client currentUser) {
+        List<Project> publicProjects = projectRepository.findByClientAndAccessLevel(viewedUser, AccessLevel.PUBLIC);
+        List<Project> collaboratorProjects = projectTeamService.findProjectsByClient(viewedUser, currentUser, ProjectTeam.Role.COLLABORATOR);
+        return Stream.concat(publicProjects.stream(), collaboratorProjects.stream())
+                .distinct()
+                .collect(Collectors.toList());
     }
 }

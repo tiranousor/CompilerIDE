@@ -131,9 +131,10 @@ public class UserController {
                 System.out.println("Saving login timestamp for user: " + client.getUsername());
 
                 loginTimestampRepository.save(loginTimestamp);  // Сохраняем запись в базу данных
+                return "redirect:/userProfile/" + client.getId();
             }
 
-            return "redirect:/userProfile";
+            return "loginAndRegistration";
         }
         return "loginAndRegistration";
     }
@@ -195,8 +196,13 @@ public class UserController {
         return "userProfile";
     }
     @GetMapping("/edit/{id}")
-    public String editProfile(Model model, @PathVariable("id") int id) {
-        model.addAttribute("client", clientService.findOne(id));
+    public String editProfile(Model model, @PathVariable("id") int id, Authentication authentication) {
+        Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
+        if (clientOpt.isEmpty()) {
+            return "redirect:/loginAndRegistration";
+        }
+        Client client = clientOpt.get();
+        model.addAttribute("client", clientService.findOne(client.getId()));
         return "editProfile";
     }
     @PostMapping("/edit/{id}")
@@ -253,20 +259,28 @@ public class UserController {
     public String viewUserProfile(@PathVariable("id") int id, Model model, Authentication authentication) {
 
         String authName = authentication.getName();
-        Client currentUser = clientService.findByUsername(authName)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + authName));
+        Optional<Client> currentUserOpt = clientService.findByUsername(authName);
+        if (currentUserOpt.isEmpty()) {
+            return "redirect:/loginAndRegistration";
+        }
+        Client currentUser = currentUserOpt.get();
 
         Client viewedUser = clientService.findOne(id);
         if (viewedUser == null) {
-            model.addAttribute("error", "User not found.");
-            return "error"; // Убедитесь, что у вас есть шаблон error.html
+            return "redirect:/userProfile/" + currentUser.getId();
         }
-        boolean isOwnProfile = viewedUser.getId() == currentUser.getId();
-        model.addAttribute("isOwnProfile", isOwnProfile);
 
+        boolean isOwnProfile = viewedUser.getId().equals(currentUser.getId());
+        model.addAttribute("isOwnProfile", isOwnProfile);
         model.addAttribute("client", viewedUser);
         model.addAttribute("friendsCount", friendshipService.getFriends(viewedUser).size());
-        model.addAttribute("projects", projectService.findByClient(viewedUser));
+        if (isOwnProfile) {
+            model.addAttribute("projects", projectService.findByClient(viewedUser));
+            model.addAttribute("friends", friendshipService.getFriends(viewedUser));
+            model.addAttribute("friendsProjects", projectTeamService.findCollaboratorProjects(currentUser));
+        } else {
+            model.addAttribute("projects", projectService.findAccessibleProjects(viewedUser, currentUser));
+        }
 
         return "userProfile";
     }
