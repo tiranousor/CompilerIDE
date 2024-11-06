@@ -4,31 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Новый Проект</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap:wght@300;400;500;600;700&display=swap');
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'VT323', monospace;
         }
 
         body {
-                       background: linear-gradient(70deg, #8EC5FC, #E0C3FC);
-
+            background: #000000;
+            color: #FFC300;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
+            flex-direction: column;
             height: 100vh;
-            padding: 20px;
+            overflow: hidden;
+            position: relative;
         }
 
         .container {
-            background-color: #FFFFFF;
+            background-color: rgba(0, 0, 0, 0.9);
+            border: 3px solid #FFC300;
             border-radius: 25px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
             width: 600px;
             max-width: 100%;
             padding: 30px;
@@ -37,9 +41,8 @@
         .container h2 {
             text-align: center;
             margin-bottom: 20px;
-            font-weight: 700;
-            font-size: 24px;
-            color: #333;
+            font-size: 28px;
+            color: #FFC300;
         }
 
         .container form {
@@ -47,41 +50,46 @@
             flex-direction: column;
         }
 
-        .container input, .container textarea {
-            background-color: #F9FBFC;
-            border: 1px solid #E0E0E0;
+        .container input,
+        .container select,
+        .container textarea {
+            background-color: #333;
+            border: 2px solid #FFC300;
+            color: #FFC300;
             margin: 10px 0;
-            padding: 12px 15px;
-            font-size: 14px;
-            border-radius: 8px;
+            padding: 10px;
+            font-size: 16px;
             width: 100%;
+            border-radius: 8px;
             outline: none;
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
-            transition: border-color 0.3s;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
 
-        .container input:focus, .container textarea:focus {
-            border-color: #1DB954;
+        .container input:focus,
+        .container select:focus,
+        .container textarea:focus {
+            border-color: #17A846;
+            box-shadow: 0 0 10px rgba(23, 168, 70, 0.6);
         }
 
         .container button {
             background-color: #1DB954;
             color: #fff;
-            font-size: 14px;
-            padding: 12px;
+            font-size: 16px;
+            padding: 10px;
             border: none;
             border-radius: 8px;
             font-weight: 600;
-            letter-spacing: 0.5px;
             text-transform: uppercase;
             margin-top: 15px;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transition: background-color 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s, box-shadow 0.3s;
         }
 
         .container button:hover {
             background-color: #17A846;
+            box-shadow: 0 0 15px rgba(23, 168, 70, 0.6);
         }
 
         .form-input {
@@ -89,22 +97,58 @@
         }
 
         .form-input label {
-            font-weight: 500;
+            font-size: 16px;
+            color: #FFC300;
             margin-bottom: 5px;
             display: block;
-            color: #555;
         }
 
         .form-error {
-            color: red;
-            font-size: 12px;
+            color: #FF4D4F;
+            font-size: 14px;
             margin-top: -5px;
         }
+                .matrix {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
 
+        .matrix span {
+            position: absolute;
+            top: -10vh;
+            font-size: 18px;
+            color: #FFC300;
+            opacity: 0.8;
+            animation: fall 10s linear infinite;
+            white-space: pre;
+        }
+
+        @keyframes fall {
+            0% {
+                top: -10vh;
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 110vh;
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 
 <body>
+<div class="matrix" id="matrixContainer"></div>
 
 <div class="container">
     <h2>Добавить новый проект</h2>
@@ -112,7 +156,7 @@
         <div class="form-input">
             <label for="name">Название проекта:</label>
             <input type="text" class="form-control" id="name" name="name" required th:field="*{name}">
-            <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+            <div class="form-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
         </div>
         <div class="form-input">
             <label for="language">Язык программирования:</label>
@@ -122,18 +166,34 @@
                 <option value="Python" th:selected="${project.language == 'Python'}">Python</option>
                 <option value="C++" th:selected="${project.language == 'C++'}">C++</option>
             </select>
-            <div class="form-error" th:if="${#fields.hasErrors('language')}" th:errors="*{language}">Ошибка в языке программирования</div>
+            <div class="form-error" th:if="${#fields.hasErrors('language')}" th:errors="*{language}"></div>
         </div>
         <div class="form-input">
             <label for="readMe">Read Me:</label>
             <textarea class="form-control" id="readMe" name="readMe" th:field="*{readMe}" rows="3"></textarea>
         </div>
 
-        <button type="submit" class="btn btn-primary">Создать</button>
+        <button type="submit" class="btn-primary">Создать</button>
     </form>
 </div>
+<script>
 
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    const matrixContainer = document.getElementById('matrixContainer');
+    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+    function createMatrixSpan() {
+        const span = document.createElement('span');
+        span.textContent = characters.charAt(Math.floor(Math.random() * characters.length));
+        span.style.left = Math.random() * 100 + 'vw';
+        span.style.animationDuration = Math.random() * 5 + 5 + 's';
+        span.style.opacity = Math.random() * 0.5 + 0.5;
+        matrixContainer.appendChild(span);
+        setTimeout(() => {
+            matrixContainer.removeChild(span);
+        }, 10000);
+    }
+
+    setInterval(createMatrixSpan, 150);
+</script>
 </body>
 </html>

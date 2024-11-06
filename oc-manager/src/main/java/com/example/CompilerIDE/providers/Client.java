@@ -76,4 +76,8 @@ public class Client implements Serializable {
     private Set<Client> friends = new HashSet<>();
     @OneToMany(mappedBy = "client", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<ProjectTeam> projectTeams;
+    @Column(name = "backgroundColor")
+    private String backgroundColor = "#000000";
+    @Column(name = "mainColor")
+    private String mainColor = "#FFC300";
 }

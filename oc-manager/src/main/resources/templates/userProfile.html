@@ -5,83 +5,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap:wght@300;400;500;600;700&display=swap');
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'VT323', monospace; /* Apply the VT323 font */
         }
 
-        body {
-            background: linear-gradient(70deg, #8EC5FC, #E0C3FC);
+   body {
+            background: #000000;
+            color: #FFC300;
             display: flex;
-            justify-content: flex-start;
-            align-items: flex-start;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
             height: 100vh;
             overflow: hidden;
+            position: relative;
         }
-
         .container {
             display: flex;
             gap: 30px;
-            margin-top: 30px;
-            margin-left: 100px;
-            width: 100%;
-            max-width: 1200px;
-            height: calc(100vh - 60px);
-            overflow: hidden;
             align-items: flex-start;
+            width: 80%;
+            max-width: 1200px;
+            height: 90%;
+            overflow: hidden;
         }
 
-
-
-        /* Правый контейнер (список проектов) */
-        .projects-container {
+   .projects-container {
             flex-grow: 1;
-            background-color: #FFFFFF;
+            background-color: rgba(0, 0, 0, 0.9);
+            border: 3px solid #FFC300;
             border-radius: 25px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-            padding: 30px;
-            height: 100%;
+            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
+            padding: 25px;
             overflow-y: auto;
         }
-
         .projects-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         .projects-header h2 {
             font-size: 24px;
-            font-weight: 700;
             color: #333;
         }
 
         .add-btn {
-            background-color: #1DB954;
+            background-color: transparent;
             text-decoration: none;
             border: none;
-            color: #fff;
-            width: 45px;
-            height: 45px;
+            color: #FFC300;
             border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             cursor: pointer;
-            font-size: 22px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            font-size: 35px;
             transition: box-shadow 0.3s ease-in-out;
         }
 
         .add-btn:hover {
-            box-shadow: 0 0 20px rgba(142, 197, 252, 0.8), 0 0 40px rgba(142, 197, 252, 0.6);
+            box-shadow: 0 0 20px rgba(255, 234, 0, 0.4), 0 0 40px rgba(255, 234, 0, 0.2);
         }
 
         .project-list {
@@ -90,20 +80,21 @@
         }
 
         .project-item {
-            background-color: #F9FBFC;
             padding: 20px;
             border-radius: 15px;
             margin-bottom: 15px;
-            transition: box-shadow 0.3s ease-in-out, background-color 0.3s;
             cursor: pointer;
-            box-shadow: none; /* Без подсветки по умолчанию */
-            border: 2px solid rgba(142, 197, 252, 0.4);
+
+            border: 3px solid #FFC300;
+            border-radius: 25px;
+             box-shadow: 0 6px 15px rgba(255, 234, 0, 0.2);
+            background-color: rgba(0, 0, 0, 0.8);
+
         }
 
         .project-item:hover {
-            box-shadow: 0 0 25px rgba(142, 197, 252, 0.8), 0 0 50px rgba(142, 197, 252, 0.5);
-            border-color: rgba(142, 197, 252, 0.8);
-            background-color: #E8EFF5;
+            box-shadow: 0 0 25px rgba(255, 234, 0, 0.8), 0 0 50px rgba(142, 197, 252, 0.5);
+            border-color: rgba(255, 234, 0, 0.2);
         }
 
         .project-header {
@@ -113,56 +104,29 @@
         }
 
         .project-name {
-            font-size: 18px;
-            font-weight: 600;
+            font-size: 20px;
             color: #333;
         }
 
         .project-actions {
             display: flex;
-            gap: 12px;
+            gap: 10px;
         }
 
         .project-actions button {
-            padding: 8px 12px;
-            border: none;
+            background-color: transparent;
+            border: 2px solid #FFC300;
+            color: #FFC300;
+            padding: 5px 10px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
-        }
+            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
 
-        .btn-open {
-            background-color: #1DB954;
-            color: #fff;
-            border-radius: 5px;
-            padding: 8px 12px;
-            border: none;
-            cursor: pointer;
-            transition: box-shadow 0.3s ease-in-out;
-            box-shadow: none; /* Без подсветки по умолчанию */
         }
-
-        .btn-open:hover {
-            box-shadow: 0 0 20px rgba(142, 197, 252, 0.8), 0 0 40px rgba(142, 197, 252, 0.6);
-        }
-
-        .btn-delete {
-            background-color: #FF4D4F;
-            color: #fff;
-        }
-
-        .btn-info {
-            background-color: #E0E0E0;
-            color: #333;
-            border: none;
-            padding: 8px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .project-actions button:hover {
+            background-color: #FFC300;
+            color: #000000;
+            box-shadow: 0 0 10px rgba(255, 234, 0, 0.6);
         }
 
         /* Стили для раскрывающегося окна с информацией о проекте */
@@ -205,115 +169,107 @@
         .project-details-actions .btn-delete {
             background-color: #FF4D4F;
         }
+/* Fixed Buttons (Back and Settings) */
+.back-btn,
+.settings-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: transparent;
+    border: none;
+    color: #FFC300;
+    font-size: 30px;
+    cursor: pointer;
+    transition: color 0.3s ease, box-shadow 0.3s;
+}
 
-        /* Фиксированные кнопки (назад и настройки) */
-        .back-btn,
-        .settings-btn {
-            position: absolute;
-            width: 45px;
-            height: 45px;
-            background-color: #E0E0E0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-            transition: box-shadow 0.3s ease-in-out;
-            box-shadow: none; /* Без подсветки по умолчанию */
-        }
+.back-btn:hover,
+.settings-btn:hover {
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(255, 234, 0, 0.6);
+}
 
-        .back-btn:hover,
-        .settings-btn:hover {
-            box-shadow: 0 0 25px rgba(142, 197, 252, 0.8), 0 0 50px rgba(142, 197, 252, 0.5);
-        }
+.back-btn {
+    left: 20px;
+}
 
-        .back-btn {
-            top: 20px;
-            left: 20px;
-        }
+.settings-btn {
+    right: 20px;
+}
 
-        .settings-btn {
-            top: 20px;
-            right: 20px;
-        }
+/* Slide-out Menu */
+.settings-menu {
+    position: fixed;
+    top: 0;
 
-        /* Slide-out Menu */
-        .settings-menu {
-            text-decoration: none;
-            position: fixed;
-            top: 0;
-            right: -300px;
-            height: 100%;
-            width: 300px;
-            background-color: #FFFFFF;
-            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
-            transition: right 0.4s ease;
-            z-index: 100;
-            padding: 25px;
-        }
+    right: -300px;
+    height: 100%;
+    width: 300px;
+    background-color: rgba(0, 0, 0, 0.9);
+    border: 2px solid #FFC300;
+    border-radius: 10px 0 0 10px;
+    box-shadow: -2px 0 10px rgba(255, 234, 0, 0.4);
+    transition: right 0.4s ease;
+    z-index: 100;
+    padding: 25px;
+    color: #FFC300;
+}
 
-        .settings-menu a {
-            display: block;
-            padding: 12px;
-            color: #333;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 16px;
-            border-radius: 8px;
-            transition: background-color 0.3s, box-shadow 0.3s;
-            box-shadow: none; /* Без подсветки по умолчанию */
-        }
+.settings-menu a {
+    display: block;
+    padding: 12px;
+    color: #FFC300;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 18px;
+    border-radius: 8px;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    box-shadow: none; /* No shadow by default */
+}
 
-        .settings-menu a:hover {
-            box-shadow: 0 0 25px rgba(142, 197, 252, 0.8), 0 0 50px rgba(142, 197, 252, 0.5);
-            background-color: rgba(142, 197, 252, 0.1);
-        }
+.settings-menu a:hover {
+    box-shadow: 0 0 15px rgba(255, 234, 0, 0.6);
+    background-color: rgba(255, 234, 0, 0.1);
+}
 
-        .edit-profile-btn {
-            display: block;
-            padding: 12px;
-            font-size: 16px;
-            color: #333;
-            text-decoration: none;
-            font-weight: 600;
-            background-color: transparent;
-            border: none;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: background-color 0.3s, box-shadow 0.3s;
-            box-shadow: none; /* Без подсветки по умолчанию */
-        }
+.edit-profile-btn {
+    display: block;
+    padding: 12px;
+    font-size: 18px;
+    color: #FFC300;
+    background-color: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 15px;
+}
 
-        .edit-profile-btn:hover {
-            box-shadow: 0 0 25px rgba(142, 197, 252, 0.8), 0 0 50px rgba(142, 197, 252, 0.5);
-            background-color: rgba(142, 197, 252, 0.1);
-            border-radius: 8px;
-        }
+.edit-profile-btn:hover {
+    box-shadow: 0 0 15px rgba(255, 234, 0, 0.6);
+    background-color: rgba(255, 234, 0, 0.1);
+}
 
-        /* Overlay для затемнения фона */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            visibility: hidden;
-            opacity: 0;
-            transition: opacity 0.4s ease, visibility 0.4s ease;
-            z-index: 50;
-        }
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+    z-index: 50;
+}
 
-        /* Показываем overlay и меню настроек, когда активны */
-        .overlay.active {
-            visibility: visible;
-            opacity: 1;
-        }
+.overlay.active {
+    visibility: visible;
+    opacity: 1;
+}
 
-        .settings-menu.active {
-            right: 0;
-        }
+.settings-menu.active {
+    right: 0;
+}
+
 
         .matrix {
             position: absolute;
@@ -352,80 +308,41 @@
             }
         }
 
-        /* Подсветка для кнопки "Open" */
-        .btn-open {
-            background-color: #1DB954;
-            color: #fff;
-            border-radius: 5px;
-            padding: 8px 12px;
-            border: none;
-            cursor: pointer;
-            transition: box-shadow 0.3s ease-in-out;
-            box-shadow: none; /* Без подсветки по умолчанию */
+        .friends-section {
+          text-align: center;
+            margin-top: 30px;
         }
 
-        .btn-open:hover {
-            box-shadow: 0 0 20px rgba(142, 197, 252, 0.8), 0 0 40px rgba(142, 197, 252, 0.6);
-        }
-
-        /* Подсветка для кнопок настроек */
-        .settings-btn,
-        .back-btn {
-            background-color: #E0E0E0;
-            transition: box-shadow 0.3s ease-in-out;
-            box-shadow: none; /* Без подсветки по умолчанию */
-        }
-
-        .settings-btn:hover,
-        .back-btn:hover {
-            box-shadow: 0 0 25px rgba(142, 197, 252, 0.8), 0 0 50px rgba(142, 197, 252, 0.5);
-        }
-
-        /* Подсветка для кнопки "Редактировать профиль" и кнопки "Выход" */
-        .settings-menu a,
-        .edit-profile-btn {
-            padding: 12px;
-            color: #333;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 16px;
-            border-radius: 8px;
-            display: block;
-            transition: box-shadow 0.3s ease-in-out, background-color 0.3s ease-in-out;
-            box-shadow: none; /* Без подсветки по умолчанию */
-        }
-
-        .settings-menu a:hover,
-        .edit-profile-btn:hover {
-            box-shadow: 0 0 25px rgba(142, 197, 252, 0.8), 0 0 50px rgba(142, 197, 252, 0.5);
-            background-color: rgba(142, 197, 252, 0.1);
-        }
-      .friends-links {
+        .friends-list {
             display: flex;
-            flex-direction: column;
             gap: 10px;
+            justify-content: center;
             margin-top: 10px;
         }
 
-        .friends-links a {
-            text-decoration: none;
-            color: #1DB954;
-            font-weight: 600;
-            padding: 8px 12px;
-            border: 2px solid #1DB954;
-            border-radius: 5px;
-            transition: background-color 0.3s, color 0.3s;
+        .friend-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 60px;
         }
 
-        .friends-links a:hover {
-            background-color: #1DB954;
-            color: #fff;
+        .friend-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 5px;
+            border: 2px solid #FFC300;
         }
-                #notificationsList {
-            list-style: none;
-            padding: 0;
-            width: 100%;
+
+        .friend-username {
+            color: #17A846;
+            font-size: 14px;
+             text-align: center;
+             text-decoration:none;
         }
+
 
          #notificationsList {
             list-style: none;
@@ -482,33 +399,20 @@
             background-color: #e60000;
         }
 
-        /* Кнопка редактирования профиля видна только владельцу профиля */
-        .btn-edit-profile {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 10px 15px;
-            background-color: #1DB954;
-            color: #fff;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background-color 0.3s;
-        }
 
-        .btn-edit-profile:hover {
-            background-color: #17a44c;
-        }
 
 
         .profile-container {
-            width: 270px;
-            background-color: #FFFFFF;
-            border-radius: 25px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            width: 290px;
             padding: 25px;
             display: flex;
             flex-direction: column;
             align-items: center;
             flex-shrink: 0;
+             border: 3px solid #FFC300;
+            border-radius: 25px;
+             box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
+            background-color: rgba(0, 0, 0, 0.9);
         }
 
         .profile-avatar {
@@ -517,75 +421,34 @@
             border-radius: 50%;
             object-fit: cover;
             margin-bottom: 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 0 25px rgba(255, 234, 0, 0.2), 0 0 50px rgba(142, 197, 252, 0.3);
+                        background-color: #333;
+
         }
 
         .profile-info {
             text-align: center;
         }
 
-        .profile-info p {
+             .profile-info p {
             margin-bottom: 10px;
-            font-size: 16px;
-            color: #333;
+            font-size: 18px;
+            color: #FFC300; /* Brightened */
         }
 
-        .profile-info a {
+   .profile-info a {
+            color: #17A846;
+            font-size: 18px;
             text-decoration: none;
-            color: #1DB954;
-            font-weight: 600;
-            margin-bottom: 10px;
+            transition: color 0.3s;
         }
 
         .profile-info a:hover {
-            text-decoration: underline;
+            color: #ffffff;
         }
 
-        .friends-section {
-            margin-top: 30px;
-            text-align: center;
-        }
 
-        .friends-section h2 {
-            margin-bottom: 15px;
-            color: #333;
-        }
 
-        .friends-list {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-
-        .friend-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 60px;
-            text-align: center;
-        }
-
-        .friend-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-            margin-bottom: 5px;
-            cursor: pointer;
-        }
-
-        .friend-username {
-            text-decoration: none;
-            color: #1DB954;
-            font-weight: 600;
-            font-size: 12px;
-        }
-
-        .friend-username:hover {
-            color: #14833b;
-        }
 
         .view-all-friends {
             text-decoration: none;
@@ -597,12 +460,8 @@
         .view-all-friends:hover {
             text-decoration: underline;
         }
-         .settings-btn, .search-btn { position: absolute; top: 20px; background-color: #E0E0E0; width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; border-radius: 50%; cursor: pointer; }
-        .settings-btn { right: 80px; } /* Отодвигаем вправо для иконки поиска */
-        .search-btn { right: 20px; } /* Иконка поиска */
-
-        /* Подсветка при наведении */
-        .settings-btn:hover, .search-btn:hover { box-shadow: 0 0 25px rgba(142, 197, 252, 0.8), 0 0 50px rgba(142, 197, 252, 0.5); }
+         .settings-btn{ position: absolute; top: 20px;  width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; border-radius: 50%; cursor: pointer; }
+        .settings-btn { right: 20px; } /* Отодвигаем вправо для иконки поиска */
 
 
     </style>
@@ -626,7 +485,7 @@
                 <a th:href="${client.githubProfile}" target="_blank">GitHub Профиль</a>
             </p>
             <p class="info-item" th:text="${client.about}">О себе</p>
-            <p>Friends: <span th:text="${friendsCount}">0</span></p>
+<!--            <p>Друзей: <span th:text="${friendsCount}">0</span></p>-->
         </div>
 
 <!--        &lt;!&ndash; Кнопка редактирования профиля видна только владельцу профиля &ndash;&gt;-->
@@ -672,7 +531,7 @@
                         <span class="project-name" th:text="${project.name}">Project Name</span>
                         <div class="project-actions">
                             <!-- Кнопка "Open" для перехода к проекту -->
-                            <button class="btn-open">Open</button>
+                            <button class="btn-open"><i class='bx bx-folder-open'></i></button>
                             <!-- Кнопка информации -->
                             <button class="btn-info">
                                 <i class='bx bx-info-circle'></i>
@@ -680,7 +539,7 @@
                             <form th:action="@{/projects/delete/{id}(id=${project.id})}" method="post" style="display: inline;"
                                   onsubmit="return confirm('Вы действительно хотите удалить проект?');">
                                 <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
-                                <button type="submit" class="btn-delete">Delete</button>
+                                <button type="submit" class="btn-delete"><i class='bx bx-trash'></i> </button>
                             </form>
                         </div>
                     </div>
@@ -701,10 +560,10 @@
     </div>
 </div>
 
-<!-- Кнопка настроек -->
-<div class="settings-btn">
+<button class="settings-btn">
     <i class='bx bx-cog'></i>
-</div>
+</button>
+
 <div class="search-btn">
     <a th:href="@{/friends/search}">
         <i class='bx bx-search'></i>

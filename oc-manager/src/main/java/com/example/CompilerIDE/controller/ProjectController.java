@@ -6,6 +6,7 @@ import com.example.CompilerIDE.providers.*;
 import com.example.CompilerIDE.repositories.ProjectAccessLogRepository;
 import com.example.CompilerIDE.repositories.ProjectStructRepository;
 import com.example.CompilerIDE.services.*;
+import com.example.CompilerIDE.util.FileUploadUtil;
 import com.example.CompilerIDE.util.ProjectValidator;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -15,7 +16,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.*; // Изменено
@@ -161,46 +164,67 @@ public String editProjectForm(@PathVariable("id") int projectId, Model model, Au
         return "redirect:/userProfile";
     }
 }
-
     @PostMapping("/edit/{id}")
-    public String updateProject(@PathVariable("id") int projectId,
-                                @Valid @ModelAttribute("project") Project projectForm,
-                                BindingResult bindingResult,
-                                Authentication authentication) {
+    public String updateProfile(Authentication authentication, @PathVariable("id") int id,
+                                @Valid @ModelAttribute("client") Client clientForm, BindingResult bindingResult,
+                                @RequestParam("avatarFile") MultipartFile avatarFile) {
         if (bindingResult.hasErrors()) {
-            return "edit_project_form";
+            return "editProfile";
         }
 
-        Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
-        if (clientOpt.isEmpty()) {
-            return "redirect:/login";
+        Client existingClient = clientService.findOne(id);
+        if (existingClient == null) {
+            // Обработка случая, когда клиент не найден
+            bindingResult.reject("client.notfound", "Клиент не найден");
+            return "editProfile";
         }
 
-        Client client = clientOpt.get();
+        if (!avatarFile.isEmpty()) {
+            String originalFileName = avatarFile.getOriginalFilename();
+            String extension = "";
 
-        Optional<Project> projectOpt = projectService.findById(projectId);
+            if (originalFileName != null && originalFileName.contains(".")) {
+                extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+            }
 
-        if (projectOpt.isPresent()) {
-            Project existingProject = projectOpt.get();
-            if (existingProject.getClient().getId().equals(client.getId())) {
-                existingProject.setName(projectForm.getName());
-                existingProject.setLanguage(projectForm.getLanguage());
-                existingProject.setReadMe(projectForm.getReadMe());
-                existingProject.setRefGit(projectForm.getRefGit());
-                existingProject.setProjectType(projectForm.getProjectType());
-                projectService.save(existingProject);
-
-                // Записываем информацию об изменении проекта
-                ProjectAccessLog accessLog = new ProjectAccessLog();
-                accessLog.setClient(client);
-                accessLog.setProject(existingProject);
-                accessLog.setAccessTime(new Timestamp(System.currentTimeMillis()));  // Текущее время
-                accessLog.setActionType("edit");  // Действие "edit"
-                projectAccessLogRepository.save(accessLog);
+            String fileName = existingClient.getId() + extension;
+            String uploadDir = "user-photos/";
+            try {
+                FileUploadUtil.saveFile(uploadDir, fileName, avatarFile);
+                existingClient.setAvatarUrl("/" + uploadDir + fileName);
+            } catch (IOException e) {
+                bindingResult.rejectValue("avatarUrl", "error.avatarUrl", "Ошибка при загрузке файла: " + e.getMessage());
+                return "editProfile";
             }
         }
+
+        // Обновляем данные пользователя
+        existingClient.setUsername(clientForm.getUsername());
+        existingClient.setEmail(clientForm.getEmail());
+        existingClient.setGithubProfile(clientForm.getGithubProfile());
+        existingClient.setAbout(clientForm.getAbout());
+
+        // Обновляем цвета темы
+        existingClient.setBackgroundColor(clientForm.getBackgroundColor());
+        existingClient.setMainColor(clientForm.getMainColor());
+
+        // Проверка цвета валидацией, уже выполнена ранее
+
+        clientService.update(id, existingClient);
+
+        // Обновляем объект аутентификации, если изменилось имя пользователя
+        if (!authentication.getName().equals(existingClient.getUsername())) {
+            Authentication newAuth = new UsernamePasswordAuthenticationToken(
+                    existingClient.getUsername(),
+                    authentication.getCredentials(),
+                    authentication.getAuthorities()
+            );
+            SecurityContextHolder.getContext().setAuthentication(newAuth);
+        }
+
         return "redirect:/userProfile";
     }
+
 
 
     @GetMapping("/{projectId}/access-logs")

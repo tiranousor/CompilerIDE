@@ -4,16 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <title>Login & Register Page</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <title>Retro Login & Register Page</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Press Start 2P', cursive;
+            font-family: 'VT323', monospace; /* Apply the VT323 font */
         }
 
         body {
@@ -32,16 +30,28 @@
             background-color: rgba(0, 0, 0, 0.9);
             border: 3px solid #FFC300;
             border-radius: 25px;
-            box-shadow: 0 6px 15px rgba(255, 255, 0, 0.5);
+            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.2);
             position: relative;
             overflow: hidden;
             width: 768px;
             max-width: 100%;
             min-height: 480px;
             padding: 20px;
-            z-index: 1;
+        }
+  .container h1 {
+            font-size: 32px; /* Larger font size for headings */
+            margin-bottom: 20px;
         }
 
+        .container h3 {
+            font-size: 24px; /* Larger font size for subheadings */
+        }
+ .container p {
+            font-size: 16px; /* Increased font size for paragraphs */
+            line-height: 24px;
+            margin: 15px 0;
+            color: #FFC300;
+        }
         .matrix {
             position: absolute;
             top: 0;
@@ -56,7 +66,7 @@
         .matrix span {
             position: absolute;
             top: -10vh;
-            font-size: 18px;
+            font-size: 24px;
             color: #FFC300;
             opacity: 0.8;
             animation: fall 10s linear infinite;
@@ -77,18 +87,6 @@
             }
         }
 
-        .container p {
-            font-size: 12px;
-            line-height: 18px;
-            letter-spacing: 1px;
-            margin: 15px 0;
-            color: #FFC300;
-        }
-
-        .container span {
-            font-size: 10px;
-            color: #FFC300;
-        }
 
         .container a {
             color: #FFC300;
@@ -105,8 +103,8 @@
         .container button {
             background-color: #FFC300;
             color: #000000;
-            font-size: 12px;
-            padding: 10px 35px;
+            font-size: 16px;
+            padding: 10px 40px;
             border: none;
             border-radius: 12px;
             font-weight: 600;
@@ -124,7 +122,7 @@
             background-color: transparent;
             border: 2px solid #FFC300;
             color: #FFC300;
-            padding: 10px 25px;
+            padding: 10px 30px;
             transition: background-color 0.3s, color 0.3s;
         }
 
@@ -147,8 +145,8 @@
             background-color: #1E1E1E;
             border: 2px solid #FFC300;
             margin: 10px 0;
-            padding: 12px 20px;
-            font-size: 12px;
+            padding: 14px 20px;
+            font-size: 16px;
             border-radius: 10px;
             width: 100%;
             outline: none;

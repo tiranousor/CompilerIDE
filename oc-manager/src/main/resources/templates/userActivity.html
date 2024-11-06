@@ -1,23 +1,296 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Activity</title>
+    <title>User Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'VT323', monospace;
+        }
+
+        :root {
+            --background-color: #000000;
+            --text-color: #FFC300;
+            --primary-color: #1DB954;
+            --secondary-color: #FF4D4F;
+            --highlight-color: #17A846;
+        }
+
+        body {
+            background: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .container {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            width: 80%;
+            max-width: 1200px;
+            height: 90%;
+            overflow: hidden;
+        }
+
+        .projects-container {
+    background: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .projects-header h2 {
+            font-size: 24px;
+            color: var(--text-color);
+        }
+
+        .add-btn {
+            color: var(--text-color);
+            font-size: 35px;
+            transition: box-shadow 0.3s ease-in-out;
+        }
+
+        .add-btn:hover {
+            box-shadow: 0 0 20px var(--text-color), 0 0 40px rgba(255, 234, 0, 0.2);
+        }
+
+        .project-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .project-item {
+            padding: 20px;
+            border: 3px solid var(--text-color);
+            border-radius: 25px;
+            background-color: rgba(0, 0, 0, 0.8);
+            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.2);
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+
+        .project-item:hover {
+            box-shadow: 0 0 25pxvar(--text-color), 0 0 50px rgba(142, 197, 252, 0.5);
+        }
+
+        .project-name {
+            color: var(--text-color);
+            font-size: 20px;
+        }
+
+        .project-actions button {
+            border: 2px solid var(--text-color);
+            color: var(--text-color);
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+        }
+
+        .project-actions button:hover {
+            background-color: var(--text-color);
+            color: var(--background-color);
+            box-shadow: 0 0 10px var(--text-color);
+        }
+
+        .profile-container {
+            width: 290px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 3px solid var(--text-color);
+            border-radius: 25px;
+            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .profile-avatar {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 20px;
+            box-shadow: 0 0 25px rgba(255, 234, 0, 0.2), 0 0 50px rgba(142, 197, 252, 0.3);
+        }
+
+        .profile-info p {
+            margin-bottom: 10px;
+            font-size: 18px;
+            color: var(--text-color);
+        }
+
+        .profile-info a {
+            color: var(--highlight-color);
+            font-size: 18px;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .profile-info a:hover {
+            color: #ffffff;
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 30px;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: color 0.3s, box-shadow 0.3s;
+        }
+
+        .settings-btn:hover {
+            color: #ffffff;
+            box-shadow: 0 0 10px var(--text-color);
+        }
+
+        .matrix {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .matrix span {
+            position: absolute;
+            top: -10vh;
+            font-size: 18px;
+            color: var(--text-color);
+            opacity: 0.8;
+            animation: fall 10s linear infinite;
+            white-space: pre;
+        }
+
+        @keyframes fall {
+            0% { top: -10vh; opacity: 0; }
+            20% { opacity: 1; }
+            100% { top: 110vh; opacity: 0; }
+        }
+    </style>
 </head>
 <body>
-<h1>История входов</h1>
-<table>
-    <thead>
-    <tr>
-        <th>Дата и время входа</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="loginTime : ${loginTimes}">
-        <td th:text="${#dates.format(loginTime, 'dd-MM-yyyy HH:mm:ss')}"></td>
-    </tr>
-    </tbody>
-</table>
+<!-- Profile Section -->
+<div class="container">
+    <div class="profile-container">
+        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="profile-avatar">
+        <div class="profile-info">
+            <p th:text="${client.username}">Имя пользователя</p>
+            <p th:text="${client.email}">example@example.com</p>
+            <p>
+                <a th:href="${client.githubProfile}" target="_blank">GitHub Профиль</a>
+            </p>
+            <p th:text="${client.about}">О себе</p>
+        </div>
+    </div>
+
+    <div class="projects-container">
+        <div class="projects-header">
+            <h2>Мои Проекты</h2>
+            <a th:href="@{/projects/userProfile/new}" class="add-btn">
+                <i class='bx bx-plus'></i>
+            </a>
+        </div>
+        <ul class="project-list">
+            <th:block th:each="project : ${projects}">
+                <li class="project-item">
+                    <div class="project-header">
+                        <span class="project-name" th:text="${project.name}">Project Name</span>
+                        <div class="project-actions">
+                            <button class="btn-open"><i class='bx bx-folder-open'></i></button>
+                            <button class="btn-info"><i class='bx bx-info-circle'></i></button>
+                            <form th:action="@{/projects/delete/{id}(id=${project.id})}" method="post" style="display: inline;">
+                                <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+                                <button type="submit" class="btn-delete"><i class='bx bx-trash'></i></button>
+                            </form>
+                        </div>
+                    </div>
+                </li>
+            </th:block>
+        </ul>
+    </div>
+</div>
+
+<!-- Settings Button -->
+<button class="settings-btn"><i class='bx bx-cog'></i></button>
+
+<!-- Matrix Background -->
+<div class="matrix" id="matrixContainer"></div>
+
+<script>
+    // Load theme from localStorage
+    function loadTheme() {
+        const root = document.documentElement;
+        const theme = JSON.parse(localStorage.getItem('theme')) || {};
+        for (const [key, value] of Object.entries(theme)) {
+            root.style.setProperty(`--${key}`, value);
+        }
+    }
+
+    // Save theme to localStorage
+    function saveTheme(theme) {
+        localStorage.setItem('theme', JSON.stringify(theme));
+    }
+
+    // Function to change theme colors
+    function changeTheme(bgColor, textColor, primaryColor) {
+        const root = document.documentElement;
+        const newTheme = {
+            'background-color': bgColor,
+            'text-color': textColor,
+            'primary-color': primaryColor
+        };
+
+        for (const [key, value] of Object.entries(newTheme)) {
+            root.style.setProperty(`--${key}`, value);
+        }
+
+        saveTheme(newTheme);
+    }
+
+    // Initial theme load
+    loadTheme();
+
+    // Matrix Animation
+    const matrixContainer = document.getElementById('matrixContainer');
+    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+    function createMatrixSpan() {
+        const span = document.createElement('span');
+        span.textContent = characters.charAt(Math.floor(Math.random() * characters.length));
+        span.style.left = Math.random() * 100 + 'vw';
+        span.style.animationDuration = Math.random() * 5 + 5 + 's';
+        span.style.opacity = Math.random() * 0.5 + 0.5;
+        matrixContainer.appendChild(span);
+        setTimeout(() => {
+            matrixContainer.removeChild(span);
+        }, 10000);
+    }
+
+    setInterval(createMatrixSpan, 150);
+</script>
 </body>
 </html>

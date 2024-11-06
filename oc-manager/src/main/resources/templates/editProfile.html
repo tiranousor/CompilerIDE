@@ -1,121 +1,213 @@
+<!-- src/main/resources/templates/editProfile.html -->
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.w3.org/1999/xhtml">
-
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <title>Редактировать Аккаунт</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Montserrat', sans-serif;
+        /* Используем CSS-переменные для динамического изменения цветов */
+        :root {
+            --background-color: [[${client.backgroundColor} != null ? '"' + ${client.backgroundColor} + '"' : '"#000000"']];
+            --main-color: [[${client.mainColor} != null ? '"' + ${client.mainColor} + '"' : '"#FFC300"']];
         }
 
         body {
-                       background: linear-gradient(70deg, #8EC5FC, #E0C3FC);
-
+            background-color: var(--background-color);
+            color: var(--main-color);
+            font-family: 'VT323', monospace;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
         }
 
         .container {
-            background-color: #fff;
-            border-radius: 30px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background-color: rgba(0, 0, 0, 0.9);
+            border: 3px solid var(--main-color);
+            border-radius: 25px;
+            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
             width: 600px;
-            max-width: 100%;
+            max-width: 90%;
             padding: 30px;
             text-align: center;
+            color: var(--main-color);
         }
 
         h1 {
-            font-size: 24px;
-            font-weight: 600;
+            font-size: 28px;
+            color: var(--main-color);
             margin-bottom: 20px;
+        }
+
+        #preview {
+            margin: 0 auto 10px;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 3px solid var(--main-color);
+            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
+            object-fit: cover;
+            background-color: #333;
+        }
+
+        .icon-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .file-upload-icon {
+            font-size: 40px;
+            color: var(--main-color);
+            cursor: pointer;
+            transition: color 0.3s, transform 0.3s;
+        }
+
+        .file-upload-icon:hover {
+            color: #17A846;
+            transform: scale(1.1);
+        }
+
+        input[type="file"] {
+            display: none;
         }
 
         .form-control {
             width: 100%;
             padding: 10px;
-            font-size: 14px;
+            font-size: 16px;
             margin-bottom: 15px;
-            border: 1px solid #ddd;
+            border: 2px solid var(--main-color);
             border-radius: 8px;
-            background-color: #eee;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            background-color: #333;
+            color: var(--main-color);
             outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .form-control::placeholder {
+            color: var(--main-color);
         }
 
         .form-control:focus {
-            border-color: #1DB954;
+            border-color: #17A846;
+            box-shadow: 0 0 10px rgba(23, 168, 70, 0.6);
         }
 
         .btn-primary {
-            background-color: #1DB954;
+            background-color: var(--main-color);
             color: #fff;
             padding: 10px 45px;
-            border: 1px solid transparent;
+            border: none;
             border-radius: 8px;
             font-weight: 600;
-            text-transform: uppercase;
             cursor: pointer;
-            margin-top: 20px;
+            text-transform: uppercase;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .btn-primary:hover {
+            background-color: #17A846;
+            box-shadow: 0 0 15px rgba(23, 168, 70, 0.6);
         }
 
         .form-error {
-            color: red;
-            font-size: 12px;
-            margin-top: -5px;
+            color: #FF4D4F;
+            font-size: 14px;
+            margin-top: -10px;
+            margin-bottom: 10px;
+            text-align: left;
         }
 
-        p {
-            margin-bottom: 20px;
+        /* Матрица фон */
+        .matrix {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
         }
 
-        #preview {
-            margin: 0 auto 20px;
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-            object-fit: cover;
-            display: block;
+        .matrix span {
+            position: absolute;
+            top: -10vh;
+            font-size: 18px;
+            color: #FFC300;
+            opacity: 0.8;
+            animation: fall 10s linear infinite;
+            white-space: pre;
+        }
+
+        @keyframes fall {
+            0% {
+                top: -10vh;
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 110vh;
+                opacity: 0;
+            }
         }
     </style>
 </head>
-
 <body>
+<div class="matrix" id="matrixContainer"></div>
 
 <div class="container">
-    <h1>Редактировать аккаунт</h1>
+    <h1>Редактировать Аккаунт</h1>
+    <img id="preview" th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt=""/>
 
-    <img id="preview" th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="Предпросмотр изображения"/>
+    <!-- Центрированный значок под изображением -->
+    <div class="icon-wrapper">
+        <label for="avatarFile">
+            <i class='bx bx-upload file-upload-icon'></i>
+        </label>
+    </div>
+    <input type="file" id="avatarFile" name="avatarFile" accept="image/*" onchange="previewImage(event)" />
 
     <form th:action="@{/edit/{id}(id=${client.id})}" th:method="POST" th:object="${client}" enctype="multipart/form-data">
-        <input type="file" name="avatarFile" class="form-control" accept="image/*" onchange="previewImage(event)" />
-        <div class="form-error" th:if="${#fields.hasErrors('avatarUrl')}" th:errors="*{avatarUrl}"></div>
+        <!-- Поля для загрузки аватара уже включены выше -->
 
-        <input type="text" class="form-control" th:field="*{username}" id="username" placeholder="Username" th:classappend="${#fields.hasErrors('username')} ? 'error' : 'form-control'"/>
-        <div class="form-error" th:if="${#fields.hasErrors('username')}" th:text="*{username}"></div>
+        <!-- Поля для редактирования информации -->
+        <input type="text" class="form-control" th:field="*{username}" id="username" placeholder="Username" />
+        <div class="form-error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
 
-        <input type="text" class="form-control" th:field="*{email}" id="email" placeholder="Email" th:classappend="${#fields.hasErrors('email')} ? 'error' : 'form-control'"/>
-        <div class="form-error" th:if="${#fields.hasErrors('email')}" th:text="*{email}"></div>
+        <input type="email" class="form-control" th:field="*{email}" id="email" placeholder="Email" />
+        <div class="form-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
 
-        <input type="text" class="form-control" th:field="*{githubProfile}" id="githubProfile" placeholder="GitHub URL" th:classappend="${#fields.hasErrors('githubProfile')} ? 'error' : 'form-control'"/>
-        <div class="form-error" th:if="${#fields.hasErrors('githubProfile')}" th:text="*{githubProfile}"></div>
+        <input type="url" class="form-control" th:field="*{githubProfile}" id="githubProfile" placeholder="GitHub URL" />
+        <div class="form-error" th:if="${#fields.hasErrors('githubProfile')}" th:errors="*{githubProfile}"></div>
 
-        <input type="text" class="form-control" th:field="*{about}" id="about" placeholder="About" th:classappend="${#fields.hasErrors('about')} ? 'error' : 'form-control'"/>
-        <div class="form-error" th:if="${#fields.hasErrors('about')}" th:text="*{about}"></div>
+        <input type="text" class="form-control" th:field="*{about}" id="about" placeholder="About" />
+        <div class="form-error" th:if="${#fields.hasErrors('about')}" th:errors="*{about}"></div>
 
-        <input type="hidden" th:field="*{password}" id="password" placeholder="New Password" th:classappend="${#fields.hasErrors('password')} ? 'error' : 'form-control'"/>
-        <div class="form-error" th:if="${#fields.hasErrors('password')}" th:text="*{password}"></div>
+        <!-- Новые поля для выбора цвета -->
+        <div>
+            <label for="backgroundColor">Цвет фона:</label>
+            <input type="color" id="backgroundColor" name="backgroundColor" th:value="${client.backgroundColor != null ? client.backgroundColor : '#000000'}" class="form-control" />
+            <div class="form-error" th:if="${#fields.hasErrors('backgroundColor')}" th:errors="*{backgroundColor}"></div>
+        </div>
+
+        <div>
+            <label for="mainColor">Основной цвет:</label>
+            <input type="color" id="mainColor" name="mainColor" th:value="${client.mainColor != null ? client.mainColor : '#FFC300'}" class="form-control" />
+            <div class="form-error" th:if="${#fields.hasErrors('mainColor')}" th:errors="*{mainColor}"></div>
+        </div>
 
         <button type="submit" class="btn-primary">Сохранить изменения</button>
     </form>
@@ -136,8 +228,36 @@
             preview.src = '';
         }
     }
+
+    // Матрица анимация
+    const matrixContainer = document.getElementById('matrixContainer');
+    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+    function createMatrixSpan() {
+        const span = document.createElement('span');
+        span.textContent = characters.charAt(Math.floor(Math.random() * characters.length));
+        span.style.left = Math.random() * 100 + 'vw';
+        span.style.animationDuration = Math.random() * 5 + 5 + 's';
+        span.style.opacity = Math.random() * 0.5 + 0.5;
+        matrixContainer.appendChild(span);
+        setTimeout(() => {
+            matrixContainer.removeChild(span);
+        }, 10000);
+    }
+
+    setInterval(createMatrixSpan, 150);
+
+    // Применение выбранных цветов в реальном времени
+    const backgroundColorInput = document.getElementById('backgroundColor');
+        const mainColorInput = document.getElementById('mainColor');
+
+        backgroundColorInput.addEventListener('input', function() {
+            document.documentElement.style.setProperty('--background-color', this.value);
+        });
+
+        mainColorInput.addEventListener('input', function() {
+            document.documentElement.style.setProperty('--main-color', this.value);
+        });
 </script>
-
 </body>
-
 </html>
