@@ -1,766 +1,766 @@
-<!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+    <!DOCTYPE html>
+    <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile</title>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap:wght@300;400;500;600;700&display=swap');
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>User Profile</title>
+        <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap:wght@300;400;500;600;700&display=swap');
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'VT323', monospace; /* Apply the VT323 font */
-        }
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: 'VT323', monospace; /* Apply the VT323 font */
+            }
 
-   body {
-            background: #000000;
-            color: #FFC300;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
-        }
-        .container {
-            display: flex;
-            gap: 30px;
-            align-items: flex-start;
-            width: 80%;
-            max-width: 1200px;
-            height: 90%;
-            overflow: hidden;
-        }
+       body {
+                background: #000000;
+                color: #FFC300;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;
+                height: 100vh;
+                overflow: hidden;
+                position: relative;
+            }
+            .container {
+                display: flex;
+                gap: 30px;
+                align-items: flex-start;
+                width: 80%;
+                max-width: 1200px;
+                height: 90%;
+                overflow: hidden;
+            }
 
-   .projects-container {
-            flex-grow: 1;
-            background-color: rgba(0, 0, 0, 0.9);
-            border: 3px solid #FFC300;
-            border-radius: 25px;
-            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
-            padding: 25px;
-            overflow-y: auto;
-        }
-        .projects-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
+       .projects-container {
+                flex-grow: 1;
+                background-color: rgba(0, 0, 0, 0.9);
+                border: 3px solid #FFC300;
+                border-radius: 25px;
+                box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
+                padding: 25px;
+                overflow-y: auto;
+            }
+            .projects-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
 
-        .projects-header h2 {
-            font-size: 24px;
-            color: #333;
-        }
+            .projects-header h2 {
+                font-size: 24px;
+                color: #333;
+            }
 
-        .add-btn {
-            background-color: transparent;
-            text-decoration: none;
-            border: none;
-            color: #FFC300;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 35px;
-            transition: box-shadow 0.3s ease-in-out;
-        }
+            .add-btn {
+                background-color: transparent;
+                text-decoration: none;
+                border: none;
+                color: #FFC300;
+                border-radius: 50%;
+                cursor: pointer;
+                font-size: 35px;
+                transition: box-shadow 0.3s ease-in-out;
+            }
 
-        .add-btn:hover {
-            box-shadow: 0 0 20px rgba(255, 234, 0, 0.4), 0 0 40px rgba(255, 234, 0, 0.2);
-        }
+            .add-btn:hover {
+                box-shadow: 0 0 20px rgba(255, 234, 0, 0.4), 0 0 40px rgba(255, 234, 0, 0.2);
+            }
 
-        .project-list {
-            list-style: none;
-            padding: 0;
-        }
+            .project-list {
+                list-style: none;
+                padding: 0;
+            }
 
-        .project-item {
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 15px;
-            cursor: pointer;
+            .project-item {
+                padding: 20px;
+                border-radius: 15px;
+                margin-bottom: 15px;
+                cursor: pointer;
 
-            border: 3px solid #FFC300;
-            border-radius: 25px;
-             box-shadow: 0 6px 15px rgba(255, 234, 0, 0.2);
-            background-color: rgba(0, 0, 0, 0.8);
+                border: 3px solid #FFC300;
+                border-radius: 25px;
+                 box-shadow: 0 6px 15px rgba(255, 234, 0, 0.2);
+                background-color: rgba(0, 0, 0, 0.8);
 
-        }
+            }
 
-        .project-item:hover {
-            box-shadow: 0 0 25px rgba(255, 234, 0, 0.8), 0 0 50px rgba(142, 197, 252, 0.5);
-            border-color: rgba(255, 234, 0, 0.2);
-        }
+            .project-item:hover {
+                box-shadow: 0 0 25px rgba(255, 234, 0, 0.8), 0 0 50px rgba(142, 197, 252, 0.5);
+                border-color: rgba(255, 234, 0, 0.2);
+            }
 
-        .project-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+            .project-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
 
-        .project-name {
-            font-size: 20px;
-            color: #333;
-        }
+            .project-name {
+                font-size: 20px;
+                color: #333;
+            }
 
-        .project-actions {
-            display: flex;
-            gap: 10px;
-        }
+            .project-actions {
+                display: flex;
+                gap: 10px;
+            }
 
-        .project-actions button {
-            background-color: transparent;
-            border: 2px solid #FFC300;
-            color: #FFC300;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+            .project-actions button {
+                background-color: transparent;
+                border: 2px solid #FFC300;
+                color: #FFC300;
+                padding: 5px 10px;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
 
-        }
-        .project-actions button:hover {
-            background-color: #FFC300;
-            color: #000000;
-            box-shadow: 0 0 10px rgba(255, 234, 0, 0.6);
-        }
+            }
+            .project-actions button:hover {
+                background-color: #FFC300;
+                color: #000000;
+                box-shadow: 0 0 10px rgba(255, 234, 0, 0.6);
+            }
 
-        /* Стили для раскрывающегося окна с информацией о проекте */
-        .project-details {
-            margin-top: 15px;
-            background-color: #F7F9FA;
-            padding: 20px;
-            border-radius: 15px;
-            display: none;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
+            /* Стили для раскрывающегося окна с информацией о проекте */
+            .project-details {
+                margin-top: 15px;
+                background-color: #F7F9FA;
+                padding: 20px;
+                border-radius: 15px;
+                display: none;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            }
 
-        .project-details p {
-            margin-bottom: 12px;
-            font-size: 15px;
-            color: #555;
-        }
+            .project-details p {
+                margin-bottom: 12px;
+                font-size: 15px;
+                color: #555;
+            }
 
-        .project-details-actions {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
+            .project-details-actions {
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+                margin-top: 20px;
+            }
 
-        .project-details-actions .btn-edit,
-        .project-details-actions .btn-continue,
-        .project-details-actions .btn-delete {
-            background-color: #1DB954;
-            color: #fff;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 15px;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-        }
+            .project-details-actions .btn-edit,
+            .project-details-actions .btn-continue,
+            .project-details-actions .btn-delete {
+                background-color: #1DB954;
+                color: #fff;
+                padding: 10px 15px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                text-decoration: none;
+                font-size: 15px;
+                box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+            }
 
-        .project-details-actions .btn-delete {
-            background-color: #FF4D4F;
-        }
-/* Fixed Buttons (Back and Settings) */
-.back-btn,
-.settings-btn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background-color: transparent;
-    border: none;
-    color: #FFC300;
-    font-size: 30px;
-    cursor: pointer;
-    transition: color 0.3s ease, box-shadow 0.3s;
-}
+            .project-details-actions .btn-delete {
+                background-color: #FF4D4F;
+            }
+    /* Fixed Buttons (Back and Settings) */
+    .back-btn,
+    .settings-btn {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background-color: transparent;
+        border: none;
+        color: #FFC300;
+        font-size: 30px;
+        cursor: pointer;
+        transition: color 0.3s ease, box-shadow 0.3s;
+    }
 
-.back-btn:hover,
-.settings-btn:hover {
-    color: #ffffff;
-    box-shadow: 0 0 10px rgba(255, 234, 0, 0.6);
-}
+    .back-btn:hover,
+    .settings-btn:hover {
+        color: #ffffff;
+        box-shadow: 0 0 10px rgba(255, 234, 0, 0.6);
+    }
 
-.back-btn {
-    left: 20px;
-}
+    .back-btn {
+        left: 20px;
+    }
 
-.settings-btn {
-    right: 20px;
-}
+    .settings-btn {
+        right: 20px;
+    }
 
-/* Slide-out Menu */
-.settings-menu {
-    position: fixed;
-    top: 0;
+    /* Slide-out Menu */
+    .settings-menu {
+        position: fixed;
+        top: 0;
 
-    right: -300px;
-    height: 100%;
-    width: 300px;
-    background-color: rgba(0, 0, 0, 0.9);
-    border: 2px solid #FFC300;
-    border-radius: 10px 0 0 10px;
-    box-shadow: -2px 0 10px rgba(255, 234, 0, 0.4);
-    transition: right 0.4s ease;
-    z-index: 100;
-    padding: 25px;
-    color: #FFC300;
-}
+        right: -300px;
+        height: 100%;
+        width: 300px;
+        background-color: rgba(0, 0, 0, 0.9);
+        border: 2px solid #FFC300;
+        border-radius: 10px 0 0 10px;
+        box-shadow: -2px 0 10px rgba(255, 234, 0, 0.4);
+        transition: right 0.4s ease;
+        z-index: 100;
+        padding: 25px;
+        color: #FFC300;
+    }
 
-.settings-menu a {
-    display: block;
-    padding: 12px;
-    color: #FFC300;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 18px;
-    border-radius: 8px;
-    transition: background-color 0.3s, box-shadow 0.3s;
-    box-shadow: none; /* No shadow by default */
-}
+    .settings-menu a {
+        display: block;
+        padding: 12px;
+        color: #FFC300;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 18px;
+        border-radius: 8px;
+        transition: background-color 0.3s, box-shadow 0.3s;
+        box-shadow: none; /* No shadow by default */
+    }
 
-.settings-menu a:hover {
-    box-shadow: 0 0 15px rgba(255, 234, 0, 0.6);
-    background-color: rgba(255, 234, 0, 0.1);
-}
+    .settings-menu a:hover {
+        box-shadow: 0 0 15px rgba(255, 234, 0, 0.6);
+        background-color: rgba(255, 234, 0, 0.1);
+    }
 
-.edit-profile-btn {
-    display: block;
-    padding: 12px;
-    font-size: 18px;
-    color: #FFC300;
-    background-color: transparent;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-top: 15px;
-}
+    .edit-profile-btn {
+        display: block;
+        padding: 12px;
+        font-size: 18px;
+        color: #FFC300;
+        background-color: transparent;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 15px;
+    }
 
-.edit-profile-btn:hover {
-    box-shadow: 0 0 15px rgba(255, 234, 0, 0.6);
-    background-color: rgba(255, 234, 0, 0.1);
-}
+    .edit-profile-btn:hover {
+        box-shadow: 0 0 15px rgba(255, 234, 0, 0.6);
+        background-color: rgba(255, 234, 0, 0.1);
+    }
 
-.overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    visibility: hidden;
-    opacity: 0;
-    transition: opacity 0.4s ease, visibility 0.4s ease;
-    z-index: 50;
-}
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.4s ease, visibility 0.4s ease;
+        z-index: 50;
+    }
 
-.overlay.active {
-    visibility: visible;
-    opacity: 1;
-}
+    .overlay.active {
+        visibility: visible;
+        opacity: 1;
+    }
 
-.settings-menu.active {
-    right: 0;
-}
+    .settings-menu.active {
+        right: 0;
+    }
 
 
-        .matrix {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-            pointer-events: none;
-        }
+            .matrix {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: -1;
+                overflow: hidden;
+                pointer-events: none;
+            }
 
-        .matrix span {
-            position: absolute;
-            top: -10vh;
-            font-size: 18px;
-            color: white;
-            opacity: 0.8;
-            animation: fall 10s linear infinite;
-            white-space: pre;
-        }
-
-        @keyframes fall {
-            0% {
+            .matrix span {
+                position: absolute;
                 top: -10vh;
-                opacity: 0;
+                font-size: 18px;
+                color: white;
+                opacity: 0.8;
+                animation: fall 10s linear infinite;
+                white-space: pre;
             }
 
-            20% {
-                opacity: 1;
+            @keyframes fall {
+                0% {
+                    top: -10vh;
+                    opacity: 0;
+                }
+
+                20% {
+                    opacity: 1;
+                }
+
+                100% {
+                    top: 110vh;
+                    opacity: 0;
+                }
             }
 
-            100% {
-                top: 110vh;
-                opacity: 0;
+            .friends-section {
+              text-align: center;
+                margin-top: 30px;
             }
-        }
 
-        .friends-section {
-          text-align: center;
-            margin-top: 30px;
-        }
+            .friends-list {
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+                margin-top: 10px;
+            }
 
-        .friends-list {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 10px;
-        }
+            .friend-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 60px;
+            }
 
-        .friend-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 60px;
-        }
+            .friend-avatar {
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                object-fit: cover;
+                margin-bottom: 5px;
+                border: 2px solid #FFC300;
+            }
 
-        .friend-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 5px;
-            border: 2px solid #FFC300;
-        }
-
-        .friend-username {
-            color: #17A846;
-            font-size: 14px;
-             text-align: center;
-             text-decoration:none;
-        }
+            .friend-username {
+                color: #17A846;
+                font-size: 14px;
+                 text-align: center;
+                 text-decoration:none;
+            }
 
 
-         #notificationsList {
-            list-style: none;
-            padding: 0;
-            width: 100%;
-        }
+             #notificationsList {
+                list-style: none;
+                padding: 0;
+                width: 100%;
+            }
 
-        #notificationsList li {
-            background-color: #F9FBFC;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
+            #notificationsList li {
+                background-color: #F9FBFC;
+                padding: 15px;
+                border-radius: 10px;
+                margin-bottom: 10px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
 
-        .notification-info {
-            display: flex;
-            flex-direction: column;
-        }
+            .notification-info {
+                display: flex;
+                flex-direction: column;
+            }
 
-        .notification-buttons {
-            display: flex;
-            gap: 10px;
-        }
+            .notification-buttons {
+                display: flex;
+                gap: 10px;
+            }
 
-        .btn-accept {
-            background-color: #1DB954;
-            color: #fff;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
+            .btn-accept {
+                background-color: #1DB954;
+                color: #fff;
+                border: none;
+                padding: 8px 12px;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
 
-        .btn-accept:hover {
-            background-color: #17a44c;
-        }
+            .btn-accept:hover {
+                background-color: #17a44c;
+            }
 
-        .btn-reject {
-            background-color: #FF4D4F;
-            color: #fff;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
+            .btn-reject {
+                background-color: #FF4D4F;
+                color: #fff;
+                border: none;
+                padding: 8px 12px;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
 
-        .btn-reject:hover {
-            background-color: #e60000;
-        }
+            .btn-reject:hover {
+                background-color: #e60000;
+            }
 
 
 
 
-        .profile-container {
-            width: 290px;
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            flex-shrink: 0;
-             border: 3px solid #FFC300;
-            border-radius: 25px;
-             box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
-            background-color: rgba(0, 0, 0, 0.9);
-        }
+            .profile-container {
+                width: 290px;
+                padding: 25px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                flex-shrink: 0;
+                 border: 3px solid #FFC300;
+                border-radius: 25px;
+                 box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
+                background-color: rgba(0, 0, 0, 0.9);
+            }
 
-        .profile-avatar {
-            width: 130px;
-            height: 130px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 20px;
-            box-shadow: 0 0 25px rgba(255, 234, 0, 0.2), 0 0 50px rgba(142, 197, 252, 0.3);
-                        background-color: #333;
+            .profile-avatar {
+                width: 130px;
+                height: 130px;
+                border-radius: 50%;
+                object-fit: cover;
+                margin-bottom: 20px;
+                box-shadow: 0 0 25px rgba(255, 234, 0, 0.2), 0 0 50px rgba(142, 197, 252, 0.3);
+                            background-color: #333;
 
-        }
+            }
 
-        .profile-info {
-            text-align: center;
-        }
+            .profile-info {
+                text-align: center;
+            }
 
-             .profile-info p {
-            margin-bottom: 10px;
-            font-size: 18px;
-            color: #FFC300; /* Brightened */
-        }
+                 .profile-info p {
+                margin-bottom: 10px;
+                font-size: 18px;
+                color: #FFC300; /* Brightened */
+            }
 
-   .profile-info a {
-            color: #17A846;
-            font-size: 18px;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
+       .profile-info a {
+                color: #17A846;
+                font-size: 18px;
+                text-decoration: none;
+                transition: color 0.3s;
+            }
 
-        .profile-info a:hover {
-            color: #ffffff;
-        }
-
-
+            .profile-info a:hover {
+                color: #ffffff;
+            }
 
 
-        .view-all-friends {
-            text-decoration: none;
-            color: #1DB954;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .view-all-friends:hover {
-            text-decoration: underline;
-        }
-         .settings-btn{ position: absolute; top: 20px;  width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; border-radius: 50%; cursor: pointer; }
-        .settings-btn { right: 20px; } /* Отодвигаем вправо для иконки поиска */
 
 
-    </style>
-</head>
+            .view-all-friends {
+                text-decoration: none;
+                color: #1DB954;
+                font-weight: 600;
+                font-size: 14px;
+            }
 
-<body>
-<!-- Добавляем скрытое поле для CSRF токена -->
-<input type="hidden" id="csrfToken" name="_csrf" th:value="${_csrf.token}" />
+            .view-all-friends:hover {
+                text-decoration: underline;
+            }
+             .settings-btn{ position: absolute; top: 20px;  width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; border-radius: 50%; cursor: pointer; }
+            .settings-btn { right: 20px; } /* Отодвигаем вправо для иконки поиска */
 
-<div class="matrix" id="matrixContainer"></div>
 
-<div class="container">
-    <!-- Левый контейнер (Профиль пользователя) -->
-    <div class="profile-container">
-        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="profile-avatar">
+        </style>
+    </head>
 
-        <div class="profile-info">
-            <p class="info-item" th:text="${client.username}">Имя пользователя</p>
-            <p class="info-item" th:text="${client.email}">example@example.com</p>
-            <p class="info-item">
-                <a th:href="${client.githubProfile}" target="_blank">GitHub Профиль</a>
-            </p>
-            <p class="info-item" th:text="${client.about}">О себе</p>
-<!--            <p>Друзей: <span th:text="${friendsCount}">0</span></p>-->
-        </div>
+    <body>
+    <!-- Добавляем скрытое поле для CSRF токена -->
+    <input type="hidden" id="csrfToken" name="_csrf" th:value="${_csrf.token}" />
 
-<!--        &lt;!&ndash; Кнопка редактирования профиля видна только владельцу профиля &ndash;&gt;-->
-<!--        <div th:if="${isOwnProfile}">-->
-<!--            <a th:href="@{/edit/{id}(id=${client.id})}" class="btn-edit-profile">Редактировать профиль</a>-->
-<!--        </div>-->
-<!--        <div class="invitations-section">-->
-<!--            <h2>Полученные Приглашения на Проекты</h2>-->
-<!--            <a th:href="@{/invitations/received}" class="btn-invitations">Просмотреть приглашения</a>-->
-<!--        </div>-->
+    <div class="matrix" id="matrixContainer"></div>
 
-        <div class="friends-section">
-            <a th:href="@{/friends/list}" class="view-all-friends">Друзья</a>
+    <div class="container">
+        <!-- Левый контейнер (Профиль пользователя) -->
+        <div class="profile-container">
+            <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="profile-avatar">
 
-            <div class="friends-list">
-                <th:block th:each="friend, iterStat : ${friends}">
-                    <th:block th:if="${iterStat.index < 4}">
-                        <div class="friend-item">
-                            <a th:href="@{/friends/{id}(id=${friend.id})}">
-                                <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar" class="friend-avatar">
-                                <span th:text="${friend.username}" class="friend-username">Имя друга</span>
-                            </a>
-                        </div>
+            <div class="profile-info">
+                <p class="info-item" th:text="${client.username}">Имя пользователя</p>
+                <p class="info-item" th:text="${client.email}">example@example.com</p>
+                <p class="info-item">
+                    <a th:href="${client.githubProfile}" target="_blank">GitHub Профиль</a>
+                </p>
+                <p class="info-item" th:text="${client.about}">О себе</p>
+    <!--            <p>Друзей: <span th:text="${friendsCount}">0</span></p>-->
+            </div>
+
+    <!--        &lt;!&ndash; Кнопка редактирования профиля видна только владельцу профиля &ndash;&gt;-->
+    <!--        <div th:if="${isOwnProfile}">-->
+    <!--            <a th:href="@{/edit/{id}(id=${client.id})}" class="btn-edit-profile">Редактировать профиль</a>-->
+    <!--        </div>-->
+    <!--        <div class="invitations-section">-->
+    <!--            <h2>Полученные Приглашения на Проекты</h2>-->
+    <!--            <a th:href="@{/invitations/received}" class="btn-invitations">Просмотреть приглашения</a>-->
+    <!--        </div>-->
+
+            <div class="friends-section">
+                <a th:href="@{/friends/list}" class="view-all-friends">Друзья</a>
+
+                <div class="friends-list">
+                    <th:block th:each="friend, iterStat : ${friends}">
+                        <th:block th:if="${iterStat.index < 4}">
+                            <div class="friend-item">
+                                <a th:href="@{/friends/{id}(id=${friend.id})}">
+                                    <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar" class="friend-avatar">
+                                    <span th:text="${friend.username}" class="friend-username">Имя друга</span>
+                                </a>
+                            </div>
+                        </th:block>
                     </th:block>
-                </th:block>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Правый контейнер (Список моих проектов) -->
-    <div class="projects-container">
-        <div class="projects-header">
-            <h2>Мои Проекты</h2>
-            <a th:href="@{/projects/userProfile/new}" class="add-btn">
-                <i class='bx bx-plus'></i>
-            </a>
+        <!-- Правый контейнер (Список моих проектов) -->
+        <div class="projects-container">
+            <div class="projects-header">
+                <h2>Мои Проекты</h2>
+                <a th:href="@{/projects/userProfile/new}" class="add-btn">
+                    <i class='bx bx-plus'></i>
+                </a>
+            </div>
+            <ul class="project-list">
+                <th:block th:each="project : ${projects}">
+                    <li class="project-item" th:data-project-id="${project.id}">
+                        <!-- Заголовок проекта -->
+                        <div class="project-header">
+                            <span class="project-name" th:text="${project.name}">Project Name</span>
+                            <div class="project-actions">
+                                <!-- Кнопка "Open" для перехода к проекту -->
+                                <button class="btn-open"><i class='bx bx-folder-open'></i></button>
+                                <!-- Кнопка информации -->
+                                <button class="btn-info">
+                                    <i class='bx bx-info-circle'></i>
+                                </button>
+                                <form th:action="@{/projects/delete/{id}(id=${project.id})}" method="post" style="display: inline;"
+                                      onsubmit="return confirm('Вы действительно хотите удалить проект?');">
+                                    <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+                                    <button type="submit" class="btn-delete"><i class='bx bx-trash'></i> </button>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- Раскрывающееся окно с информацией о проекте -->
+                        <div class="project-details" style="display: none;">
+                            <p><strong>Имя проекта:</strong> <span th:text="${project.name}">Имя проекта</span></p>
+                            <p><strong>ReadMe:</strong> <span th:text="${project.readMe}">ReadMe</span></p>
+                            <p><strong>Язык:</strong> <span th:text="${project.language}">Язык</span></p>
+                            <!-- Кнопки внизу -->
+                            <div class="project-details-actions">
+                                <a th:href="@{/projects/edit/{id}(id=${project.id})}" class="btn-edit">Редактировать</a>
+                                <!-- Дополнительные кнопки можно добавить здесь -->
+                            </div>
+                        </div>
+                    </li>
+                </th:block>
+            </ul>
         </div>
-        <ul class="project-list">
-            <th:block th:each="project : ${projects}">
-                <li class="project-item" th:data-project-id="${project.id}">
-                    <!-- Заголовок проекта -->
-                    <div class="project-header">
-                        <span class="project-name" th:text="${project.name}">Project Name</span>
-                        <div class="project-actions">
-                            <!-- Кнопка "Open" для перехода к проекту -->
-                            <button class="btn-open"><i class='bx bx-folder-open'></i></button>
-                            <!-- Кнопка информации -->
-                            <button class="btn-info">
-                                <i class='bx bx-info-circle'></i>
-                            </button>
-                            <form th:action="@{/projects/delete/{id}(id=${project.id})}" method="post" style="display: inline;"
-                                  onsubmit="return confirm('Вы действительно хотите удалить проект?');">
-                                <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
-                                <button type="submit" class="btn-delete"><i class='bx bx-trash'></i> </button>
-                            </form>
-                        </div>
-                    </div>
-                    <!-- Раскрывающееся окно с информацией о проекте -->
-                    <div class="project-details" style="display: none;">
-                        <p><strong>Имя проекта:</strong> <span th:text="${project.name}">Имя проекта</span></p>
-                        <p><strong>ReadMe:</strong> <span th:text="${project.readMe}">ReadMe</span></p>
-                        <p><strong>Язык:</strong> <span th:text="${project.language}">Язык</span></p>
-                        <!-- Кнопки внизу -->
-                        <div class="project-details-actions">
-                            <a th:href="@{/projects/edit/{id}(id=${project.id})}" class="btn-edit">Редактировать</a>
-                            <!-- Дополнительные кнопки можно добавить здесь -->
-                        </div>
-                    </div>
-                </li>
-            </th:block>
-        </ul>
     </div>
-</div>
 
-<button class="settings-btn">
-    <i class='bx bx-cog'></i>
-</button>
+    <button class="settings-btn">
+        <i class='bx bx-cog'></i>
+    </button>
 
-<div class="search-btn">
-    <a th:href="@{/friends/search}">
-        <i class='bx bx-search'></i>
-    </a>
-</div>
-<!-- Меню настроек -->
-<div class="settings-menu" id="settingsMenu">
-    <a th:href="@{/edit/{id}(id=${client.id})}">Редактировать профиль</a>
-    <form th:action="@{/logout}" th:method="POST">
-        <input type="submit" value="Выход" class="edit-profile-btn" />
-    </form>
-</div>
+    <div class="search-btn">
+        <a th:href="@{/friends/search}">
+            <i class='bx bx-search'></i>
+        </a>
+    </div>
+    <!-- Меню настроек -->
+    <div class="settings-menu" id="settingsMenu">
+        <a th:href="@{/edit/{id}(id=${client.id})}">Редактировать профиль</a>
+        <form th:action="@{/logout}" th:method="POST">
+            <input type="submit" value="Выход" class="edit-profile-btn" />
+        </form>
+    </div>
 
-<!-- Overlay -->
-<div class="overlay" id="overlay"></div>
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
 
-<script>
-    // Существующий код для меню настроек
-    const settingsBtn = document.querySelector('.settings-btn');
-    const settingsMenu = document.getElementById('settingsMenu');
-    const overlay = document.getElementById('overlay');
+    <script>
+        // Существующий код для меню настроек
+        const settingsBtn = document.querySelector('.settings-btn');
+        const settingsMenu = document.getElementById('settingsMenu');
+        const overlay = document.getElementById('overlay');
 
-    settingsBtn.addEventListener('click', () => {
-        settingsMenu.classList.toggle('active');
-        overlay.classList.toggle('active');
-    });
-
-    overlay.addEventListener('click', () => {
-        settingsMenu.classList.remove('active');
-        overlay.classList.remove('active');
-    });
-
-    // Код для раскрытия информации о проекте
-    const infoButtons = document.querySelectorAll('.btn-info');
-
-    infoButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const projectItem = button.closest('.project-item');
-            const projectDetails = projectItem.querySelector('.project-details');
-            projectDetails.style.display = (projectDetails.style.display === 'none' || projectDetails.style.display === '') ? 'block' : 'none';
+        settingsBtn.addEventListener('click', () => {
+            settingsMenu.classList.toggle('active');
+            overlay.classList.toggle('active');
         });
-    });
 
-    // Код для обработки кнопки "Open"
-    document.addEventListener('DOMContentLoaded', function () {
-        const openButtons = document.querySelectorAll('.btn-open');
+        overlay.addEventListener('click', () => {
+            settingsMenu.classList.remove('active');
+            overlay.classList.remove('active');
+        });
 
-        openButtons.forEach(button => {
+        // Код для раскрытия информации о проекте
+        const infoButtons = document.querySelectorAll('.btn-info');
+
+        infoButtons.forEach(button => {
             button.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const projectItem = button.closest('.project-item');
-                const projectId = projectItem.getAttribute('data-project-id');
-
-                if (projectId) {
-                    // Переход на страницу проекта
-                    window.location.href = `/Compiler/project/${projectId}`;
-                } else {
-                    console.error("Project ID не найден");
-                }
+                const projectDetails = projectItem.querySelector('.project-details');
+                projectDetails.style.display = (projectDetails.style.display === 'none' || projectDetails.style.display === '') ? 'block' : 'none';
             });
         });
-    });
 
-    // Код для матричной анимации
-    const matrixContainer = document.getElementById('matrixContainer');
-    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        // Код для обработки кнопки "Open"
+        document.addEventListener('DOMContentLoaded', function () {
+            const openButtons = document.querySelectorAll('.btn-open');
 
-    function createMatrixSpan() {
-        const span = document.createElement('span');
-        let trailLength = Math.floor(Math.random() * 5) + 5;  // Define length of the trail (5-10 characters)
-        let trailText = '';
+            openButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const projectItem = button.closest('.project-item');
+                    const projectId = projectItem.getAttribute('data-project-id');
 
-        for (let i = 0; i < trailLength; i++) {
-            trailText += characters.charAt(Math.floor(Math.random() * characters.length)) + '\n';
+                    if (projectId) {
+                        // Переход на страницу проекта
+                        window.location.href = `/Compiler/project/${projectId}`;
+                    } else {
+                        console.error("Project ID не найден");
+                    }
+                });
+            });
+        });
+
+        // Код для матричной анимации
+        const matrixContainer = document.getElementById('matrixContainer');
+        const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+        function createMatrixSpan() {
+            const span = document.createElement('span');
+            let trailLength = Math.floor(Math.random() * 5) + 5;  // Define length of the trail (5-10 characters)
+            let trailText = '';
+
+            for (let i = 0; i < trailLength; i++) {
+                trailText += characters.charAt(Math.floor(Math.random() * characters.length)) + '\n';
+            }
+
+            span.textContent = trailText;
+            span.style.left = Math.random() * 100 + 'vw';
+            span.style.animationDuration = Math.random() * 5 + 5 + 's';
+            span.style.opacity = Math.random() * 0.5 + 0.5;
+
+            matrixContainer.appendChild(span);
+
+            setTimeout(() => {
+                matrixContainer.removeChild(span);
+            }, 10000); // Remove after animation completes
         }
 
-        span.textContent = trailText;
-        span.style.left = Math.random() * 100 + 'vw';
-        span.style.animationDuration = Math.random() * 5 + 5 + 's';
-        span.style.opacity = Math.random() * 0.5 + 0.5;
+        setInterval(createMatrixSpan, 150);
 
-        matrixContainer.appendChild(span);
+        // Новая функция для загрузки уведомлений
+        function fetchNotifications() {
+            fetch('/friends/notifications')
+                .then(response => response.json())
+                .then(data => {
+                    const notificationsList = document.getElementById('notificationsList');
+                    notificationsList.innerHTML = '';
+                    data.forEach(notification => {
+                        const li = document.createElement('li');
 
-        setTimeout(() => {
-            matrixContainer.removeChild(span);
-        }, 10000); // Remove after animation completes
-    }
+                        // Создаем блок с информацией об уведомлении
+                        const infoDiv = document.createElement('div');
+                        infoDiv.classList.add('notification-info');
+                        infoDiv.innerHTML = `<span>${notification.senderUsername} has sent you a friend request.</span>`;
 
-    setInterval(createMatrixSpan, 150);
+                        // Создаем блок с кнопками
+                        const buttonsDiv = document.createElement('div');
+                        buttonsDiv.classList.add('notification-buttons');
 
-    // Новая функция для загрузки уведомлений
-    function fetchNotifications() {
-        fetch('/friends/notifications')
-            .then(response => response.json())
-            .then(data => {
-                const notificationsList = document.getElementById('notificationsList');
-                notificationsList.innerHTML = '';
-                data.forEach(notification => {
-                    const li = document.createElement('li');
+                        // Кнопка "Принять"
+                        const acceptButton = document.createElement('button');
+                        acceptButton.classList.add('btn-accept');
+                        acceptButton.textContent = 'Принять';
+                        acceptButton.addEventListener('click', () => {
+                            acceptFriendRequest(notification.requestId, li);
+                        });
 
-                    // Создаем блок с информацией об уведомлении
-                    const infoDiv = document.createElement('div');
-                    infoDiv.classList.add('notification-info');
-                    infoDiv.innerHTML = `<span>${notification.senderUsername} has sent you a friend request.</span>`;
+                        // Кнопка "Отклонить"
+                        const rejectButton = document.createElement('button');
+                        rejectButton.classList.add('btn-reject');
+                        rejectButton.textContent = 'Отклонить';
+                        rejectButton.addEventListener('click', () => {
+                            rejectFriendRequest(notification.requestId, li);
+                        });
 
-                    // Создаем блок с кнопками
-                    const buttonsDiv = document.createElement('div');
-                    buttonsDiv.classList.add('notification-buttons');
+                        buttonsDiv.appendChild(acceptButton);
+                        buttonsDiv.appendChild(rejectButton);
 
-                    // Кнопка "Принять"
-                    const acceptButton = document.createElement('button');
-                    acceptButton.classList.add('btn-accept');
-                    acceptButton.textContent = 'Принять';
-                    acceptButton.addEventListener('click', () => {
-                        acceptFriendRequest(notification.requestId, li);
+                        li.appendChild(infoDiv);
+                        li.appendChild(buttonsDiv);
+
+                        notificationsList.appendChild(li);
                     });
+                })
+                .catch(error => console.error('Error fetching notifications:', error));
+        }
 
-                    // Кнопка "Отклонить"
-                    const rejectButton = document.createElement('button');
-                    rejectButton.classList.add('btn-reject');
-                    rejectButton.textContent = 'Отклонить';
-                    rejectButton.addEventListener('click', () => {
-                        rejectFriendRequest(notification.requestId, li);
-                    });
-
-                    buttonsDiv.appendChild(acceptButton);
-                    buttonsDiv.appendChild(rejectButton);
-
-                    li.appendChild(infoDiv);
-                    li.appendChild(buttonsDiv);
-
-                    notificationsList.appendChild(li);
-                });
+        // Функция для принятия запроса на дружбу
+        function acceptFriendRequest(requestId, listItem) {
+            fetch('/friends/acceptRequest', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-TOKEN': getCsrfToken()
+                },
+                body: `requestId=${requestId}`
             })
-            .catch(error => console.error('Error fetching notifications:', error));
-    }
+                .then(response => response.text())
+                .then(data => {
+                    if (data === 'success') {
+                        // Удаляем уведомление из списка
+                        listItem.remove();
+                        alert('Friend request accepted.');
+                    } else {
+                        alert('Error: ' + data);
+                    }
+                })
+                .catch(error => console.error('Error accepting friend request:', error));
+        }
 
-    // Функция для принятия запроса на дружбу
-    function acceptFriendRequest(requestId, listItem) {
-        fetch('/friends/acceptRequest', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRF-TOKEN': getCsrfToken()
-            },
-            body: `requestId=${requestId}`
-        })
-            .then(response => response.text())
-            .then(data => {
-                if (data === 'success') {
-                    // Удаляем уведомление из списка
-                    listItem.remove();
-                    alert('Friend request accepted.');
-                } else {
-                    alert('Error: ' + data);
-                }
+        // Функция для отклонения запроса на дружбу
+        function rejectFriendRequest(requestId, listItem) {
+            fetch('/friends/rejectRequest', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-TOKEN': getCsrfToken()
+                },
+                body: `requestId=${requestId}`
             })
-            .catch(error => console.error('Error accepting friend request:', error));
-    }
+                .then(response => response.text())
+                .then(data => {
+                    if (data === 'success') {
+                        // Удаляем уведомление из списка
+                        listItem.remove();
+                        alert('Friend request rejected.');
+                    } else {
+                        alert('Error: ' + data);
+                    }
+                })
+                .catch(error => console.error('Error rejecting friend request:', error));
+        }
 
-    // Функция для отклонения запроса на дружбу
-    function rejectFriendRequest(requestId, listItem) {
-        fetch('/friends/rejectRequest', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRF-TOKEN': getCsrfToken()
-            },
-            body: `requestId=${requestId}`
-        })
-            .then(response => response.text())
-            .then(data => {
-                if (data === 'success') {
-                    // Удаляем уведомление из списка
-                    listItem.remove();
-                    alert('Friend request rejected.');
-                } else {
-                    alert('Error: ' + data);
-                }
-            })
-            .catch(error => console.error('Error rejecting friend request:', error));
-    }
+        // Функция для получения CSRF токена из скрытого поля
+        function getCsrfToken() {
+            const token = document.querySelector('input[name="_csrf"]').value;
+            return token;
+        }
 
-    // Функция для получения CSRF токена из скрытого поля
-    function getCsrfToken() {
-        const token = document.querySelector('input[name="_csrf"]').value;
-        return token;
-    }
+        // Fetch notifications every 30 seconds
+        setInterval(fetchNotifications, 30000);
 
-    // Fetch notifications every 30 seconds
-    setInterval(fetchNotifications, 30000);
+        // Initial fetch
+        fetchNotifications();
+    </script>
 
-    // Initial fetch
-    fetchNotifications();
-</script>
+    </body>
 
-</body>
-
-</html>
+    </html>

@@ -195,19 +195,24 @@ public class UserController {
     }
     @PostMapping("/edit/{id}")
     public String updateProfile(Authentication authentication, @PathVariable("id") int id,
-                                @Valid Client clientForm, BindingResult bindingResult,
+                                @Valid @ModelAttribute("client") Client clientForm, BindingResult bindingResult,
                                 @RequestParam("avatarFile") MultipartFile avatarFile) {
         if (bindingResult.hasErrors()) {
             return "editProfile";
         }
 
         Client existingClient = clientService.findOne(id);
+        if (existingClient == null) {
+            // Обработка случая, когда клиент не найден
+            bindingResult.reject("client.notfound", "Клиент не найден");
+            return "editProfile";
+        }
 
         if (!avatarFile.isEmpty()) {
             String originalFileName = avatarFile.getOriginalFilename();
             String extension = "";
 
-            if (originalFileName != null) {
+            if (originalFileName != null && originalFileName.contains(".")) {
                 extension = originalFileName.substring(originalFileName.lastIndexOf("."));
             }
 
@@ -217,7 +222,7 @@ public class UserController {
                 FileUploadUtil.saveFile(uploadDir, fileName, avatarFile);
                 existingClient.setAvatarUrl("/" + uploadDir + fileName);
             } catch (IOException e) {
-                bindingResult.rejectValue("avatarUrl", "error.avatarUrl", e.getMessage());
+                bindingResult.rejectValue("avatarUrl", "error.avatarUrl", "Ошибка при загрузке файла: " + e.getMessage());
                 return "editProfile";
             }
         }
@@ -228,9 +233,13 @@ public class UserController {
         existingClient.setGithubProfile(clientForm.getGithubProfile());
         existingClient.setAbout(clientForm.getAbout());
 
+        // Обновляем цвета темы
+//        existingClient.setBackgroundColor(clientForm.getBackgroundColor());
+//        existingClient.setMainColor(clientForm.getMainColor());
+
         clientService.update(id, existingClient);
 
-        // Если имя пользователя изменилось, обновляем объект аутентификации
+        // Обновляем объект аутентификации, если изменилось имя пользователя
         if (!authentication.getName().equals(existingClient.getUsername())) {
             Authentication newAuth = new UsernamePasswordAuthenticationToken(
                     existingClient.getUsername(),
@@ -242,6 +251,7 @@ public class UserController {
 
         return "redirect:/userProfile";
     }
+
 
     @GetMapping("/userProfile/{id}")
     public String viewUserProfile(@PathVariable("id") int id, Model model, Authentication authentication) {

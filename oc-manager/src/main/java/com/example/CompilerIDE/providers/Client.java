@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -77,7 +78,9 @@ public class Client implements Serializable {
     @OneToMany(mappedBy = "client", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<ProjectTeam> projectTeams;
     @Column(name = "backgroundColor")
-    private String backgroundColor = "#000000";
+    @Pattern(regexp = "^#([A-Fa-f0-9]{6})$", message = "Недопустимый цвет фона")
+    private String backgroundColor;
     @Column(name = "mainColor")
-    private String mainColor = "#FFC300";
+    @Pattern(regexp = "^#([A-Fa-f0-9]{6})$", message = "Недопустимый цвет фона")
+    private String mainColor;
 }

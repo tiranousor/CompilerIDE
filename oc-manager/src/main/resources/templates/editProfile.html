@@ -1,17 +1,17 @@
-<!-- src/main/resources/templates/editProfile.html -->
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<html lang="ru" xmlns:th="http://www.w3.org/1999/xhtml">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Редактировать Аккаунт</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    <style>
+    <title>Редактировать Аккаунт</title>
+    <style th:inline="css">
         /* Используем CSS-переменные для динамического изменения цветов */
         :root {
-            --background-color: [[${client.backgroundColor} != null ? '"' + ${client.backgroundColor} + '"' : '"#000000"']];
-            --main-color: [[${client.mainColor} != null ? '"' + ${client.mainColor} + '"' : '"#FFC300"']];
+            --background-color: [[${client.backgroundColor} ?: '#000000']];
+            --main-color: [[${client.mainColor} ?: '#FFC300']];
         }
 
         body {
@@ -165,14 +165,16 @@
         }
     </style>
 </head>
+
 <body>
 <div class="matrix" id="matrixContainer"></div>
 
 <div class="container">
     <h1>Редактировать Аккаунт</h1>
-    <img id="preview" th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt=""/>
+<!--    <img id="preview" th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt=""/>-->
+    <img id="preview" th:src="${client.avatarUrl != null ? client.avatarUrl : '/static/noAvatar.png'}" alt="Предпросмотр изображения"/>
 
-    <!-- Центрированный значок под изображением -->
+    <!-- Centered Icon Under the Preview Image -->
     <div class="icon-wrapper">
         <label for="avatarFile">
             <i class='bx bx-upload file-upload-icon'></i>
@@ -180,38 +182,38 @@
     </div>
     <input type="file" id="avatarFile" name="avatarFile" accept="image/*" onchange="previewImage(event)" />
 
-    <form th:action="@{/edit/{id}(id=${client.id})}" th:method="POST" th:object="${client}" enctype="multipart/form-data">
-        <!-- Поля для загрузки аватара уже включены выше -->
+        <form th:action="@{/edit/{id}(id=${client.id})}" th:method="POST" th:object="${client}" enctype="multipart/form-data">
+            <input type="file" name="avatarFile" class="form-control" accept="image/*" onchange="previewImage(event)" />
+            <div class="form-error" th:if="${#fields.hasErrors('avatarUrl')}" th:errors="*{avatarUrl}"></div>
 
-        <!-- Поля для редактирования информации -->
-        <input type="text" class="form-control" th:field="*{username}" id="username" placeholder="Username" />
-        <div class="form-error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+            <input type="text" class="form-control" th:field="*{username}" id="username" placeholder="Username" th:classappend="${#fields.hasErrors('username')} ? 'error' : 'form-control'"/>
+            <div class="form-error" th:if="${#fields.hasErrors('username')}" th:text="*{username}"></div>
 
-        <input type="email" class="form-control" th:field="*{email}" id="email" placeholder="Email" />
-        <div class="form-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+            <input type="text" class="form-control" th:field="*{email}" id="email" placeholder="Email" th:classappend="${#fields.hasErrors('email')} ? 'error' : 'form-control'"/>
+            <div class="form-error" th:if="${#fields.hasErrors('email')}" th:text="*{email}"></div>
 
-        <input type="url" class="form-control" th:field="*{githubProfile}" id="githubProfile" placeholder="GitHub URL" />
-        <div class="form-error" th:if="${#fields.hasErrors('githubProfile')}" th:errors="*{githubProfile}"></div>
+            <input type="text" class="form-control" th:field="*{githubProfile}" id="githubProfile" placeholder="GitHub URL" th:classappend="${#fields.hasErrors('githubProfile')} ? 'error' : 'form-control'"/>
+            <div class="form-error" th:if="${#fields.hasErrors('githubProfile')}" th:text="*{githubProfile}"></div>
 
-        <input type="text" class="form-control" th:field="*{about}" id="about" placeholder="About" />
-        <div class="form-error" th:if="${#fields.hasErrors('about')}" th:errors="*{about}"></div>
+            <input type="text" class="form-control" th:field="*{about}" id="about" placeholder="About" th:classappend="${#fields.hasErrors('about')} ? 'error' : 'form-control'"/>
+            <div class="form-error" th:if="${#fields.hasErrors('about')}" th:text="*{about}"></div>
+            <div>
+                <label for="backgroundColor">Цвет фона:</label>
+                <input type="color" id="backgroundColor" th:field="*{backgroundColor}" class="form-control" />
+                <div class="form-error" th:if="${#fields.hasErrors('backgroundColor')}" th:errors="*{backgroundColor}"></div>
+            </div>
 
-        <!-- Новые поля для выбора цвета -->
-        <div>
-            <label for="backgroundColor">Цвет фона:</label>
-            <input type="color" id="backgroundColor" name="backgroundColor" th:value="${client.backgroundColor != null ? client.backgroundColor : '#000000'}" class="form-control" />
-            <div class="form-error" th:if="${#fields.hasErrors('backgroundColor')}" th:errors="*{backgroundColor}"></div>
-        </div>
+            <div>
+                <label for="mainColor">Основной цвет:</label>
+                <input type="color" id="mainColor" th:field="*{mainColor}" class="form-control" />
+                <div class="form-error" th:if="${#fields.hasErrors('mainColor')}" th:errors="*{mainColor}"></div>
+            </div>
+            <input type="hidden" th:field="*{password}" id="password" placeholder="New Password" th:classappend="${#fields.hasErrors('password')} ? 'error' : 'form-control'"/>
+            <div class="form-error" th:if="${#fields.hasErrors('password')}" th:text="*{password}"></div>
 
-        <div>
-            <label for="mainColor">Основной цвет:</label>
-            <input type="color" id="mainColor" name="mainColor" th:value="${client.mainColor != null ? client.mainColor : '#FFC300'}" class="form-control" />
-            <div class="form-error" th:if="${#fields.hasErrors('mainColor')}" th:errors="*{mainColor}"></div>
-        </div>
-
-        <button type="submit" class="btn-primary">Сохранить изменения</button>
-    </form>
-</div>
+            <button type="submit" class="btn-primary">Сохранить изменения</button>
+        </form>
+    </div>
 
 <script>
     function previewImage(event) {
@@ -229,7 +231,7 @@
         }
     }
 
-    // Матрица анимация
+    // Matrix Animation
     const matrixContainer = document.getElementById('matrixContainer');
     const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
@@ -246,18 +248,7 @@
     }
 
     setInterval(createMatrixSpan, 150);
-
-    // Применение выбранных цветов в реальном времени
-    const backgroundColorInput = document.getElementById('backgroundColor');
-        const mainColorInput = document.getElementById('mainColor');
-
-        backgroundColorInput.addEventListener('input', function() {
-            document.documentElement.style.setProperty('--background-color', this.value);
-        });
-
-        mainColorInput.addEventListener('input', function() {
-            document.documentElement.style.setProperty('--main-color', this.value);
-        });
 </script>
 </body>
+
 </html>
