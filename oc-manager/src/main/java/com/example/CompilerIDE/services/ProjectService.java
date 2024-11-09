@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -190,46 +191,57 @@ public class ProjectService {
                 .setURI(repoUrl)
                 .setDirectory(projectDir)
                 .setCloneAllBranches(true)
-                .setTimeout(60); // Таймаут в секундах
-
-        // Если репозиторий приватный, можно добавить аутентификацию
-        // cloneCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider("username", "password"));
+                .setTimeout(60);
 
         try (Git git = cloneCommand.call()) {
-            // После клонирования, обрабатываем файлы
             processClonedRepository(project, projectDir);
         } catch (Exception e) {
-            // В случае ошибки удаляем временную директорию
             FileSystemUtils.deleteRecursively(projectDir);
             throw new Exception("Не удалось клонировать репозиторий: " + e.getMessage(), e);
         }
 
-        // Удаляем временную директорию после обработки
         FileSystemUtils.deleteRecursively(projectDir);
     }
 
-    /**
-     * Обрабатывает клонированный репозиторий, создавая записи ProjectStruct и загружая файлы в MinIO.
-     *
-     * @param project    проект, которому принадлежат файлы
-     * @param projectDir директория с клонированным репозиторием
-     * @throws Exception если произошла ошибка при обработке файлов
-     */
+
     private void processClonedRepository(Project project, File projectDir) throws Exception {
-        traverseAndProcess(project, projectDir, ""); // Начинаем с корня
+        File[] files = projectDir.listFiles();
+
+        if (files == null || files.length == 0) {
+            logger.warn("Клонированный репозиторий пуст.");
+            return;
+        }
+
+        logger.info("Обнаружены файлы/папки после клонирования: {}", Arrays.toString(files));
+        if (files.length == 1 && files[0].isDirectory()) {
+            File innerFolder = files[0];
+            logger.info("Перенос содержимого папки '{}' в корень '{}'", innerFolder.getName(), projectDir.getPath());
+
+            File[] innerFiles = innerFolder.listFiles();
+            if (innerFiles != null) {
+                for (File innerFile : innerFiles) {
+                    File targetFile = new File(projectDir, innerFile.getName());
+                    if (innerFile.renameTo(targetFile)) {
+                        logger.info("Файл/папка '{}' успешно перемещён в '{}'", innerFile.getName(), projectDir.getPath());
+                    } else {
+                        throw new IOException("Не удалось переместить файл " + innerFile.getName());
+                    }
+                }
+            }
+            if (innerFolder.delete()) {
+                logger.info("Папка '{}' успешно удалена.", innerFolder.getName());
+            } else {
+                logger.warn("Не удалось удалить папку '{}'", innerFolder.getName());
+            }
+        }
+        for (File file : projectDir.listFiles()) {
+            traverseAndProcess(project, file, "");
+        }
     }
 
-    /**
-     * Рекурсивно обходит файлы и директории, создавая записи ProjectStruct и загружая файлы в MinIO.
-     *
-     * @param project     проект, которому принадлежат файлы
-     * @param currentFile текущий файл или директория
-     * @param currentPath текущий путь относительно корня проекта
-     * @throws Exception если произошла ошибка при обработке файлов
-     */
+
     private void traverseAndProcess(Project project, File currentFile, String currentPath) throws Exception {
         if (currentFile.isDirectory()) {
-            // Создаем запись для директории
             String dirPath = currentPath + currentFile.getName() + "/";
             ProjectStruct struct = new ProjectStruct();
             struct.setName(currentFile.getName());
@@ -238,16 +250,12 @@ public class ProjectService {
             struct.setProject(project);
             projectStructRepository.save(struct);
 
-            // Загружаем пустую папку в MinIO
             String objectKey = "projects/" + project.getId() + "/" + struct.getPath();
             minioService.uploadFileContent(objectKey, new byte[0]);
-
-            // Обрабатываем вложенные файлы и директории
             for (File file : Objects.requireNonNull(currentFile.listFiles())) {
                 traverseAndProcess(project, file, dirPath);
             }
         } else if (currentFile.isFile()) {
-            // Создаем запись для файла
             String filePath = currentPath + currentFile.getName();
             ProjectStruct struct = new ProjectStruct();
             struct.setName(currentFile.getName());
@@ -255,7 +263,6 @@ public class ProjectService {
             struct.setType("file");
             struct.setProject(project);
 
-            // Вычисляем хеш файла
             try {
                 String hash = HashUtil.computeSHA256Hash(currentFile);
                 struct.setHash(hash);
@@ -265,8 +272,6 @@ public class ProjectService {
             }
 
             projectStructRepository.save(struct);
-
-            // Загружаем файл в MinIO
             String objectKey = "projects/" + project.getId() + "/" + struct.getPath();
             byte[] contentBytes = FileUtils.readFileToByteArray(currentFile);
             minioService.uploadFileContent(objectKey, contentBytes);
@@ -276,10 +281,9 @@ public class ProjectService {
         List<ProjectStruct> structs = projectStructRepository.findByProject(project);
         logger.info("Building jsTree structure for project: {}", project.getName());
 
-        // Создаём корневой узел с названием проекта
         JsTreeNodeDto root = new JsTreeNodeDto();
         root.setId("root");
-        root.setText(project.getName()); // Используем название проекта
+        root.setText(project.getName());
         root.setType("folder");
         root.setChildren(new ArrayList<>());
         root.setData(null);
@@ -343,5 +347,6 @@ public class ProjectService {
         logger.info("jsTree structure built successfully for project: {}", project.getName());
         return Collections.singletonList(root);
     }
+
 
 }

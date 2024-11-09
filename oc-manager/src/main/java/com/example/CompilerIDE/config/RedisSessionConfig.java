@@ -8,7 +8,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
 
 @Configuration
-@EnableRedisHttpSession // Включение поддержки сессий через Redis
+@EnableRedisHttpSession
 public class RedisSessionConfig {
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {

@@ -41,7 +41,7 @@ public class ProjectController {
     private final ProjectService projectService;
     private final ClientService clientService;
     private final CompilationService compilationService;
-    private final MinioService minioService; // Добавлено
+    private final MinioService minioService;
     private final ProjectStructRepository projectStructRepository;
     private final ProjectTeamService projectTeamService;
     private final ProjectValidator projectValidator;
@@ -49,17 +49,17 @@ public class ProjectController {
     private final ProjectAccessLogRepository projectAccessLogRepository;
     private static final Logger logger = LoggerFactory.getLogger(ProjectService.class);
     @Value("${minio.bucket-name}")
-    private String bucketName; // Убедитесь, что бакет создан
+    private String bucketName;
 
     public ProjectController(ProjectInvitationService projectInvitationService, ProjectService projectService,
                              ClientService clientService,
                              CompilationService compilationService,
                              MinioService minioService, ProjectStructRepository projectStructRepository, ProjectTeamService projectTeamService, ProjectValidator projectValidator, ProjectAccessLogRepository projectAccessLogRepository) {
-        this.projectInvitationService = projectInvitationService; // Добавлено
+        this.projectInvitationService = projectInvitationService;
         this.projectService = projectService;
         this.clientService = clientService;
         this.compilationService = compilationService;
-        this.minioService = minioService; // Добавлено
+        this.minioService = minioService;
         this.projectStructRepository = projectStructRepository;
         this.projectTeamService = projectTeamService;
         this.projectValidator = projectValidator;
@@ -149,20 +149,16 @@ public String editProjectForm(@PathVariable("id") int projectId, Model model, Au
     Optional<Project> projectOpt = projectService.findById(projectId);
     if (projectOpt.isPresent()) {
         Project project = projectOpt.get();
-
-        // Проверяем, принадлежит ли проект текущему пользователю
         if (project.getClient().getId().equals(client.getId())) {
-
-            // Записываем информацию о том, что проект был открыт
             ProjectAccessLog accessLog = new ProjectAccessLog();
             accessLog.setClient(client);
             accessLog.setProject(project);
-            accessLog.setAccessTime(new Timestamp(System.currentTimeMillis()));  // Текущее время
+            accessLog.setAccessTime(new Timestamp(System.currentTimeMillis()));
             accessLog.setActionType("open");
             projectAccessLogRepository.save(accessLog);
 
             model.addAttribute("project", project);
-            return "edit_project_form"; // Страница редактирования проекта
+            return "edit_project_form";
         } else {
             return "redirect:/userProfile";
         }

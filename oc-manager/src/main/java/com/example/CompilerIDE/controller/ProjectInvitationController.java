@@ -36,9 +36,7 @@ public class ProjectInvitationController {
         this.clientService = clientService;
     }
 
-    /**
-     * Отправить приглашение на проект.
-     */
+
     @PostMapping("/send")
     public String sendInvitation(@RequestParam("projectId") int projectId,
                                  @RequestParam("receiverId") int receiverId,
@@ -60,9 +58,7 @@ public class ProjectInvitationController {
         return "redirect:/userProfile";
     }
 
-    /**
-     * Просмотр полученных приглашений.
-     */
+
     @GetMapping("/received")
     public String viewReceivedInvitations(Model model, Authentication authentication) {
         Client receiver = clientService.findByUsername(authentication.getName())

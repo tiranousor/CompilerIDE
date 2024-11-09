@@ -79,8 +79,6 @@ public class UserController {
         Project project = projectOpt.get();
         Client currentUser = clientService.findByUsername(authentication.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + authentication.getName()));
-
-        // Check if the current user is the owner or a collaborator
         boolean isOwner = project.getClient().getId().equals(currentUser.getId());
         boolean isCollaborator = projectTeamService.findByProjectAndClient(project, currentUser)
                 .map(team -> team.getRole() == ProjectTeam.Role.COLLABORATOR)
@@ -104,7 +102,7 @@ public class UserController {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-        model.addAttribute("projectName", project.getName()); // Добавляем название проекта
+        model.addAttribute("projectName", project.getName());
 
         model.addAttribute("fileStructure", fileStructureJson);
         return "Compiler";
@@ -117,19 +115,16 @@ public class UserController {
     @PostMapping("/login")
     public String processLogin(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()) {
-            // Получаем текущего пользователя
             Client client = clientService.findByUsername(authentication.getName()).orElse(null);
 
             if (client != null) {
-                // Записываем время входа
                 LoginTimestamp loginTimestamp = new LoginTimestamp();
                 loginTimestamp.setClient(client);
-                loginTimestamp.setLoginTime(new Timestamp(System.currentTimeMillis()));  // Текущее время
+                loginTimestamp.setLoginTime(new Timestamp(System.currentTimeMillis()));
 
-                // Логирование перед сохранением
                 System.out.println("Saving login timestamp for user: " + client.getUsername());
 
-                loginTimestampRepository.save(loginTimestamp);  // Сохраняем запись в базу данных
+                loginTimestampRepository.save(loginTimestamp);
             }
 
             return "redirect:/userProfile";
@@ -171,8 +166,6 @@ public class UserController {
 
         Client client = clientService.findByUsername(authName)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + authName));
-
-        // Запись времени входа
         LoginTimestamp loginTimestamp = new LoginTimestamp();
         loginTimestamp.setClient(client);
         loginTimestamp.setLoginTime(new Timestamp(System.currentTimeMillis()));
@@ -203,7 +196,6 @@ public class UserController {
 
         Client existingClient = clientService.findOne(id);
         if (existingClient == null) {
-            // Обработка случая, когда клиент не найден
             bindingResult.reject("client.notfound", "Клиент не найден");
             return "editProfile";
         }
@@ -233,13 +225,10 @@ public class UserController {
         existingClient.setGithubProfile(clientForm.getGithubProfile());
         existingClient.setAbout(clientForm.getAbout());
 
-        // Обновляем цвета темы
 //        existingClient.setBackgroundColor(clientForm.getBackgroundColor());
 //        existingClient.setMainColor(clientForm.getMainColor());
 
         clientService.update(id, existingClient);
-
-        // Обновляем объект аутентификации, если изменилось имя пользователя
         if (!authentication.getName().equals(existingClient.getUsername())) {
             Authentication newAuth = new UsernamePasswordAuthenticationToken(
                     existingClient.getUsername(),

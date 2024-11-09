@@ -35,8 +35,6 @@ public class UnbanRequestController {
 
         String username = authentication.getName();
         Optional<Client> client = clientRepository.findByUsername(username);
-
-        // Проверяем, есть ли уже запрос от этого пользователя
         UnbanRequest existingRequest = unbanRequestRepository.findByClient(client.orElse(null));
         if (existingRequest != null) {
             model.addAttribute("message", "Вы уже отправили запрос на разблокировку. Ожидайте ответа администратора.");

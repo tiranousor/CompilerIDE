@@ -40,20 +40,19 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/banned", "/sendUnbanRequest").hasAuthority("ROLE_BANNED") // Используем hasAuthority для BANNED
-                        .requestMatchers("/admin/**").hasRole("ADMIN") // Для админов
-                        .requestMatchers("/userProfile").hasRole("USER") // Для обычных пользователей
-                        .requestMatchers(AUTH_WHITELIST).permitAll() // Разрешаем доступ к белому списку URL
-                        .anyRequest().authenticated() // Все остальные запросы требуют аутентификации
+                        .requestMatchers("/banned", "/sendUnbanRequest").hasAuthority("ROLE_BANNED")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/userProfile").hasRole("USER")
+                        .requestMatchers(AUTH_WHITELIST).permitAll()
+                        .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        .loginPage("/login") // страница для логина``
+                        .loginPage("/login")
                         .loginProcessingUrl("/process_login")
                         .successHandler(customSuccessHandler())
                         .failureUrl("/login?error")
-                        .permitAll() // разрешаем доступ ко всем
+                        .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
@@ -68,10 +67,8 @@ public class SecurityConfiguration {
         return new CustomAuthenticationSuccessHandler();
     }
 
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
 }
