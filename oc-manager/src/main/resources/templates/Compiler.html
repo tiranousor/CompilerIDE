@@ -8,9 +8,11 @@
     <meta name="fileStructure" th:content="${fileStructure}">
     <title>jsTree и Monaco Editor</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         body, html {
             height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             font-family: Arial, sans-serif;
         }
@@ -18,19 +20,20 @@
             display: flex;
             height: 100%;
         }
-        #sidebar {
-            width: 25%;
-            border-right: 1px solid #ccc;
-            overflow: auto;
-            padding: 10px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-        }
+   #sidebar {
+    width: 0;
+    border-right: 1px solid #ccc;
+    overflow: hidden; /* Скрыть содержимое при ширине 0 */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease; /* Плавный переход ширины */
+}
         #jstree {
-            flex: 1;
+<!--            flex: 1;-->
             overflow: auto;
             min-height: 200px;
+            padding: 20px;
         }
         #save-button {
             margin-top: 10px;
@@ -45,8 +48,10 @@
             background-color: #218838;
         }
         #editor-container {
-            width: 75%;
             position: relative;
+            height: 100%;
+            flex-grow: 1; /* Редактор занимает всю оставшуюся ширину */
+            transition: width 0.3s ease; /* Плавный переход изменения ширины */
         }
         #editor {
             width: 100%;
@@ -82,15 +87,51 @@
             background: url('https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default-file.png') no-repeat center center;
             background-size: 16px 16px;
         }
+        .icon-panel {
+            width: 50px;
+            background: #333;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+        }
+        .icon-panel button {
+            background: none;
+            border: none;
+            color: #fff;
+            margin: 10px 0;
+            cursor: pointer;
+            font-size: 24px;
+            transition: transform 0.2s;
+        }
+        .icon-panel button:hover {
+            transform: scale(1.2);
+        }
+        .icon-panel button.active {
+            color: #28a745;
+        }
     </style>
 </head>
 <body>
 <div id="container">
+    <div class="icon-panel">
+        <button id="profile-button" title="Profile">
+            <i class="fas fa-user-circle"></i>
+        </button>
+        <button id="project-button" title="Project Tree">
+            <i class="fas fa-project-diagram"></i>
+        </button>
+        <button id="save-button" title="Save Project">
+            <i class="fas fa-save"></i>
+        </button>
+    </div>
     <div id="sidebar">
-<!--        <div id="jstree"></div>-->
+        <!--        <div id="jstree"></div>-->
         <div id="jstree" data-file-structure="${fileStructure}" data-project-name="${projectName}"></div>
 
-        <button id="save-button">Сохранить проект</button>
+        <!--        <button id="save-button">Сохранить проект</button>-->
     </div>
     <div id="editor-container">
         <div id="editor"></div>
@@ -111,7 +152,21 @@
         const undoStack = [];
         let pendingCreations = 0;
         let duplicateNameError = false;
+         let isSidebarOpen = false; // Инициализация состояния боковой панели
         let isSaving = false;
+
+    $('#project-button').on('click', function() {
+            if (isSidebarOpen) {
+                $('#sidebar').css('width', '0');
+                $('#editor-container').css('width', 'calc(100% - 50px)'); // Вернем всю ширину для редактора
+                $(this).removeClass('active');
+            } else {
+                $('#sidebar').css('width', '300px'); // Устанавливаем ширину боковой панели
+                $('#editor-container').css('width', 'calc(100% - 350px)'); // Сжимаем редактор, чтобы он не выходил за экран
+                $(this).addClass('active');
+            }
+            isSidebarOpen = !isSidebarOpen;
+        });
         const getLanguageFromFilename = (filename) => {
             const extension = filename.split('.').pop().toLowerCase();
             const languageMap = {
