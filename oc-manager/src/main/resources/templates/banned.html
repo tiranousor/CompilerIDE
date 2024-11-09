@@ -132,12 +132,17 @@
 <div class="container">
     <h1>Ваш аккаунт заблокирован</h1>
     <p>Пожалуйста, свяжитесь с администратором для получения дополнительной информации.</p>
+    <div th:if="${message}">
+        <p th:text="${message}"></p>
+    </div>
+    <div th:if="${error}">
+        <p th:text="${error}"></p>
+    </div>
 
     <!-- Форма для отправки сообщения -->
     <form th:action="@{/sendUnbanRequest}" method="post">
         <div class="mb-3">
-            <input type="email" id="email" name="email" class="form-control" placeholder="Ваш email" th:value="${email}">
-
+            <input type="email" id="email" name="email" class="form-control" placeholder="Ваш email" th:value="${email}" readonly>
             <textarea id="message" name="message" class="form-control" rows="4" placeholder="Напишите, почему вас нужно разблокировать"></textarea>
         </div>
         <button type="submit" class="btn-primary">Отправить запрос на разблокировку</button>

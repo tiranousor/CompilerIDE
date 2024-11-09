@@ -121,7 +121,16 @@
             <groupId>io.minio</groupId>
             <artifactId>minio</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit</artifactId>
+            <version>6.6.0.202305301015-r</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.11.0</version>
+        </dependency>
     </dependencies>
     <build>
         <finalName>oc-manager</finalName>

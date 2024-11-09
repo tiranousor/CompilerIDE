@@ -1,0 +1,38 @@
+<!-- unban_requests.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Запросы на разблокировку</title>
+    <!-- Добавьте необходимые стили и скрипты -->
+</head>
+<body>
+<h1>Запросы на разблокировку</h1>
+
+<table>
+    <thead>
+    <tr>
+        <th>Пользователь</th>
+        <th>Сообщение</th>
+        <th>Время запроса</th>
+        <th>Действия</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="request : ${unbanRequests}">
+        <td th:text="${request.client.username}"></td>
+        <td th:text="${request.message}"></td>
+        <td th:text="${#temporals.format(request.requestTime,  'yyyy-MM-dd HH:mm:ss'н)}"></td>
+        <td>
+            <form th:action="@{/admin/unbanUser/{id}(id=${request.id})}" method="post" style="display:inline;">
+                <button type="submit">Разблокировать</button>
+            </form>
+            <form th:action="@{/admin/declineUnbanRequest/{id}(id=${request.id})}" method="post" style="display:inline;">
+                <button type="submit">Отклонить</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

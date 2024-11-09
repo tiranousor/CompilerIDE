@@ -7,8 +7,12 @@
         <title>User Profile</title>
         <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
         <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap:wght@300;400;500;600;700&display=swap');
+        <style th:inline="css">
+
+        :root {
+        --background-color: [[${backgroundColor} ?: '#000000']];
+        --main-color: [[${mainColor} ?: '#FFC300']];
+        }
 
             * {
                 margin: 0;
@@ -271,27 +275,26 @@
     }
 
 
-            .matrix {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                z-index: -1;
-                overflow: hidden;
-                pointer-events: none;
-            }
+        .matrix {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
 
-            .matrix span {
-                position: absolute;
-                top: -10vh;
-                font-size: 18px;
-                color: white;
-                opacity: 0.8;
-                animation: fall 10s linear infinite;
-                white-space: pre;
-            }
-
+        .matrix span {
+            position: absolute;
+            top: -10vh;
+            font-size: 18px;
+            color: #FFC300;
+            opacity: 0.8;
+            animation: fall 10s linear infinite;
+            white-space: pre;
+        }
             @keyframes fall {
                 0% {
                     top: -10vh;
@@ -628,32 +631,24 @@
             });
         });
 
-        // Код для матричной анимации
-        const matrixContainer = document.getElementById('matrixContainer');
-        const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
-        function createMatrixSpan() {
-            const span = document.createElement('span');
-            let trailLength = Math.floor(Math.random() * 5) + 5;  // Define length of the trail (5-10 characters)
-            let trailText = '';
+    // Matrix Animation
+    const matrixContainer = document.getElementById('matrixContainer');
+    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
-            for (let i = 0; i < trailLength; i++) {
-                trailText += characters.charAt(Math.floor(Math.random() * characters.length)) + '\n';
-            }
+    function createMatrixSpan() {
+        const span = document.createElement('span');
+        span.textContent = characters.charAt(Math.floor(Math.random() * characters.length));
+        span.style.left = Math.random() * 100 + 'vw';
+        span.style.animationDuration = Math.random() * 5 + 5 + 's';
+        span.style.opacity = Math.random() * 0.5 + 0.5;
+        matrixContainer.appendChild(span);
+        setTimeout(() => {
+            matrixContainer.removeChild(span);
+        }, 10000);
+    }
 
-            span.textContent = trailText;
-            span.style.left = Math.random() * 100 + 'vw';
-            span.style.animationDuration = Math.random() * 5 + 5 + 's';
-            span.style.opacity = Math.random() * 0.5 + 0.5;
-
-            matrixContainer.appendChild(span);
-
-            setTimeout(() => {
-                matrixContainer.removeChild(span);
-            }, 10000); // Remove after animation completes
-        }
-
-        setInterval(createMatrixSpan, 150);
+    setInterval(createMatrixSpan, 150);
 
         // Новая функция для загрузки уведомлений
         function fetchNotifications() {

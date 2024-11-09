@@ -92,7 +92,6 @@ public class UserController {
 
         model.addAttribute("projectId", projectId);
 
-        // Load the file structure for the project
         List<String> filePaths = minioService.listFiles("projects/" + projectId + "/");
         if (filePaths == null) {
             filePaths = List.of();
@@ -105,6 +104,7 @@ public class UserController {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
+        model.addAttribute("projectName", project.getName()); // Добавляем название проекта
 
         model.addAttribute("fileStructure", fileStructureJson);
         return "Compiler";
@@ -144,7 +144,7 @@ public class UserController {
     }
 
     @PostMapping("/process_registration")
-    public String registrationPerson(@Valid @ModelAttribute Client client, BindingResult bindingResult) {
+    public String registrationPerson(@Valid @ModelAttribute("client") Client client, BindingResult bindingResult) {
         clientValidator.validate(client, bindingResult);
 
         if (bindingResult.hasErrors())

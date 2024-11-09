@@ -42,7 +42,7 @@ public class SecurityConfiguration {
         http
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/banned").hasAuthority("ROLE_BANNED") // Используем hasAuthority для BANNED
+                        .requestMatchers("/banned", "/sendUnbanRequest").hasAuthority("ROLE_BANNED") // Используем hasAuthority для BANNED
                         .requestMatchers("/admin/**").hasRole("ADMIN") // Для админов
                         .requestMatchers("/userProfile").hasRole("USER") // Для обычных пользователей
                         .requestMatchers(AUTH_WHITELIST).permitAll() // Разрешаем доступ к белому списку URL

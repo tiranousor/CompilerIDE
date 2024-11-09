@@ -10,9 +10,10 @@
     <style th:inline="css">
         /* Используем CSS-переменные для динамического изменения цветов */
         :root {
-            --background-color: [[${client.backgroundColor} ?: '#000000']];
-            --main-color: [[${client.mainColor} ?: '#FFC300']];
+            --background-color: [[${backgroundColor} ?: '#000000']];
+            --main-color: [[${mainColor} ?: '#FFC300']];
         }
+
 
         body {
             background-color: var(--background-color);
@@ -172,7 +173,7 @@
 <div class="container">
     <h1>Редактировать Аккаунт</h1>
 <!--    <img id="preview" th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt=""/>-->
-    <img id="preview" th:src="${client.avatarUrl != null ? client.avatarUrl : '/static/noAvatar.png'}" alt="Предпросмотр изображения"/>
+    <img id="preview" th:src="${client.avatarUrl != null ? client.avatarUrl : '/static/noAvatar.png'}" alt=" "/>
 
     <!-- Centered Icon Under the Preview Image -->
     <div class="icon-wrapper">
@@ -248,6 +249,49 @@
     }
 
     setInterval(createMatrixSpan, 150);
+
+    // Обновите цвета темы при выборе пользователем
+document.getElementById('backgroundColor').addEventListener('input', function() {
+    document.documentElement.style.setProperty('--background-color', this.value);
+});
+
+document.getElementById('mainColor').addEventListener('input', function() {
+    document.documentElement.style.setProperty('--main-color', this.value);
+});
+      // Load theme from localStorage
+    function loadTheme() {
+        const root = document.documentElement;
+        const theme = JSON.parse(localStorage.getItem('theme')) || {};
+        for (const [key, value] of Object.entries(theme)) {
+            root.style.setProperty(`--${key}`, value);
+        }
+    }
+
+    // Save theme to localStorage
+    function saveTheme(theme) {
+        localStorage.setItem('theme', JSON.stringify(theme));
+    }
+
+    // Function to change theme colors
+    function changeTheme(bgColor, textColor, primaryColor) {
+        const root = document.documentElement;
+        const newTheme = {
+            'background-color': bgColor,
+            'text-color': textColor,
+            'primary-color': primaryColor
+        };
+
+        for (const [key, value] of Object.entries(newTheme)) {
+            root.style.setProperty(`--${key}`, value);
+        }
+
+        saveTheme(newTheme);
+    }
+
+    // Initial theme load
+    loadTheme();
+
+
 </script>
 </body>
 

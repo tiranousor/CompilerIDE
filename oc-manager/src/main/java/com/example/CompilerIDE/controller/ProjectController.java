@@ -34,8 +34,8 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
-@Controller // Изменено с @Controller на @RestController
-@RequestMapping("/projects") // Добавлено
+@Controller
+@RequestMapping("/projects")
 public class ProjectController {
     private final ProjectInvitationService projectInvitationService;
     private final ProjectService projectService;
@@ -82,7 +82,6 @@ public class ProjectController {
 
         Client currentUser = clientOpt.get();
 
-        // Используем ProjectTeamService через ProjectService
         ProjectTeamService projectTeamService = projectService.getProjectTeamService();
         Optional<ProjectTeam> projectTeamOpt = projectTeamService.findByProjectAndClient(project, currentUser);
 
@@ -93,12 +92,12 @@ public class ProjectController {
         model.addAttribute("isOwner", isOwner);
         model.addAttribute("isCollaborator", isCollaborator);
 
-        return "projectInfo"; // Убедитесь, что у вас есть соответствующий шаблон
+        return "projectInfo";
     }
     @GetMapping("/userProfile/new")
     public String newProjectForm(Authentication authentication, Model model) {
         model.addAttribute("project", new Project());
-        return "new_project_form"; // Ensure this template exists
+        return "new_project_form";
     }
 
     @PostMapping("/userProfile/new")
@@ -112,12 +111,19 @@ public class ProjectController {
             return "new_project_form";
         }
         projectService.save(project);
-//        projectTeamService.addCreator(project, clientService.getClient(authentication.getName()).get());
+        if (project.getRefGit() != null && !project.getRefGit().isEmpty()) {
+            try {
+                projectService.importFromGit(project);
+            } catch (Exception e) {
+                logger.error("Ошибка при импорте проекта из Git: {}", e.getMessage());
+                projectService.delete(project);
+                bindingResult.rejectValue("refGit", "error.refGit", "Не удалось импортировать проект из Git: " + e.getMessage());
+                return "new_project_form";
+            }
+        }
         return "redirect:/userProfile";
     }
 
-
-    // Delete a project
     @PostMapping("/userProfile/delete/{id}")
     public String deleteProject(@PathVariable("id") int projectId, Authentication authentication) {
         Client client = clientService.findByUsername(authentication.getName()).get();
@@ -174,7 +180,6 @@ public String editProjectForm(@PathVariable("id") int projectId, Model model, Au
 
         Client existingClient = clientService.findOne(id);
         if (existingClient == null) {
-            // Обработка случая, когда клиент не найден
             bindingResult.reject("client.notfound", "Клиент не найден");
             return "editProfile";
         }
@@ -198,21 +203,14 @@ public String editProjectForm(@PathVariable("id") int projectId, Model model, Au
             }
         }
 
-        // Обновляем данные пользователя
         existingClient.setUsername(clientForm.getUsername());
         existingClient.setEmail(clientForm.getEmail());
         existingClient.setGithubProfile(clientForm.getGithubProfile());
         existingClient.setAbout(clientForm.getAbout());
-
-        // Обновляем цвета темы
         existingClient.setBackgroundColor(clientForm.getBackgroundColor());
         existingClient.setMainColor(clientForm.getMainColor());
 
-        // Проверка цвета валидацией, уже выполнена ранее
-
         clientService.update(id, existingClient);
-
-        // Обновляем объект аутентификации, если изменилось имя пользователя
         if (!authentication.getName().equals(existingClient.getUsername())) {
             Authentication newAuth = new UsernamePasswordAuthenticationToken(
                     existingClient.getUsername(),

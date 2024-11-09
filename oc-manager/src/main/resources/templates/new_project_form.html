@@ -155,7 +155,7 @@
     <form th:action="@{/projects/userProfile/new}" method="post" th:object="${project}">
         <div class="form-input">
             <label for="name">Название проекта:</label>
-            <input type="text" class="form-control" id="name" name="name" required th:field="*{name}">
+            <input type="text" class="form-control" id="name" name="name" th:field="*{name}" placeholder="Автоматически заполнится при вводе Git URL">
             <div class="form-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
         </div>
         <div class="form-input">
@@ -172,7 +172,11 @@
             <label for="readMe">Read Me:</label>
             <textarea class="form-control" id="readMe" name="readMe" th:field="*{readMe}" rows="3"></textarea>
         </div>
-
+        <div class="form-input">
+            <label for="refGit">Ссылка на Git-репозиторий:</label>
+            <input type="url" class="form-control" id="refGit" name="refGit" th:field="*{refGit}" placeholder="https://github.com/username/repository.git">
+            <div class="form-error" th:if="${#fields.hasErrors('refGit')}" th:errors="*{refGit}"></div>
+        </div>
         <button type="submit" class="btn-primary">Создать</button>
     </form>
 </div>
@@ -194,6 +198,24 @@
     }
 
     setInterval(createMatrixSpan, 150);
+   document.addEventListener('DOMContentLoaded', function () {
+    const refGitInput = document.getElementById('refGit');
+    const nameInput = document.getElementById('name');
+
+    refGitInput.addEventListener('input', function () {
+        const gitUrl = refGitInput.value;
+
+        // Регулярное выражение для извлечения имени репозитория
+        const regex = /\/([^\/]+?)(?:\.git)?$/;
+        const match = gitUrl.match(regex);
+
+        if (match && match[1]) {
+            const repoName = match[1];
+            nameInput.value = repoName; // Автоматическое заполнение поля
+        }
+    });
+});
+
 </script>
 </body>
 </html>

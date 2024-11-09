@@ -1,66 +1,56 @@
+// UnbanRequestController.java
 package com.example.CompilerIDE.controller;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
+import com.example.CompilerIDE.providers.Client;
+import com.example.CompilerIDE.providers.UnbanRequest;
+import com.example.CompilerIDE.repositories.ClientRepository;
+import com.example.CompilerIDE.repositories.UnbanRequestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
-import java.io.UnsupportedEncodingException;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Controller
 public class UnbanRequestController {
 
-    private final JavaMailSender mailSender;
+    private final UnbanRequestRepository unbanRequestRepository;
+    private final ClientRepository clientRepository;
 
     @Autowired
-    public UnbanRequestController(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
+    public UnbanRequestController(UnbanRequestRepository unbanRequestRepository, ClientRepository clientRepository) {
+        this.unbanRequestRepository = unbanRequestRepository;
+        this.clientRepository = clientRepository;
     }
-
-    @Value("${spring.mail.username}")
-    private String projectEmail;
-
-    private static final String SUBJECT = "Запрос на разблокировку аккаунта";
-
-    @GetMapping("/unbanRequest")
-    public String showUnbanRequestPage(Model model, @RequestParam("email") String email) {
-        model.addAttribute("email", email);
-        return "banned";
-    }
-
 
     @PostMapping("/sendUnbanRequest")
-    public String sendUnbanRequest(@RequestParam("email") String email, @RequestParam("message") String message, Model model) {
-        try {
-            sendEmail(projectEmail, email, message);
-            model.addAttribute("message", "Ваш запрос на разблокировку был отправлен.");
-        } catch (MessagingException | UnsupportedEncodingException e) {
-            model.addAttribute("error", "Ошибка при отправке запроса.");
+    public String sendUnbanRequest(@RequestParam("message") String message, Model model, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            model.addAttribute("error", "Вы не авторизованы.");
+            return "banned";
         }
+
+        String username = authentication.getName();
+        Optional<Client> client = clientRepository.findByUsername(username);
+
+        // Проверяем, есть ли уже запрос от этого пользователя
+        UnbanRequest existingRequest = unbanRequestRepository.findByClient(client.orElse(null));
+        if (existingRequest != null) {
+            model.addAttribute("message", "Вы уже отправили запрос на разблокировку. Ожидайте ответа администратора.");
+            return "banned";
+        }
+
+        UnbanRequest unbanRequest = new UnbanRequest();
+        unbanRequest.setClient(client.get());
+        unbanRequest.setMessage(message);
+        unbanRequest.setRequestTime(LocalDateTime.now());
+
+        unbanRequestRepository.save(unbanRequest);
+
+        model.addAttribute("message", "Ваш запрос на разблокировку был отправлен.");
         return "banned";
-    }
-
-    private void sendEmail(String toEmail, String fromEmail, String messageContent) throws MessagingException, UnsupportedEncodingException {
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-        helper.setFrom(fromEmail, "Заблокированный пользователь");
-        helper.setTo(toEmail);
-        helper.setSubject(SUBJECT);
-
-        String content = "<p>Запрос от пользователя: " + fromEmail + "</p>";
-        content += "<p>Сообщение:</p>";
-        content += "<p>" + messageContent + "</p>";
-
-        helper.setText(content, true);
-
-        mailSender.send(message);
     }
 }
