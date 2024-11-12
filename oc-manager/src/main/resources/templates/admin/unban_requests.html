@@ -21,7 +21,7 @@
     <tr th:each="request : ${unbanRequests}">
         <td th:text="${request.client.username}"></td>
         <td th:text="${request.message}"></td>
-        <td th:text="${#temporals.format(request.requestTime,  'yyyy-MM-dd HH:mm:ss'н)}"></td>
+        <td th:text="${#temporals.format(request.requestTime,  'yyyy-MM-dd HH:mm:ss')}"></td>
         <td>
             <form th:action="@{/admin/unbanUser/{id}(id=${request.id})}" method="post" style="display:inline;">
                 <button type="submit">Разблокировать</button>

@@ -1,6 +1,6 @@
 package com.example.CompilerIDE.client;
 
-import com.example.CompilerIDE.Dto.CompileRequest;
+import com.example.CompilerIDE.dto.CompileRequest;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

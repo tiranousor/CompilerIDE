@@ -1,7 +1,7 @@
 package com.example.CompilerIDE.services;
 
-import com.example.CompilerIDE.Dto.FileNodeDto;
-import com.example.CompilerIDE.Dto.JsTreeNodeDto;
+import com.example.CompilerIDE.dto.FileNodeDto;
+import com.example.CompilerIDE.dto.JsTreeNodeDto;
 import com.example.CompilerIDE.providers.Client;
 import com.example.CompilerIDE.providers.Project;
 import com.example.CompilerIDE.providers.ProjectStruct;

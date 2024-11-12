@@ -1,5 +1,5 @@
 package com.example.CompilerIDE.services;
-import com.example.CompilerIDE.Dto.CompileRequest;
+import com.example.CompilerIDE.dto.CompileRequest;
 import com.example.CompilerIDE.client.CompileClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

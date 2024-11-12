@@ -1,7 +1,7 @@
 package com.example.CompilerIDE.controller;
 
-import com.example.CompilerIDE.Dto.FileNodeDto;
-import com.example.CompilerIDE.Dto.SaveProjectRequest;
+import com.example.CompilerIDE.dto.FileNodeDto;
+import com.example.CompilerIDE.dto.SaveProjectRequest;
 import com.example.CompilerIDE.providers.*;
 import com.example.CompilerIDE.repositories.ProjectAccessLogRepository;
 import com.example.CompilerIDE.repositories.ProjectStructRepository;
@@ -12,24 +12,18 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.*; // Изменено
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.web.servlet.HandlerMapping;
 
 import java.io.IOException;
-import java.net.URLConnection;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
@@ -124,7 +118,7 @@ public class ProjectController {
         return "redirect:/userProfile";
     }
 
-    @PostMapping("/userProfile/delete/{id}")
+    @PostMapping("/delete/{id}")
     public String deleteProject(@PathVariable("id") int projectId, Authentication authentication) {
         Client client = clientService.findByUsername(authentication.getName()).get();
         Optional<Project> projectToDelete = projectService.findById(projectId);
