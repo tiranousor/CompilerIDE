@@ -8,7 +8,7 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "project_structs")
+@Table(name = "project_struct")
 public class ProjectStruct {
 
     @Id

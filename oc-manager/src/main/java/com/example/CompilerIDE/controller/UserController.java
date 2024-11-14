@@ -146,7 +146,7 @@ public class UserController {
     }
 
     @PostMapping("/process_registration")
-    public String registrationPerson(@Valid @ModelAttribute Client client, BindingResult bindingResult) {
+    public String registrationPerson(@Valid @ModelAttribute("client") Client client, BindingResult bindingResult) {
         clientValidator.validate(client, bindingResult);
 
         if (bindingResult.hasErrors())
