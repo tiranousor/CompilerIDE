@@ -2,10 +2,7 @@ package com.example.CompilerIDE.services;
 
 import com.example.CompilerIDE.dto.FileNodeDto;
 import com.example.CompilerIDE.dto.JsTreeNodeDto;
-import com.example.CompilerIDE.providers.Client;
-import com.example.CompilerIDE.providers.Project;
-import com.example.CompilerIDE.providers.ProjectStruct;
-import com.example.CompilerIDE.providers.ProjectTeam;
+import com.example.CompilerIDE.providers.*;
 import com.example.CompilerIDE.repositories.ProjectRepository;
 import com.example.CompilerIDE.repositories.ProjectStructRepository;
 import com.example.CompilerIDE.util.HashUtil;
