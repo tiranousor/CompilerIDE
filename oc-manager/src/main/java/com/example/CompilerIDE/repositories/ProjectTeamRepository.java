@@ -7,6 +7,7 @@ import com.example.CompilerIDE.providers.ProjectTeam.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.List;
 
@@ -16,4 +17,6 @@ public interface ProjectTeamRepository extends JpaRepository<ProjectTeam, Intege
     List<ProjectTeam> findByProject(Project project);
     List<ProjectTeam> findByClient(Client client);
     List<ProjectTeam> findByProjectAndRole(Project project, Role role);
+    List<ProjectTeam> findByClientAndRole(Client client, Role role);
+    List<ProjectTeam> findByProject_ClientAndClientAndRole(Client viewedUser, Client currentUser, Role role);
 }

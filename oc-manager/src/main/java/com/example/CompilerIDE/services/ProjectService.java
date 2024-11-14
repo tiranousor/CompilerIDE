@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
 import org.springframework.util.FileSystemUtils;
 
@@ -168,20 +169,6 @@ public class ProjectService {
         return lastSlash != -1 ? path.substring(lastSlash + 1) : path;
     }
 
-
-    private String getFileContent(String projectId, String filePath) {
-        try {
-            byte[] contentBytes = minioService.getFileContentAsBytes("projects/" + projectId + "/" + filePath);
-            return new String(contentBytes, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            logger.error("Ошибка при получении содержимого файла '{}': {}", filePath, e.getMessage());
-            return "";
-        }
-    }
-    public boolean canEditProject(Project project, Client client) {
-        Optional<ProjectTeam> team = projectTeamService.findByProjectAndClient(project, client);
-        return team.isPresent() && (team.get().getRole() == ProjectTeam.Role.CREATOR || team.get().getRole() == ProjectTeam.Role.COLLABORATOR);
-    }
     public void importFromGit(Project project) throws Exception {
         String repoUrl = project.getRefGit();
         String projectDirPath = gitCloneDirectory + File.separator + "project-" + project.getId();
@@ -348,5 +335,26 @@ public class ProjectService {
         return Collections.singletonList(root);
     }
 
+    private String getFileContent(String projectId, String filePath) {
+        try {
+            byte[] contentBytes = minioService.getFileContentAsBytes("projects/" + projectId + "/" + filePath);
+            return new String(contentBytes, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            logger.error("Ошибка при получении содержимого файла '{}': {}", filePath, e.getMessage());
+            return "";
+        }
+    }
 
+    public boolean canEditProject(Project project, Client client) {
+        Optional<ProjectTeam> team = projectTeamService.findByProjectAndClient(project, client);
+        return team.isPresent() && (team.get().getRole() == ProjectTeam.Role.CREATOR || team.get().getRole() == ProjectTeam.Role.COLLABORATOR);
+    }
+
+    public List<Project> findAccessibleProjects(Client viewedUser, Client currentUser) {
+        List<Project> publicProjects = projectRepository.findByClientAndAccessLevel(viewedUser, AccessLevel.PUBLIC);
+        List<Project> collaboratorProjects = projectTeamService.findProjectsByClient(viewedUser, currentUser, ProjectTeam.Role.COLLABORATOR);
+        return Stream.concat(publicProjects.stream(), collaboratorProjects.stream())
+                .distinct()
+                .collect(Collectors.toList());
+    }
 }

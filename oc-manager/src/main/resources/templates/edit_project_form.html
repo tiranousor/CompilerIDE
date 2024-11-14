@@ -175,6 +175,17 @@
             <div class="form-error" th:if="${#fields.hasErrors('readMe')}" th:errors="*{readMe}">Ошибка в поле Read Me</div>
         </div>
 
+        <!-- Поле Уровень доступа -->
+        <div class="form-input">
+            <label for="accessLevel">Доступ:</label>
+            <select class="form-control" id="accessLevel" name="accessLevel" required th:field="*{accessLevel}">
+                <option value="">Выберите доступ</option>
+                <option value="PUBLIC" th:selected="${project.accessLevel == 'PUBLIC'}">Публичный</option>
+                <option value="PRIVATE" th:selected="${project.accessLevel == 'PRIVATE'}">Приватный</option>
+            </select>
+            <div class="form-error" th:if="${#fields.hasErrors('accessLevel')}" th:errors="*{accessLevel}">Ошибка в доступе</div>
+        </div>
+
         <button type="submit" class="btn btn-primary">Сохранить изменения</button>
     </form>
 </div>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
@@ -7,8 +7,11 @@
     <title>User Profile</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
-    <style th:inline="css">
+    <!-- Подключение Bootstrap для вкладок и выпадающих меню -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+
         * {
             font-family: 'VT323', monospace;
         }
@@ -161,6 +164,7 @@
         </div>
         <div class="mt-3">
             <a th:href="@{/friends/list}" class="btn-link">Друзья</a>
+
         </div>
         <div class="friends-list d-flex flex-wrap justify-content-center mt-3">
             <th:block th:each="friend, iterStat : ${friends}">
@@ -210,8 +214,46 @@
         </ul>
     </div>
 </div>
+
+<!-- Кнопка настроек -->
+<div class="settings-btn">
+    <i class='bx bx-cog'></i>
+</div>
+<div class="search-btn">
+    <a th:href="@{/friends/search}">
+        <i class='bx bx-search'></i>
+    </a>
+</div>
+<!-- Меню настроек -->
+<div class="settings-menu" id="settingsMenu">
+    <a th:href="@{/edit/{id}(id=${client.id})}">Редактировать профиль</a>
+    <form th:action="@{/logout}" th:method="POST">
+        <input type="submit" value="Выход" class="edit-profile-btn" />
+    </form>
+</div>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay"></div>
+
 <script>
+    // Существующий код для меню настроек
+    const settingsBtn = document.querySelector('.settings-btn');
+    const settingsMenu = document.getElementById('settingsMenu');
+    const overlay = document.getElementById('overlay');
+
+    settingsBtn.addEventListener('click', () => {
+        settingsMenu.classList.toggle('active');
+        overlay.classList.toggle('active');
+    });
+
+    overlay.addEventListener('click', () => {
+        settingsMenu.classList.remove('active');
+        overlay.classList.remove('active');
+    });
+
+    // Код для раскрытия информации о проекте
     const infoButtons = document.querySelectorAll('.btn-info');
+
     infoButtons.forEach(button => {
         button.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -233,7 +275,43 @@
             }
         });
     }
+
+    // Функция для отклонения запроса на дружбу
+    function rejectFriendRequest(requestId, listItem) {
+        fetch('/friends/rejectRequest', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-TOKEN': getCsrfToken()
+            },
+            body: `requestId=${requestId}`
+        })
+            .then(response => response.text())
+            .then(data => {
+                if (data === 'success') {
+                    // Удаляем уведомление из списка
+                    listItem.remove();
+                    alert('Friend request rejected.');
+                } else {
+                    alert('Error: ' + data);
+                }
+            })
+            .catch(error => console.error('Error rejecting friend request:', error));
+    }
+
+    // Функция для получения CSRF токена из скрытого поля
+    function getCsrfToken() {
+        const token = document.querySelector('input[name="_csrf"]').value;
+        return token;
+    }
+
+    // Fetch notifications every 30 seconds
+    setInterval(fetchNotifications, 30000);
+
+    // Initial fetch
+    fetchNotifications();
 </script>
+
 </body>
 
 </html>

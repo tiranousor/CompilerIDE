@@ -12,18 +12,24 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.*; // Изменено
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.servlet.HandlerMapping;
 
 import java.io.IOException;
+import java.net.URLConnection;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
@@ -76,6 +82,7 @@ public class ProjectController {
 
         Client currentUser = clientOpt.get();
 
+        // Используем ProjectTeamService через ProjectService
         ProjectTeamService projectTeamService = projectService.getProjectTeamService();
         Optional<ProjectTeam> projectTeamOpt = projectTeamService.findByProjectAndClient(project, currentUser);
 
@@ -115,6 +122,7 @@ public class ProjectController {
                 return "new_project_form";
             }
         }
+        projectTeamService.addCreator(project, clientService.getClient(authentication.getName()).get());
         return "redirect:/userProfile";
     }
 
@@ -160,59 +168,47 @@ public String editProjectForm(@PathVariable("id") int projectId, Model model, Au
         return "redirect:/userProfile";
     }
 }
+
     @PostMapping("/edit/{id}")
-    public String updateProfile(Authentication authentication, @PathVariable("id") int id,
-                                @Valid @ModelAttribute("client") Client clientForm, BindingResult bindingResult,
-                                @RequestParam("avatarFile") MultipartFile avatarFile) {
+    public String updateProject(@PathVariable("id") int projectId,
+                                @Valid @ModelAttribute("project") Project projectForm,
+                                BindingResult bindingResult,
+                                Authentication authentication) {
         if (bindingResult.hasErrors()) {
-            return "editProfile";
+            return "edit_project_form";
         }
 
-        Client existingClient = clientService.findOne(id);
-        if (existingClient == null) {
-            bindingResult.reject("client.notfound", "Клиент не найден");
-            return "editProfile";
+        Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
+        if (clientOpt.isEmpty()) {
+            return "redirect:/login";
         }
 
-        if (!avatarFile.isEmpty()) {
-            String originalFileName = avatarFile.getOriginalFilename();
-            String extension = "";
+        Client client = clientOpt.get();
 
-            if (originalFileName != null && originalFileName.contains(".")) {
-                extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+        Optional<Project> projectOpt = projectService.findById(projectId);
+
+        if (projectOpt.isPresent()) {
+            Project existingProject = projectOpt.get();
+            if (existingProject.getClient().getId().equals(client.getId())) {
+                existingProject.setName(projectForm.getName());
+                existingProject.setLanguage(projectForm.getLanguage());
+                existingProject.setReadMe(projectForm.getReadMe());
+                existingProject.setRefGit(projectForm.getRefGit());
+                existingProject.setProjectType(projectForm.getProjectType());
+                existingProject.setAccessLevel(projectForm.getAccessLevel());
+                projectService.save(existingProject);
+
+                // Записываем информацию об изменении проекта
+                ProjectAccessLog accessLog = new ProjectAccessLog();
+                accessLog.setClient(client);
+                accessLog.setProject(existingProject);
+                accessLog.setAccessTime(new Timestamp(System.currentTimeMillis()));  // Текущее время
+                accessLog.setActionType("edit");  // Действие "edit"
+                projectAccessLogRepository.save(accessLog);
             }
-
-            String fileName = existingClient.getId() + extension;
-            String uploadDir = "user-photos/";
-            try {
-                FileUploadUtil.saveFile(uploadDir, fileName, avatarFile);
-                existingClient.setAvatarUrl("/" + uploadDir + fileName);
-            } catch (IOException e) {
-                bindingResult.rejectValue("avatarUrl", "error.avatarUrl", "Ошибка при загрузке файла: " + e.getMessage());
-                return "editProfile";
-            }
         }
-
-        existingClient.setUsername(clientForm.getUsername());
-        existingClient.setEmail(clientForm.getEmail());
-        existingClient.setGithubProfile(clientForm.getGithubProfile());
-        existingClient.setAbout(clientForm.getAbout());
-        existingClient.setBackgroundColor(clientForm.getBackgroundColor());
-        existingClient.setMainColor(clientForm.getMainColor());
-
-        clientService.update(id, existingClient);
-        if (!authentication.getName().equals(existingClient.getUsername())) {
-            Authentication newAuth = new UsernamePasswordAuthenticationToken(
-                    existingClient.getUsername(),
-                    authentication.getCredentials(),
-                    authentication.getAuthorities()
-            );
-            SecurityContextHolder.getContext().setAuthentication(newAuth);
-        }
-
         return "redirect:/userProfile";
     }
-
 
 
     @GetMapping("/{projectId}/access-logs")

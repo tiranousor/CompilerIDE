@@ -13,14 +13,17 @@ import com.example.CompilerIDE.util.ProjectValidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -160,8 +163,13 @@ public class UserController {
         String authName = authentication.getName();
         System.out.println("Authenticated Username: " + authName);
 
-        Client client = clientService.findByUsername(authName)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + authName));
+        Optional<Client> clientOpt = clientService.findByUsername(authName);
+        if (clientOpt.isEmpty()) {
+            return "redirect:/loginAndRegistration";
+        }
+        Client client = clientOpt.get();
+
+        // Запись времени входа
         LoginTimestamp loginTimestamp = new LoginTimestamp();
         loginTimestamp.setClient(client);
         loginTimestamp.setLoginTime(new Timestamp(System.currentTimeMillis()));
@@ -169,17 +177,24 @@ public class UserController {
 
         List<Project> projects = projectService.findByClient(client);
         List<Client> friends = friendshipService.getFriends(client);
+        List<ProjectTeam> collaboratorProjects = projectTeamService.findCollaboratorProjects(client);
 
         model.addAttribute("client", client);
         model.addAttribute("projects", projects);
         model.addAttribute("friendsCount", friends.size());
         model.addAttribute("friends", friends);
+        model.addAttribute("collaboratorProjects", collaboratorProjects);
 
         return "userProfile";
     }
     @GetMapping("/edit/{id}")
-    public String editProfile(Model model, @PathVariable("id") int id) {
-        model.addAttribute("client", clientService.findOne(id));
+    public String editProfile(Model model, @PathVariable("id") int id, Authentication authentication) {
+        Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
+        if (clientOpt.isEmpty()) {
+            return "redirect:/loginAndRegistration";
+        }
+        Client client = clientOpt.get();
+        model.addAttribute("client", clientService.findOne(client.getId()));
         return "editProfile";
     }
     @PostMapping("/edit/{id}")
@@ -225,6 +240,8 @@ public class UserController {
 //        existingClient.setMainColor(clientForm.getMainColor());
 
         clientService.update(id, existingClient);
+
+        // Если имя пользователя изменилось, обновляем объект аутентификации
         if (!authentication.getName().equals(existingClient.getUsername())) {
             Authentication newAuth = new UsernamePasswordAuthenticationToken(
                     existingClient.getUsername(),
@@ -237,25 +254,33 @@ public class UserController {
         return "redirect:/userProfile";
     }
 
-
     @GetMapping("/userProfile/{id}")
     public String viewUserProfile(@PathVariable("id") int id, Model model, Authentication authentication) {
 
         String authName = authentication.getName();
-        Client currentUser = clientService.findByUsername(authName)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + authName));
+        Optional<Client> currentUserOpt = clientService.findByUsername(authName);
+        if (currentUserOpt.isEmpty()) {
+            return "redirect:/loginAndRegistration";
+        }
+        Client currentUser = currentUserOpt.get();
 
         Client viewedUser = clientService.findOne(id);
         if (viewedUser == null) {
-            model.addAttribute("error", "User not found.");
-            return "error"; // Убедитесь, что у вас есть шаблон error.html
+            return "redirect:/userProfile/" + currentUser.getId();
         }
-        boolean isOwnProfile = viewedUser.getId() == currentUser.getId();
+
+        boolean isOwnProfile = viewedUser.getId().equals(currentUser.getId());
         model.addAttribute("isOwnProfile", isOwnProfile);
 
         model.addAttribute("client", viewedUser);
         model.addAttribute("friendsCount", friendshipService.getFriends(viewedUser).size());
-        model.addAttribute("projects", projectService.findByClient(viewedUser));
+        if (isOwnProfile) {
+            model.addAttribute("projects", projectService.findByClient(viewedUser));
+            model.addAttribute("friends", friendshipService.getFriends(viewedUser));
+            model.addAttribute("friendsProjects", projectTeamService.findCollaboratorProjects(currentUser));
+        } else {
+            model.addAttribute("projects", projectService.findAccessibleProjects(viewedUser, currentUser));
+        }
 
         return "userProfile";
     }
