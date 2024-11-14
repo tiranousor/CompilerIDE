@@ -2,81 +2,112 @@
 <html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile</title>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap:wght@300;400;500;600;700&display=swap');
-
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
+    <style th:inline="css">
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'VT323', monospace;
+            font-family: 'Roboto', sans-serif;
         }
 
-        body {
-            background: #000000;
-            color: #FFC300;
+        .profile-avatar {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 20px;
+            box-shadow: 0 0 25px rgba(255, 234, 0, 0.2), 0 0 50px rgba(142, 197, 252, 0.3);
+        }
+
+        .btn-custom {
+            background-color: transparent;
+            padding: 5px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-custom:hover {
+            background-color: #f6f8fa;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 20px;
+            background-color: #f6f8fa;
+            border-bottom: 1px solid #d1d5da;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 900;
+            box-sizing: border-box;
+        }
+
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .main-container {
+            margin-top: 80px;
             display: flex;
             justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
+            align-items: flex-start;
+            padding: 0 20px;
+            box-sizing: border-box;
+            width: 100%;
+            gap: 40px;
         }
 
-        .container {
-            background-color: rgba(0, 0, 0, 0.9);
-            border: 3px solid #FFC300;
-            border-radius: 25px;
-            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
-            width: 80%;
-            max-width: 900px;
-            padding: 30px;
-            margin: 20px;
-        }
-
-        h1, h2, h3 {
-            color: #FFC300;
+        .profile-info-container {
+            width: 35%;
+            max-width: 400px;
+            padding: 20px;
+            background-color: #ffffff;
             text-align: center;
-            margin-bottom: 20px;
         }
 
-        h3 {
-            font-size: 24px;
+        .projects-container {
+            width: 60%;
+            padding: 20px;
+            background-color: #ffffff;
         }
 
-        p {
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-
-        strong {
-            color: #17A846;
-        }
-
-        ul {
-            list-style-type: none;
+        .btn-link {
+            background: none;
+            color: #0366d6;
+            text-decoration: underline;
+            cursor: pointer;
             padding: 0;
-            font-size: 18px;
-            color: #FFC300;
-        }
-
-        ul li {
-            padding: 5px 0;
+            font-size: 1em;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
-            color: #FFC300;
+            color: #24292e;
         }
 
         th, td {
             padding: 12px 15px;
             text-align: left;
-            border-bottom: 2px solid #FFC300;
+            border-bottom: 1px solid #d1d5da;
         }
 
         th {
@@ -87,7 +118,6 @@
             font-size: 18px;
         }
 
-        /* Matrix Animation */
         .matrix {
             position: absolute;
             top: 0;
@@ -116,45 +146,61 @@
         }
     </style>
 </head>
-<body>
-<div class="matrix" id="matrixContainer"></div>
-
-<div class="container">
-    <h1>Profile of <span th:text="${user.username}">User</span></h1>
-
-    <div class="row">
-        <div class="col-md-6">
-            <h3>User Info</h3>
-            <p><strong>Email:</strong> <span th:text="${user.email}">email@example.com</span></p>
-            <p><strong>Role:</strong> <span th:text="${user.role}">ROLE_USER</span></p>
+<body class="p-3">
+<div class="header">
+    <div class="user-info">
+        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar">
+        <span class="username" th:text="${client.username}"></span>
+    </div>
+    <div class="actions">
+        <a th:href="@{/logout}" th:method="POST"><i class='bx bx-log-out'></i></a>
+    </div>
+</div>
+<!--<div class="matrix" id="matrixContainer"></div>-->
+<div class="main-container clearfix gutter-lg">
+    <div class="profile-info-container d-flex flex-column align-items-center">
+        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="profile-avatar">
+        <div class="profile-info text-center mt-2">
+            <h2 th:text="${client.username}"></h2>
+            <p class="color-fg-muted" th:text="${client.email}"></p>
+            <a th:href="${client.githubProfile}" class="Link--primary" target="_blank">GitHub Profile</a>
+            <p class="color-fg-default mt-3" th:text="${client.about}"></p>
         </div>
-        <div class="col-md-6">
-            <h3>Projects</h3>
-            <ul>
-                <li th:each="project : ${projects}" th:text="${project.name}">Project Name</li>
-            </ul>
+        <div class="mt-3">
+            <a th:href="@{/friends/list}" class="btn-link">Friends</a>
         </div>
     </div>
-
-    <h2>Login Activity</h2>
-    <table>
-        <thead>
-        <tr>
-            <th>#</th>
-            <th>Login Time</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="timestamp, iterStat : ${loginTimestamps}">
-            <td th:text="${iterStat.index + 1}">1</td>
-            <td th:text="${#dates.format(timestamp.loginTime, 'yyyy-MM-dd HH:mm:ss')}">2023-10-24 18:00:00</td>
-        </tr>
-        </tbody>
-    </table>
+    <div class="projects-container">
+        <h2>Projects</h2>
+        <ul class="list-style-none mt-3">
+            <th:block th:each="project : ${projects}">
+                <li class="Box-row project-item p-3 mb-3" style="border: 1px solid #d1d5da; border-radius: 6px;" th:data-project-id="${project.id}">
+                    <div class="d-flex flex-items-center flex-justify-between">
+                        <strong class="f4" style="color: #000000;" th:text="${project.name}"></strong>
+                    </div>
+                </li>
+            </th:block>
+        </ul>
+    </div>
+    <div class="projects-container">
+        <h2>Login Activity</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Login Time</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="timestamp, iterStat : ${loginTimestamps}">
+                <td th:text="${iterStat.index + 1}">1</td>
+                <td th:text="${#dates.format(timestamp.loginTime, 'yyyy-MM-dd HH:mm:ss')}">2023-10-24 18:00:00</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
-
 <script>
-    // Matrix Animation
     const matrixContainer = document.getElementById('matrixContainer');
     const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 

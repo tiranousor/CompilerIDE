@@ -3,60 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <title>User List</title>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'VT323', monospace;
+            font-family: 'Roboto', sans-serif;
         }
 
         body {
-            background: #000000;
-            color: #FFC300;
+            background-color: #ffffff;
+            color: #24292e;
             display: flex;
             justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
+            padding: 10px 20px;
+            background-color: #f6f8fa;
+            border-bottom: 1px solid #d1d5da;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 900;
+            box-sizing: border-box;
         }
 
-        .container {
-            background-color: rgba(0, 0, 0, 0.9);
-            border: 3px solid #FFC300;
-            border-radius: 25px;
-            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
-            width: 90%;
-            max-width: 1000px;
-            padding: 30px;
+        .header .user-info {
+            display: flex;
+            align-items: center;
         }
 
-        h1 {
-            font-size: 32px;
-            color: #FFC300;
-            text-align: center;
-            margin-bottom: 20px;
+        .header .user-info span {
+            font-size: 24px;
+            font-weight: 700;
+            color: #24292e;
+        }
+
+        .header .notification-container {
+            display: flex;
+            align-items: center;
         }
 
         .notification-container {
-            position: absolute;
-            top: 20px;
-            right: 20px;
+            position: relative;
         }
 
         .notification-icon {
             font-size: 24px;
             position: relative;
             cursor: pointer;
-            color: #FFC300;
+            color: #0366d6;
         }
 
         .notification-icon:hover {
-            color: #FFD700;
+            color: #0056b3;
         }
 
         .notification-badge {
@@ -76,6 +87,20 @@
             display: inline-block;
         }
 
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            padding: 20px;
+            margin-top: 80px;
+        }
+
+        h1 {
+            font-size: 32px;
+            color: #24292e;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
         .input-group {
             display: flex;
             align-items: center;
@@ -83,9 +108,9 @@
         }
 
         .form-control {
-            background-color: #333;
-            border: 2px solid #FFC300;
-            color: #FFC300;
+            background-color: #f6f8fa;
+            border: 1px solid #d1d5da;
+            color: #24292e;
             border-radius: 8px;
             padding: 10px;
             outline: none;
@@ -106,27 +131,28 @@
         }
 
         .btn-outline-secondary {
-            background-color: #FFC300;
-            color: #000000;
-            border: 2px solid #FFC300;
+            background-color: #0366d6;
+            color: #ffffff;
+            border: 2px solid #0366d6;
         }
 
         .btn-outline-secondary:hover {
-            background-color: #FFD700;
-            color: #000;
+            background-color: #0056b3;
+            color: #ffffff;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            background-color: #ffffff;
         }
 
         th, td {
             padding: 12px 15px;
             text-align: left;
-            border-bottom: 2px solid #FFC300;
-            color: #FFC300;
+            border-bottom: 1px solid #d1d5da;
+            color: #24292e;
         }
 
         th {
@@ -139,83 +165,55 @@
 
         .btn-primary, .btn-danger, .btn-success {
             font-size: 16px;
-            color: #000;
+            color: #ffffff;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             transition: background-color 0.3s;
             padding: 5px 15px;
         }
 
         .btn-primary {
-            background-color: #1DB954;
-            color: #fff;
+            background-color: #0366d6;
         }
 
         .btn-primary:hover {
-            background-color: #17A846;
+            background-color: #0056b3;
         }
 
         .btn-danger {
-            background-color: #FF4D4F;
-            color: #fff;
+            background-color: #d73a49;
         }
 
         .btn-danger:hover {
-            background-color: #e60000;
+            background-color: #b31d28;
         }
 
         .btn-success {
-            background-color: #FFC300;
-            color: #000;
+            background-color: #28a745;
         }
 
         .btn-success:hover {
-            background-color: #FFD700;
+            background-color: #218838;
         }
 
-        /* Matrix Animation */
-        .matrix {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-            pointer-events: none;
-        }
-
-        .matrix span {
-            position: absolute;
-            top: -10vh;
-            font-size: 18px;
-            color: #FFC300;
-            opacity: 0.8;
-            animation: fall 10s linear infinite;
-            white-space: pre;
-        }
-
-        @keyframes fall {
-            0% { top: -10vh; opacity: 0; }
-            20% { opacity: 1; }
-            100% { top: 110vh; opacity: 0; }
-        }
     </style>
 </head>
 <body>
-<div class="matrix" id="matrixContainer"></div>
-
-<!-- Notification Icon -->
-<div class="notification-container">
-    <a href="/admin/unbanRequests" class="notification-icon">
-        &#128276; <!-- Unicode bell icon -->
-        <span class="notification-badge" th:classappend="${notificationCount > 0} ? 'visible' : ''" th:text="${notificationCount}"></span>
-    </a>
+<div class="header">
+    <div class="user-info">
+        <span th:text="${username}">User Name</span>
+    </div>
+    <div class="notification-container">
+        <a href="/admin/unbanRequests" class="notification-icon">
+            &#128276; <!-- Unicode bell icon -->
+            <span class="notification-badge" th:classappend="${notificationCount > 0} ? 'visible' : ''" th:text="${notificationCount}"></span>
+        </a>
+    </div>
 </div>
 
 <div class="container">
-    <h1>All Users</h1>
+    <h1>Все пользователи</h1>
 
     <!-- Search Form -->
     <form th:action="@{/admin/users/search}" method="get">
@@ -256,25 +254,5 @@
         </tbody>
     </table>
 </div>
-
-<script>
-    // Matrix Animation
-    const matrixContainer = document.getElementById('matrixContainer');
-    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-
-    function createMatrixSpan() {
-        const span = document.createElement('span');
-        span.textContent = characters.charAt(Math.floor(Math.random() * characters.length));
-        span.style.left = Math.random() * 100 + 'vw';
-        span.style.animationDuration = Math.random() * 5 + 5 + 's';
-        span.style.opacity = Math.random() * 0.5 + 0.5;
-        matrixContainer.appendChild(span);
-        setTimeout(() => {
-            matrixContainer.removeChild(span);
-        }, 10000);
-    }
-
-    setInterval(createMatrixSpan, 150);
-</script>
 </body>
 </html>

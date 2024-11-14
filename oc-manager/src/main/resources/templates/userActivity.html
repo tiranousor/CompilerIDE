@@ -14,8 +14,8 @@
         }
 
         .profile-avatar {
-            width: 180px;
-            height: 180px;
+            width: 220px;
+            height: 220px;
             border-radius: 50%;
             object-fit: cover;
             margin-bottom: 20px;
@@ -26,13 +26,12 @@
             width: 50px;
             height: 50px;
             border-radius: 50%;
+            box-shadow: 0 0 25px rgba(255, 234, 0, 0.2), 0 0 50px rgba(142, 197, 252, 0.3);
             object-fit: cover;
-            border: 2px solid #FFC300;
         }
 
         .btn-custom {
             background-color: transparent;
-            border: none;
             padding: 5px;
             border-radius: 6px;
             cursor: pointer;
@@ -70,11 +69,6 @@
             margin-right: 10px;
         }
 
-        .header .user-info .username {
-            font-size: 20px;
-            color: #24292e;
-        }
-
         .header .actions {
             display: flex;
             align-items: center;
@@ -84,10 +78,9 @@
         .header .actions a {
             display: flex;
             align-items: center;
-            gap: 5px;
             color: #24292e;
             text-decoration: none;
-            font-size: 20px;
+            font-size: 24px;
             transition: color 0.3s ease;
         }
 
@@ -101,35 +94,50 @@
         }
 
         .Box {
-            border: none;
             box-shadow: none;
+            border: none;
         }
 
-        .container-lg {
+        .main-container {
             margin-top: 80px;
             display: flex;
-            justify-content: space-between;
-            padding: 0 80px;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 0 20px;
             box-sizing: border-box;
+            width: 100%;
+            gap: 40px;
         }
 
-        .profile-container {
-            flex: 0 0 35%;
-            padding-right: 40px;
+        .profile-info-container {
+            width: 35%;
+            max-width: 400px;
+            padding: 20px;
+            background-color: #ffffff;
+            text-align: center;
         }
 
         .projects-container {
-            flex: 0 0 60%;
+            width: 60%;
+            padding: 20px;
+            background-color: #ffffff;
         }
 
         .btn-link {
             background: none;
-            border: none;
             color: #0366d6;
             text-decoration: underline;
             cursor: pointer;
             padding: 0;
             font-size: 1em;
+        }
+
+        .profile-info-container .profile-avatar {
+            align-self: center;
+        }
+
+        .d-flex.gap-2 > button {
+            margin-right: 10px;
         }
     </style>
 </head>
@@ -141,56 +149,54 @@
         <span class="username" th:text="${client.username}"></span>
     </div>
     <div class="actions">
-        <a th:href="@{/edit/{id}(id=${client.id})}"><i class='bx bx-user'></i>Редактировать профиль</a>
-        <a th:href="@{/logout}" th:method="POST"><i class='bx bx-log-out'></i>Выход</a>
+        <a th:href="@{/edit/{id}(id=${client.id})}"><i class='bx bx-user'></i></a>
+        <a th:href="@{/logout}" th:method="POST"><i class='bx bx-log-out'></i></a>
     </div>
 </div>
 <input type="hidden" id="csrfToken" name="_csrf" th:value="${_csrf.token}" />
-<div class="container-lg clearfix gutter-lg">
-    <div class="Box Box--spacious profile-container">
-        <div class="d-flex flex-column align-items-center p-3">
-            <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="profile-avatar">
-            <div class="profile-info text-center mt-2">
-                <h2 th:text="${client.username}"></h2>
-                <p class="color-fg-muted" th:text="${client.email}"></p>
-                <a th:href="${client.githubProfile}" class="Link--primary" target="_blank">GitHub Профиль</a>
-                <p class="color-fg-default mt-3" th:text="${client.about}"></p>
-            </div>
-            <div class="mt-3">
-                <a th:href="@{/friends/list}" class="btn-link">Друзья</a>
-            </div>
-            <div class="friends-list d-flex flex-wrap justify-content-center mt-3">
-                <th:block th:each="friend, iterStat : ${friends}">
-                    <th:block th:if="${iterStat.index < 4}">
-                        <div class="d-flex flex-column align-items-center m-2">
-                            <a th:href="@{/friends/{id}(id=${friend.id})}">
-                                <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar" class="friend-avatar">
-                                <span th:text="${friend.username}" class="Link--secondary"></span>
-                            </a>
-                        </div>
-                    </th:block>
+<div class="main-container clearfix gutter-lg">
+    <div class="profile-info-container d-flex flex-column align-items-center">
+        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="profile-avatar">
+        <div class="profile-info text-center mt-2">
+            <h2 th:text="${client.username}"></h2>
+            <p class="color-fg-muted" th:text="${client.email}"></p>
+            <a th:href="${client.githubProfile}" class="Link--primary" target="_blank">GitHub Профиль</a>
+            <p class="color-fg-default mt-3" th:text="${client.about}"></p>
+        </div>
+        <div class="mt-3">
+            <a th:href="@{/friends/list}" class="btn-link">Друзья</a>
+        </div>
+        <div class="friends-list d-flex flex-wrap justify-content-center mt-3">
+            <th:block th:each="friend, iterStat : ${friends}">
+                <th:block th:if="${iterStat.index < 4}">
+                    <div class="d-flex flex-column align-items-center m-2">
+                        <a th:href="@{/friends/{id}(id=${friend.id})}">
+                            <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar" class="friend-avatar">
+                            <span th:text="${friend.username}" class="Link--secondary"></span>
+                        </a>
+                    </div>
                 </th:block>
-            </div>
+            </th:block>
         </div>
     </div>
-    <div class="Box Box--spacious projects-container">
-        <div class="Box-header d-flex flex-items-center flex-justify-between">
-            <h2 class="Box-title">Мои Проекты</h2>
+    <div class="projects-container">
+        <div class="d-flex flex-items-center flex-justify-between" style="border: none;">
+            <h2 class="">Мои Проекты</h2>
             <div class="d-flex">
-                <input type="text" id="projectSearchInput" placeholder="Поиск проектов..." oninput="filterProjects()" class="form-control input-sm">
-                <a th:href="@{/projects/userProfile/new}" class="btn-custom ml-3">
+                <input type="text" id="projectSearchInput" placeholder="Поиск проектов..." oninput="filterProjects()" class="form-control input-sm" style="border: 1px solid #d1d5da; border-radius: 6px;">
+                <a th:href="@{/projects/userProfile/new}" class="btn-custom ml-3" style="border: none;">
                     <i class='bx bx-plus'></i>
                 </a>
             </div>
         </div>
         <ul class="list-style-none mt-3">
             <th:block th:each="project : ${projects}">
-                <li class="Box-row project-item p-3 mb-3" th:data-project-id="${project.id}">
+                <li class="Box-row project-item p-3 mb-3" style="border: 1px solid #d1d5da; border-radius: 6px;" th:data-project-id="${project.id}">
                     <div class="d-flex flex-items-center flex-justify-between">
-                        <strong class="f4" th:text="${project.name}"></strong>
+                        <strong class="f4" style="color: #000000;" th:text="${project.name}"></strong>
                         <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-custom btn-open"><i class='bx bx-folder-open'></i></button>
-                            <button class="btn btn-sm btn-custom btn-info"><i class='bx bx-info-circle'></i></button>
+                            <button class="btn btn-sm btn-outline btn-open"><i class='bx bx-folder-open'></i></button>
+                            <button class="btn btn-sm btn-outline btn-info"><i class='bx bx-info-circle'></i></button>
                             <form th:action="@{/projects/delete/{id}(id=${project.id})}" method="post" style="display: inline;" onsubmit="return confirm('Вы действительно хотите удалить проект?');">
                                 <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
                                 <button type="submit" class="btn btn-sm btn-danger"><i class='bx bx-trash'></i></button>
