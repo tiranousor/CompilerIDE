@@ -30,6 +30,7 @@ public class ClientValidator implements Validator {
         if (clientService.getClientByEmail(client.getEmail()).isPresent()) {
             errors.rejectValue("email", "error.email", "Пользователь с таким email уже существует");
         }
+
     }
 
 }

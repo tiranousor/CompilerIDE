@@ -1,4 +1,4 @@
-package com.example.CompilerIDE.Dto;
+package com.example.CompilerIDE.dto;
 
 
 import lombok.AllArgsConstructor;

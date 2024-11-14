@@ -1,7 +1,6 @@
 package com.example.CompilerIDE.controller;
 
-import com.example.CompilerIDE.Dto.ClientDto;
-import com.example.CompilerIDE.Dto.JsTreeNodeDto;
+import com.example.CompilerIDE.dto.JsTreeNodeDto;
 import com.example.CompilerIDE.providers.Client;
 import com.example.CompilerIDE.providers.LoginTimestamp;
 import com.example.CompilerIDE.providers.Project;
@@ -79,8 +78,6 @@ public class UserController {
         Project project = projectOpt.get();
         Client currentUser = clientService.findByUsername(authentication.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + authentication.getName()));
-
-        // Check if the current user is the owner or a collaborator
         boolean isOwner = project.getClient().getId().equals(currentUser.getId());
         boolean isCollaborator = projectTeamService.findByProjectAndClient(project, currentUser)
                 .map(team -> team.getRole() == ProjectTeam.Role.COLLABORATOR)
@@ -92,7 +89,6 @@ public class UserController {
 
         model.addAttribute("projectId", projectId);
 
-        // Load the file structure for the project
         List<String> filePaths = minioService.listFiles("projects/" + projectId + "/");
         if (filePaths == null) {
             filePaths = List.of();
@@ -105,6 +101,7 @@ public class UserController {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
+        model.addAttribute("projectName", project.getName());
 
         model.addAttribute("fileStructure", fileStructureJson);
         return "Compiler";
@@ -114,27 +111,22 @@ public class UserController {
     public String showLoginPage() {
         return "loginAndRegistration";
     }
-
     @PostMapping("/login")
     public String processLogin(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()) {
-            // Получаем текущего пользователя
             Client client = clientService.findByUsername(authentication.getName()).orElse(null);
 
             if (client != null) {
-                // Записываем время входа
                 LoginTimestamp loginTimestamp = new LoginTimestamp();
                 loginTimestamp.setClient(client);
-                loginTimestamp.setLoginTime(new Timestamp(System.currentTimeMillis()));  // Текущее время
+                loginTimestamp.setLoginTime(new Timestamp(System.currentTimeMillis()));
 
-                // Логирование перед сохранением
                 System.out.println("Saving login timestamp for user: " + client.getUsername());
 
-                loginTimestampRepository.save(loginTimestamp);  // Сохраняем запись в базу данных
-                return "redirect:/userProfile/" + client.getId();
+                loginTimestampRepository.save(loginTimestamp);
             }
 
-            return "loginAndRegistration";
+            return "redirect:/userProfile";
         }
         return "loginAndRegistration";
     }
@@ -207,19 +199,23 @@ public class UserController {
     }
     @PostMapping("/edit/{id}")
     public String updateProfile(Authentication authentication, @PathVariable("id") int id,
-                                @Valid Client clientForm, BindingResult bindingResult,
+                                @Valid @ModelAttribute("client") Client clientForm, BindingResult bindingResult,
                                 @RequestParam("avatarFile") MultipartFile avatarFile) {
         if (bindingResult.hasErrors()) {
             return "editProfile";
         }
 
         Client existingClient = clientService.findOne(id);
+        if (existingClient == null) {
+            bindingResult.reject("client.notfound", "Клиент не найден");
+            return "editProfile";
+        }
 
         if (!avatarFile.isEmpty()) {
             String originalFileName = avatarFile.getOriginalFilename();
             String extension = "";
 
-            if (originalFileName != null) {
+            if (originalFileName != null && originalFileName.contains(".")) {
                 extension = originalFileName.substring(originalFileName.lastIndexOf("."));
             }
 
@@ -229,7 +225,7 @@ public class UserController {
                 FileUploadUtil.saveFile(uploadDir, fileName, avatarFile);
                 existingClient.setAvatarUrl("/" + uploadDir + fileName);
             } catch (IOException e) {
-                bindingResult.rejectValue("avatarUrl", "error.avatarUrl", e.getMessage());
+                bindingResult.rejectValue("avatarUrl", "error.avatarUrl", "Ошибка при загрузке файла: " + e.getMessage());
                 return "editProfile";
             }
         }
@@ -239,6 +235,9 @@ public class UserController {
         existingClient.setEmail(clientForm.getEmail());
         existingClient.setGithubProfile(clientForm.getGithubProfile());
         existingClient.setAbout(clientForm.getAbout());
+
+//        existingClient.setBackgroundColor(clientForm.getBackgroundColor());
+//        existingClient.setMainColor(clientForm.getMainColor());
 
         clientService.update(id, existingClient);
 
@@ -272,6 +271,7 @@ public class UserController {
 
         boolean isOwnProfile = viewedUser.getId().equals(currentUser.getId());
         model.addAttribute("isOwnProfile", isOwnProfile);
+
         model.addAttribute("client", viewedUser);
         model.addAttribute("friendsCount", friendshipService.getFriends(viewedUser).size());
         if (isOwnProfile) {

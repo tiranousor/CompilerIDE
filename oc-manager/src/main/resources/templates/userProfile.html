@@ -3,8 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Профиль пользователя</title>
-    <!-- Подключение иконок Boxicons -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <!-- Подключение Bootstrap для вкладок и выпадающих меню -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -12,686 +13,205 @@
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
 
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Montserrat', sans-serif;
-        }
-
-        body {
-            background: linear-gradient(70deg, #8EC5FC, #E0C3FC);
-            display: flex;
-            justify-content: flex-start;
-            align-items: flex-start;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .container {
-            display: flex;
-            gap: 30px;
-            margin-top: 30px;
-            margin-left: 100px;
-            width: 100%;
-            max-width: 1200px;
-            height: calc(100vh - 60px);
-            overflow: hidden;
-            align-items: flex-start;
-        }
-
-        /* Левый контейнер (Профиль пользователя) */
-        .profile-container {
-            width: 270px;
-            background-color: #FFFFFF;
-            border-radius: 25px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            flex-shrink: 0;
-            position: relative;
-            z-index: 1;
+            font-family: 'VT323', monospace;
         }
 
         .profile-avatar {
-            width: 130px;
-            height: 130px;
+            width: 220px;
+            height: 220px;
             border-radius: 50%;
             object-fit: cover;
             margin-bottom: 20px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-        }
-
-        .profile-info {
-            text-align: center;
-        }
-
-        .profile-info p {
-            margin-bottom: 10px;
-            font-size: 16px;
-            color: #333;
-        }
-
-        .profile-info a {
-            text-decoration: none;
-            color: #1DB954;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .profile-info a:hover {
-            text-decoration: underline;
-        }
-
-        .friends-section {
-            margin-top: 30px;
-            text-align: center;
-            width: 100%;
-        }
-
-        .friends-section h2 {
-            margin-bottom: 15px;
-            color: #333;
-        }
-
-        .friends-list {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .friend-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 60px;
-            text-align: center;
+            box-shadow: 0 0 25px rgba(255, 234, 0, 0.2), 0 0 50px rgba(142, 197, 252, 0.3);
         }
 
         .friend-avatar {
             width: 50px;
             height: 50px;
             border-radius: 50%;
+            box-shadow: 0 0 25px rgba(255, 234, 0, 0.2), 0 0 50px rgba(142, 197, 252, 0.3);
             object-fit: cover;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-            margin-bottom: 5px;
+        }
+
+        .btn-custom {
+            background-color: transparent;
+            padding: 5px;
+            border-radius: 6px;
             cursor: pointer;
+            transition: background-color 0.3s ease;
         }
 
-        .friend-username {
-            text-decoration: none;
-            color: #1DB954;
-            font-weight: 600;
-            font-size: 12px;
+        .btn-custom:hover {
+            background-color: #f6f8fa;
         }
 
-        .friend-username:hover {
-            color: #14833b;
-        }
-
-        .view-all-friends {
-            text-decoration: none;
-            color: #1DB954;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .view-all-friends:hover {
-            text-decoration: underline;
-        }
-
-        /* Правый контейнер (Список проектов) */
-        .projects-container {
-            flex-grow: 1;
-            background-color: #FFFFFF;
-            border-radius: 25px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-            padding: 30px;
-            height: 100%;
-            overflow-y: auto;
-            position: relative;
-            z-index: 1;
-        }
-
-        .projects-header {
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            padding: 5px 20px;
+            background-color: #f6f8fa;
+            border-bottom: 1px solid #d1d5da;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 900;
+            box-sizing: border-box;
         }
 
-        .projects-header h2 {
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .header .actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header .actions a {
+            display: flex;
+            align-items: center;
+            color: #24292e;
+            text-decoration: none;
             font-size: 24px;
-            font-weight: 700;
-            color: #333;
+            transition: color 0.3s ease;
         }
 
-        .add-btn {
-            background-color: #1DB954;
-            text-decoration: none;
+        .header .actions a:hover {
+            color: #0366d6;
+        }
+
+        .header .actions .icon {
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .Box {
+            box-shadow: none;
             border: none;
-            color: #fff;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
+        }
+
+        .main-container {
+            margin-top: 80px;
             display: flex;
             justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            font-size: 22px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: box-shadow 0.3s ease-in-out;
-        }
-
-        .add-btn:hover {
-            box-shadow: 0 0 20px rgba(142, 197, 252, 0.8), 0 0 40px rgba(142, 197, 252, 0.6);
-        }
-
-        .project-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .project-item {
-            background-color: #F9FBFC;
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 15px;
-            transition: box-shadow 0.3s ease-in-out, background-color 0.3s;
-            cursor: pointer;
-            box-shadow: none; /* Без подсветки по умолчанию */
-            border: 2px solid rgba(142, 197, 252, 0.4);
-            position: relative;
-        }
-
-        .project-item:hover {
-            box-shadow: 0 0 25px rgba(142, 197, 252, 0.8), 0 0 50px rgba(142, 197, 252, 0.5);
-            border-color: rgba(142, 197, 252, 0.8);
-            background-color: #E8EFF5;
-        }
-
-        .project-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .project-name {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .project-actions {
-            display: flex;
-            gap: 12px;
-        }
-
-        .project-actions button,
-        .project-actions a {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn-open {
-            background-color: #1DB954;
-            color: #fff;
-            border-radius: 5px;
-            padding: 8px 12px;
-            border: none;
-            cursor: pointer;
-            transition: box-shadow 0.3s ease-in-out;
-            box-shadow: none; /* Без подсветки по умолчанию */
-        }
-
-        .btn-open:hover {
-            box-shadow: 0 0 20px rgba(142, 197, 252, 0.8), 0 0 40px rgba(142, 197, 252, 0.6);
-        }
-
-        .btn-delete {
-            background-color: #FF4D4F;
-            color: #fff;
-        }
-
-        /* Новая кнопка "Редактировать проект" */
-        .btn-edit {
-            background-color: #FFD700; /* Золотой цвет для отличия */
-            color: #fff;
-            border-radius: 5px;
-        }
-
-        .btn-edit:hover {
-            background-color: #FFC700;
-        }
-
-        .btn-info {
-            background-color: #E0E0E0;
-            color: #333;
-            border: none;
-            padding: 8px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Стили для раскрывающегося окна с информацией о проекте */
-        .project-details {
-            margin-top: 15px;
-            background-color: #F7F9FA;
-            padding: 20px;
-            border-radius: 15px;
-            display: none;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .project-details p {
-            margin-bottom: 12px;
-            font-size: 15px;
-            color: #555;
-        }
-
-        .project-details-actions {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        /* Стиль для вкладок */
-        .nav-tabs .nav-link.active {
-            background-color: #1DB954;
-            color: #fff;
-        }
-
-        .nav-tabs .nav-link {
-            color: #1DB954;
-            cursor: pointer;
-        }
-
-        .nav-tabs .nav-link:hover {
-            color: #17A846;
-        }
-
-        .tab-content {
-            margin-top: 20px;
-        }
-
-        /* Стили для матричной анимации */
-        .matrix {
-            position: fixed;
-            top: 0;
-            left: 0;
+            align-items: flex-start;
+            padding: 0 20px;
+            box-sizing: border-box;
             width: 100%;
-            height: 100%;
-            pointer-events: none; /* Чтобы не блокировать взаимодействие с элементами */
-            z-index: -1; /* Разместить позади других элементов */
-            overflow: hidden;
-            background: transparent; /* Удалили цвет фона */
-            font-family: monospace;
-            white-space: nowrap;
+            gap: 40px;
         }
 
-        .matrix span {
-            position: absolute;
-            top: -20px;
-            /* left: 0; Убираем фиксированное расположение */
-            animation: fall linear forwards;
-            font-size: 16px;
-            color: rgba(0, 255, 0, 0.8); /* Увеличили яркость */
+        .profile-info-container {
+            width: 35%;
+            max-width: 400px;
+            padding: 20px;
+            background-color: #ffffff;
+            text-align:center;
         }
 
-        @keyframes fall {
-            0% {
-                transform: translateY(0);
-                opacity: 0;
-            }
-
-            10% {
-                opacity: 1;
-            }
-
-            100% {
-                transform: translateY(100vh);
-                opacity: 0;
-            }
+        .projects-container {
+            width: 60%;
+            padding: 20px;
+            background-color: #ffffff;
         }
 
-        /* Меню настроек */
-        .settings-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #1DB954;
-            color: #fff;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 2;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: background-color 0.3s;
-        }
-
-        .settings-btn:hover {
-            background-color: #17A846;
-        }
-
-        .settings-menu {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            background-color: #fff;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            display: none;
-            flex-direction: column;
-            padding: 10px;
-            z-index: 2;
-        }
-
-        .settings-menu.active {
-            display: flex;
-        }
-
-        .settings-menu a,
-        .settings-menu form {
-            margin: 5px 0;
-            text-decoration: none;
-            color: #333;
-            font-weight: 500;
-        }
-
-        .settings-menu a:hover {
-            color: #1DB954;
-        }
-
-        .edit-project-btn {
+        .btn-link {
             background: none;
-            border: none;
-            color: #1DB954;
-            cursor: pointer;
-            font-weight: 500;
-            padding: 0;
-        }
-
-        .edit-project-btn:hover {
+            color: #0366d6;
             text-decoration: underline;
-        }
-
-        .edit-profile-btn {
-            background: none;
-            border: none;
-            color: #FF4D4F;
             cursor: pointer;
-            font-weight: 500;
             padding: 0;
+            font-size: 1em;
         }
 
-        .edit-profile-btn:hover {
-            text-decoration: underline;
+        .profile-info-container .profile-avatar {
+            align-self: center;
         }
-
-        /* Overlay для затемнения фона при открытом меню настроек */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            display: none;
-            z-index: 1;
-        }
-
-        .overlay.active {
-            display: block;
-        }
-
-        /* Дополнительные стили для выпадающего меню проектов */
-        .dropdown-menu-project {
-            right: 0;
-            left: auto;
-        }
-
-        /* Стили для кнопки поиска */
-        .search-btn {
-            position: fixed;
-            top: 20px;
-            right: 90px; /* Отступ от кнопки настроек */
-            background-color: #1DB954;
-            color: #fff;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 2;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: background-color 0.3s;
-        }
-
-        .search-btn:hover {
-            background-color: #17A846;
-        }
-
-        /* Остальные ваши стили */
-        /* ... (оставьте ваши стили без изменений) ... */
     </style>
 </head>
 
-<body>
-<!-- Скрытое поле для CSRF токена -->
+<body class="Box p-3">
+<div class="header">
+    <div class="user-info">
+        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar">
+        <span class="username" th:text="${client.username}"></span>
+    </div>
+    <div class="actions">
+        <a th:href="@{/edit/{id}(id=${client.id})}"><i class='bx bx-user'></i></a>
+        <a th:href="@{/logout}" th:method="POST"><i class='bx bx-log-out'></i></a>
+    </div>
+</div>
 <input type="hidden" id="csrfToken" name="_csrf" th:value="${_csrf.token}" />
-
-<!-- Контейнер для матричной анимации -->
-<div class="matrix" id="matrixContainer"></div>
-
-<div class="container">
-    <!-- Левый контейнер (Профиль пользователя) -->
-    <div class="profile-container">
+<div class="main-container clearfix gutter-lg">
+    <div class="profile-info-container d-flex flex-column align-items-center">
         <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="profile-avatar">
-
-        <div class="profile-info">
-            <p class="info-item" th:text="${client.username}">Имя пользователя</p>
-            <p class="info-item" th:text="${client.email}">example@example.com</p>
-            <p class="info-item">
-                <a th:href="${client.githubProfile}" target="_blank">GitHub Профиль</a>
-            </p>
-            <p class="info-item" th:text="${client.about}">О себе</p>
-            <!-- Показываем количество друзей всегда -->
-            <p>Друзья: <span th:text="${friendsCount}">0</span></p>
+        <div class="profile-info text-center mt-2">
+            <h2 th:text="${client.username}"></h2>
+            <p class="color-fg-muted" th:text="${client.email}"></p>
+            <a th:href="${client.githubProfile}" class="Link--primary" target="_blank">GitHub Профиль</a>
+            <p class="color-fg-default mt-3" th:text="${client.about}"></p>
         </div>
+        <div class="mt-3">
+            <a th:href="@{/friends/list}" class="btn-link">Друзья</a>
 
-        <!-- Удалили кнопку редактирования профиля под аватаркой -->
-
-        <!-- Секция друзей видна только владельцу профиля -->
-        <div th:if="${isOwnProfile}" class="friends-section">
-            <a th:href="@{/friends/list}" class="view-all-friends">Посмотреть всех друзей</a>
-
-            <div class="friends-list">
-                <th:block th:each="friend, iterStat : ${friends}">
-                    <th:block th:if="${iterStat.index < 4}">
-                        <div class="friend-item">
-                            <a th:href="@{/friends/{id}(id=${friend.id})}">
-                                <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar" class="friend-avatar">
-                                <span th:text="${friend.username}" class="friend-username">Имя друга</span>
-                            </a>
-                        </div>
-                    </th:block>
+        </div>
+        <div class="friends-list d-flex flex-wrap justify-content-center mt-3">
+            <th:block th:each="friend, iterStat : ${friends}">
+                <th:block th:if="${iterStat.index < 4}">
+                    <div class="d-flex flex-column align-items-center m-2">
+                        <a th:href="@{/friends/{id}(id=${friend.id})}">
+                            <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar" class="friend-avatar">
+                            <span th:text="${friend.username}" class="Link--secondary"></span>
+                        </a>
+                    </div>
                 </th:block>
-            </div>
+            </th:block>
         </div>
     </div>
-
-    <!-- Правый контейнер (Список проектов) -->
     <div class="projects-container">
-        <!-- Вкладки для "Мои Проекты" и "Проекты друзей" или "Проекты" -->
-        <ul class="nav nav-tabs" id="projectTabs" role="tablist">
-            <th:block th:if="${isOwnProfile}">
-                <li class="nav-item">
-                    <a class="nav-link active" id="my-projects-tab" data-toggle="tab" href="#my-projects" role="tab"
-                       aria-controls="my-projects" aria-selected="true">Мои Проекты</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="friends-projects-tab" data-toggle="tab" href="#friends-projects" role="tab"
-                       aria-controls="friends-projects" aria-selected="false">Проекты друзей</a>
-                </li>
-            </th:block>
-            <th:block th:if="${!isOwnProfile}">
-                <li class="nav-item">
-                    <a class="nav-link active" id="projects-tab" data-toggle="tab" href="#projects" role="tab"
-                       aria-controls="projects" aria-selected="true">Проекты</a>
+        <div class=" d-flex flex-items-center flex-justify-between" style="border: none;">
+            <h2 class="">Мои Проекты</h2>
+            <div class="d-flex">
+                <input type="text" id="projectSearchInput" placeholder="Поиск проектов..." oninput="filterProjects()" class="form-control input-sm" style="border: 1px solid #d1d5da; border-radius: 6px;">
+                <a th:href="@{/projects/userProfile/new}" class="btn-custom ml-3" style="border: none;">
+                    <i class='bx bx-plus'></i>
+                </a>
+            </div>
+        </div>
+        <ul class="list-style-none mt-3">
+            <th:block th:each="project : ${projects}">
+                <li class="Box-row project-item p-3 mb-3" style="border: 1px solid #d1d5da; border-radius: 6px;" th:data-project-id="${project.id}">
+                    <div class="d-flex flex-items-center flex-justify-between">
+                        <strong class="f4" style="color: #000000;" th:text="${project.name}"></strong>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline btn-open"><i class='bx bx-folder-open'></i></button>
+                            <button class="btn btn-sm btn-outline btn-info"><i class='bx bx-info-circle'></i></button>
+                            <form th:action="@{/projects/delete/{id}(id=${project.id})}" method="post" style="display: inline;" onsubmit="return confirm('Вы действительно хотите удалить проект?');">
+                                <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+                                <button type="submit" class="btn btn-sm btn-danger"><i class='bx bx-trash'></i></button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="project-details mt-2" style="display: none;">
+                        <p><strong>Имя проекта:</strong> <span th:text="${project.name}"></span></p>
+                        <p><strong>ReadMe:</strong> <span th:text="${project.readMe}"></span></p>
+                        <p><strong>Язык:</strong> <span th:text="${project.language}"></span></p>
+                        <a th:href="@{/projects/edit/{id}(id=${project.id})}" class="btn btn-outline btn-sm mt-2">Редактировать</a>
+                    </div>
                 </li>
             </th:block>
         </ul>
-        <div class="tab-content" id="projectTabsContent">
-            <!-- Вкладка "Мои Проекты" -->
-            <th:block th:if="${isOwnProfile}">
-                <div class="tab-pane fade show active" id="my-projects" role="tabpanel" aria-labelledby="my-projects-tab">
-                    <div class="projects-header">
-                        <h2>Мои Проекты</h2>
-                        <a th:if="${isOwnProfile}" th:href="@{/projects/userProfile/new}" class="add-btn">
-                            <i class='bx bx-plus'></i>
-                        </a>
-                    </div>
-                    <ul class="project-list">
-                        <th:block th:each="project : ${projects}">
-                            <li class="project-item" th:data-project-id="${project.id}">
-                                <!-- Заголовок проекта -->
-                                <div class="project-header">
-                                    <span class="project-name" th:text="${project.name}">Project Name</span>
-                                    <div class="project-actions">
-                                        <!-- Кнопка "Open" для перехода к проекту -->
-                                        <button class="btn-open">Open</button>
-                                        <!-- Кнопка информации -->
-                                        <button class="btn-info">
-                                            <i class='bx bx-info-circle'></i>
-                                        </button>
-                                        <!-- Кнопки "Редактировать" и "Удалить" видны только владельцу профиля -->
-                                        <th:block th:if="${isOwnProfile}">
-                                            <a th:href="@{/projects/edit/{id}(id=${project.id})}" class="btn-edit">Edit</a>
-                                            <form th:action="@{/projects/delete/{id}(id=${project.id})}" method="post" style="display: inline;"
-                                                  onsubmit="return confirm('Вы действительно хотите удалить проект?');">
-                                                <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
-                                                <button type="submit" class="btn-delete">Delete</button>
-                                            </form>
-                                        </th:block>
-                                    </div>
-                                </div>
-                                <!-- Раскрывающееся окно с информацией о проекте -->
-                                <div class="project-details">
-                                    <p><strong>Имя проекта:</strong> <span th:text="${project.name}">Имя проекта</span></p>
-                                    <p><strong>Доступ:</strong> <span th:text="${project.accessLevel}">Доступ</span></p>
-                                    <p><strong>Язык:</strong> <span th:text="${project.language}">Язык</span></p>
-                                    <p><strong>ReadMe:</strong> <span th:text="${project.readMe}">ReadMe</span></p>
-                                    <!-- Кнопки внизу -->
-                                    <div class="project-details-actions">
-                                        <!-- Здесь уже нет выпадающего меню "О проекте" -->
-                                        <!-- Если нужно, можно добавить дополнительные действия -->
-                                    </div>
-                                </div>
-                            </li>
-                        </th:block>
-                    </ul>
-                </div>
-
-                <!-- Вкладка "Проекты друзей" -->
-                <div class="tab-pane fade" id="friends-projects" role="tabpanel" aria-labelledby="friends-projects-tab">
-                    <div class="projects-header">
-                        <h2>Проекты друзей</h2>
-                        <!-- Кнопка добавления проекта не отображается для чужого профиля -->
-                    </div>
-                    <ul class="project-list">
-                        <th:block th:each="project : ${friendsProjects}">
-                            <li class="project-item" th:data-project-id="${project.id}">
-                                <!-- Заголовок проекта -->
-                                <div class="project-header">
-                                    <span class="project-name" th:text="${project.name}">Project Name</span>
-                                    <div class="project-actions">
-                                        <!-- Кнопка "Open" для перехода к проекту -->
-                                        <button class="btn-open">Open</button>
-                                        <!-- Кнопка информации -->
-                                        <button class="btn-info">
-                                            <i class='bx bx-info-circle'></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <!-- Раскрывающееся окно с информацией о проекте -->
-                                <div class="project-details">
-                                    <p><strong>Имя проекта:</strong> <span th:text="${project.name}">Имя проекта</span></p>
-                                    <p><strong>Доступ:</strong> <span th:text="${project.accessLevel}">Доступ</span></p>
-                                    <p><strong>Язык:</strong> <span th:text="${project.language}">Язык</span></p>
-                                    <p><strong>ReadMe:</strong> <span th:text="${project.readMe}">ReadMe</span></p>
-                                    <!-- Кнопки внизу -->
-                                    <div class="project-details-actions">
-                                        <!-- Кнопки "Редактировать" и "Удалить" отсутствуют, так как доступно только для собственных проектов -->
-                                    </div>
-                                </div>
-                            </li>
-                        </th:block>
-                    </ul>
-            </th:block>
-
-            <!-- Вкладка "Проекты" для чужого профиля -->
-            <th:block th:if="${!isOwnProfile}">
-                <div class="tab-pane fade show active" id="projects" role="tabpanel" aria-labelledby="projects-tab">
-                    <div class="projects-header">
-                        <h2>Проекты</h2>
-                        <!-- Кнопка добавления проекта не отображается для чужого профиля -->
-                    </div>
-                    <ul class="project-list">
-                        <th:block th:each="project : ${projects}">
-                            <li class="project-item" th:data-project-id="${project.id}">
-                                <!-- Заголовок проекта -->
-                                <div class="project-header">
-                                    <span class="project-name" th:text="${project.name}">Project Name</span>
-                                    <div class="project-actions">
-                                        <!-- Кнопка "Open" для перехода к проекту -->
-                                        <button class="btn-open">Open</button>
-                                        <!-- Кнопка информации -->
-                                        <button class="btn-info">
-                                            <i class='bx bx-info-circle'></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <!-- Раскрывающееся окно с информацией о проекте -->
-                                <div class="project-details">
-                                    <p><strong>Имя проекта:</strong> <span th:text="${project.name}">Имя проекта</span></p>
-                                    <p><strong>Доступ:</strong> <span th:text="${project.accessLevel}">Доступ</span></p>
-                                    <p><strong>Язык:</strong> <span th:text="${project.language}">Язык</span></p>
-                                    <p><strong>ReadMe:</strong> <span th:text="${project.readMe}">ReadMe</span></p>
-                                    <!-- Кнопки внизу -->
-                                    <div class="project-details-actions">
-                                        <!-- Кнопки "Редактировать" и "Удалить" отсутствуют -->
-                                    </div>
-                                </div>
-                            </li>
-                        </th:block>
-                    </ul>
-                </div>
-            </th:block>
-            </th:block>
-        </div>
     </div>
 </div>
 
@@ -708,19 +228,15 @@
 <div class="settings-menu" id="settingsMenu">
     <a th:href="@{/edit/{id}(id=${client.id})}">Редактировать профиль</a>
     <form th:action="@{/logout}" th:method="POST">
-        <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
-        <button type="submit" class="edit-profile-btn">Выход</button>
+        <input type="submit" value="Выход" class="edit-profile-btn" />
     </form>
 </div>
 
 <!-- Overlay -->
 <div class="overlay" id="overlay"></div>
 
-<!-- Подключение jQuery и Bootstrap JS -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script>
-    // Код для меню настроек
+    // Существующий код для меню настроек
     const settingsBtn = document.querySelector('.settings-btn');
     const settingsMenu = document.getElementById('settingsMenu');
     const overlay = document.getElementById('overlay');
@@ -747,132 +263,17 @@
         });
     });
 
-    // Код для обработки кнопки "Open"
-    document.addEventListener('DOMContentLoaded', function () {
-        const openButtons = document.querySelectorAll('.btn-open');
-
-        openButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const projectItem = button.closest('.project-item');
-                const projectId = projectItem.getAttribute('data-project-id');
-
-                if (projectId) {
-                    // Переход на страницу проекта
-                    window.location.href = `/Compiler/project/${projectId}`;
-                } else {
-                    console.error("Project ID не найден");
-                }
-            });
+    function filterProjects() {
+        const searchInput = document.getElementById('projectSearchInput').value.toLowerCase();
+        const projectItems = document.querySelectorAll('.project-item');
+        projectItems.forEach(item => {
+            const projectName = item.querySelector('strong').textContent.toLowerCase();
+            if (projectName.includes(searchInput)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
         });
-    });
-
-    // Код для матричной анимации с оптимизацией
-    const matrixContainer = document.getElementById('matrixContainer');
-    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-
-    let matrixInterval = setInterval(createMatrixSpan, 200); // Уменьшена частота до 200 мс
-
-    function createMatrixSpan() {
-        const span = document.createElement('span');
-        // Генерируем только один символ для каждого span
-        const char = characters.charAt(Math.floor(Math.random() * characters.length));
-        span.textContent = char;
-
-        // Случайное расположение по оси X
-        span.style.left = Math.floor(Math.random() * window.innerWidth) + 'px';
-        // Установка случайной продолжительности анимации
-        span.style.animationDuration = (Math.random() * 3 + 2) + 's';
-        // Установка случайного размера шрифта
-        span.style.fontSize = (Math.floor(Math.random() * 12) + 12) + 'px';
-        // Установка случайной прозрачности
-        span.style.opacity = Math.random() * 0.3 + 0.5; // Изменено для большей яркости
-
-        matrixContainer.appendChild(span);
-
-        // Удаление span после завершения анимации
-        span.addEventListener('animationend', () => {
-            matrixContainer.removeChild(span);
-        });
-
-        // Ограничение количества активных символов
-        const maxSymbols = 500;
-        if (matrixContainer.childElementCount > maxSymbols) {
-            // Удаляем самый первый символ
-            matrixContainer.removeChild(matrixContainer.firstChild);
-        }
-    }
-
-    // Новая функция для загрузки уведомлений
-    function fetchNotifications() {
-        fetch('/friends/notifications')
-            .then(response => response.json())
-            .then(data => {
-                const notificationsList = document.getElementById('notificationsList');
-                if (notificationsList) { // Проверяем, существует ли элемент
-                    notificationsList.innerHTML = '';
-                    data.forEach(notification => {
-                        const li = document.createElement('li');
-
-                        // Создаем блок с информацией об уведомлении
-                        const infoDiv = document.createElement('div');
-                        infoDiv.classList.add('notification-info');
-                        infoDiv.innerHTML = `<span>${notification.senderUsername} отправил вам запрос на дружбу.</span>`;
-
-                        // Создаем блок с кнопками
-                        const buttonsDiv = document.createElement('div');
-                        buttonsDiv.classList.add('notification-buttons');
-
-                        // Кнопка "Принять"
-                        const acceptButton = document.createElement('button');
-                        acceptButton.classList.add('btn-accept');
-                        acceptButton.textContent = 'Принять';
-                        acceptButton.addEventListener('click', () => {
-                            acceptFriendRequest(notification.requestId, li);
-                        });
-
-                        // Кнопка "Отклонить"
-                        const rejectButton = document.createElement('button');
-                        rejectButton.classList.add('btn-reject');
-                        rejectButton.textContent = 'Отклонить';
-                        rejectButton.addEventListener('click', () => {
-                            rejectFriendRequest(notification.requestId, li);
-                        });
-
-                        buttonsDiv.appendChild(acceptButton);
-                        buttonsDiv.appendChild(rejectButton);
-
-                        li.appendChild(infoDiv);
-                        li.appendChild(buttonsDiv);
-
-                        notificationsList.appendChild(li);
-                    });
-                }
-            })
-            .catch(error => console.error('Ошибка при загрузке уведомлений:', error));
-    }
-
-    // Функция для принятия запроса на дружбу
-    function acceptFriendRequest(requestId, listItem) {
-        fetch('/friends/acceptRequest', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRF-TOKEN': getCsrfToken()
-            },
-            body: `requestId=${requestId}`
-        })
-            .then(response => response.text())
-            .then(data => {
-                if (data === 'success') {
-                    // Удаляем уведомление из списка
-                    listItem.remove();
-                    alert('Запрос на дружбу принят.');
-                } else {
-                    alert('Ошибка: ' + data);
-                }
-            })
-            .catch(error => console.error('Ошибка при принятии запроса на дружбу:', error));
     }
 
     // Функция для отклонения запроса на дружбу
@@ -890,12 +291,12 @@
                 if (data === 'success') {
                     // Удаляем уведомление из списка
                     listItem.remove();
-                    alert('Запрос на дружбу отклонён.');
+                    alert('Friend request rejected.');
                 } else {
-                    alert('Ошибка: ' + data);
+                    alert('Error: ' + data);
                 }
             })
-            .catch(error => console.error('Ошибка при отклонении запроса на дружбу:', error));
+            .catch(error => console.error('Error rejecting friend request:', error));
     }
 
     // Функция для получения CSRF токена из скрытого поля

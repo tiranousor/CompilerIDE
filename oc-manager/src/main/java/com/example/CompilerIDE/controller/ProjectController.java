@@ -1,11 +1,12 @@
 package com.example.CompilerIDE.controller;
 
-import com.example.CompilerIDE.Dto.FileNodeDto;
-import com.example.CompilerIDE.Dto.SaveProjectRequest;
+import com.example.CompilerIDE.dto.FileNodeDto;
+import com.example.CompilerIDE.dto.SaveProjectRequest;
 import com.example.CompilerIDE.providers.*;
 import com.example.CompilerIDE.repositories.ProjectAccessLogRepository;
 import com.example.CompilerIDE.repositories.ProjectStructRepository;
 import com.example.CompilerIDE.services.*;
+import com.example.CompilerIDE.util.FileUploadUtil;
 import com.example.CompilerIDE.util.ProjectValidator;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -15,7 +16,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.*; // Изменено
@@ -31,14 +34,14 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
-@Controller // Изменено с @Controller на @RestController
-@RequestMapping("/projects") // Добавлено
+@Controller
+@RequestMapping("/projects")
 public class ProjectController {
     private final ProjectInvitationService projectInvitationService;
     private final ProjectService projectService;
     private final ClientService clientService;
     private final CompilationService compilationService;
-    private final MinioService minioService; // Добавлено
+    private final MinioService minioService;
     private final ProjectStructRepository projectStructRepository;
     private final ProjectTeamService projectTeamService;
     private final ProjectValidator projectValidator;
@@ -46,17 +49,17 @@ public class ProjectController {
     private final ProjectAccessLogRepository projectAccessLogRepository;
     private static final Logger logger = LoggerFactory.getLogger(ProjectService.class);
     @Value("${minio.bucket-name}")
-    private String bucketName; // Убедитесь, что бакет создан
+    private String bucketName;
 
     public ProjectController(ProjectInvitationService projectInvitationService, ProjectService projectService,
                              ClientService clientService,
                              CompilationService compilationService,
                              MinioService minioService, ProjectStructRepository projectStructRepository, ProjectTeamService projectTeamService, ProjectValidator projectValidator, ProjectAccessLogRepository projectAccessLogRepository) {
-        this.projectInvitationService = projectInvitationService; // Добавлено
+        this.projectInvitationService = projectInvitationService;
         this.projectService = projectService;
         this.clientService = clientService;
         this.compilationService = compilationService;
-        this.minioService = minioService; // Добавлено
+        this.minioService = minioService;
         this.projectStructRepository = projectStructRepository;
         this.projectTeamService = projectTeamService;
         this.projectValidator = projectValidator;
@@ -90,7 +93,7 @@ public class ProjectController {
         model.addAttribute("isOwner", isOwner);
         model.addAttribute("isCollaborator", isCollaborator);
 
-        return "projectInfo"; // Убедитесь, что у вас есть соответствующий шаблон
+        return "projectInfo";
     }
     @GetMapping("/userProfile/new")
     public String newProjectForm(Authentication authentication, Model model) {
@@ -109,13 +112,21 @@ public class ProjectController {
             return "new_project_form";
         }
         projectService.save(project);
+        if (project.getRefGit() != null && !project.getRefGit().isEmpty()) {
+            try {
+                projectService.importFromGit(project);
+            } catch (Exception e) {
+                logger.error("Ошибка при импорте проекта из Git: {}", e.getMessage());
+                projectService.delete(project);
+                bindingResult.rejectValue("refGit", "error.refGit", "Не удалось импортировать проект из Git: " + e.getMessage());
+                return "new_project_form";
+            }
+        }
         projectTeamService.addCreator(project, clientService.getClient(authentication.getName()).get());
         return "redirect:/userProfile";
     }
 
-
-    // Delete a project
-    @PostMapping("/userProfile/delete/{id}")
+    @PostMapping("/delete/{id}")
     public String deleteProject(@PathVariable("id") int projectId, Authentication authentication) {
         Client client = clientService.findByUsername(authentication.getName()).get();
         Optional<Project> projectToDelete = projectService.findById(projectId);
@@ -140,20 +151,16 @@ public String editProjectForm(@PathVariable("id") int projectId, Model model, Au
     Optional<Project> projectOpt = projectService.findById(projectId);
     if (projectOpt.isPresent()) {
         Project project = projectOpt.get();
-
-        // Проверяем, принадлежит ли проект текущему пользователю
         if (project.getClient().getId().equals(client.getId())) {
-
-            // Записываем информацию о том, что проект был открыт
             ProjectAccessLog accessLog = new ProjectAccessLog();
             accessLog.setClient(client);
             accessLog.setProject(project);
-            accessLog.setAccessTime(new Timestamp(System.currentTimeMillis()));  // Текущее время
+            accessLog.setAccessTime(new Timestamp(System.currentTimeMillis()));
             accessLog.setActionType("open");
             projectAccessLogRepository.save(accessLog);
 
             model.addAttribute("project", project);
-            return "edit_project_form"; // Страница редактирования проекта
+            return "edit_project_form";
         } else {
             return "redirect:/userProfile";
         }

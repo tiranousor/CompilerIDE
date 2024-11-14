@@ -17,11 +17,9 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
-        // Получаем объект ClientDetails
         ClientDetails clientDetails = (ClientDetails) authentication.getPrincipal();
         Client client = clientDetails.getClient();
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        // Получаем список ролей
         String roles = authorities.stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
@@ -32,7 +30,6 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         } else if (roles.contains("ROLE_USER")) {
             response.sendRedirect("/userProfile/" + client.getId());
         } else {
-            // В случае отсутствия подходящей роли можно направить на страницу ошибки
             response.sendRedirect("/login?error");
         }
     }

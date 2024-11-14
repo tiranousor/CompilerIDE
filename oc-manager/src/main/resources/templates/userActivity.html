@@ -1,23 +1,243 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Activity</title>
+    <title>User Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
+    <style th:inline="css">
+        * {
+            font-family: 'VT323', monospace;
+        }
+
+        .profile-avatar {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 20px;
+            box-shadow: 0 0 25px rgba(255, 234, 0, 0.2), 0 0 50px rgba(142, 197, 252, 0.3);
+        }
+
+        .friend-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            box-shadow: 0 0 25px rgba(255, 234, 0, 0.2), 0 0 50px rgba(142, 197, 252, 0.3);
+            object-fit: cover;
+        }
+
+        .btn-custom {
+            background-color: transparent;
+            padding: 5px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-custom:hover {
+            background-color: #f6f8fa;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 20px;
+            background-color: #f6f8fa;
+            border-bottom: 1px solid #d1d5da;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 900;
+            box-sizing: border-box;
+        }
+
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .header .actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header .actions a {
+            display: flex;
+            align-items: center;
+            color: #24292e;
+            text-decoration: none;
+            font-size: 24px;
+            transition: color 0.3s ease;
+        }
+
+        .header .actions a:hover {
+            color: #0366d6;
+        }
+
+        .header .actions .icon {
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .Box {
+            box-shadow: none;
+            border: none;
+        }
+
+        .main-container {
+            margin-top: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 0 20px;
+            box-sizing: border-box;
+            width: 100%;
+            gap: 40px;
+        }
+
+        .profile-info-container {
+            width: 35%;
+            max-width: 400px;
+            padding: 20px;
+            background-color: #ffffff;
+            text-align: center;
+        }
+
+        .projects-container {
+            width: 60%;
+            padding: 20px;
+            background-color: #ffffff;
+        }
+
+        .btn-link {
+            background: none;
+            color: #0366d6;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 0;
+            font-size: 1em;
+        }
+
+        .profile-info-container .profile-avatar {
+            align-self: center;
+        }
+
+        .d-flex.gap-2 > button {
+            margin-right: 10px;
+        }
+    </style>
 </head>
-<body>
-<h1>История входов</h1>
-<table>
-    <thead>
-    <tr>
-        <th>Дата и время входа</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="loginTime : ${loginTimes}">
-        <td th:text="${#dates.format(loginTime, 'dd-MM-yyyy HH:mm:ss')}"></td>
-    </tr>
-    </tbody>
-</table>
+
+<body class="Box p-3">
+<div class="header">
+    <div class="user-info">
+        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar">
+        <span class="username" th:text="${client.username}"></span>
+    </div>
+    <div class="actions">
+        <a th:href="@{/edit/{id}(id=${client.id})}"><i class='bx bx-user'></i></a>
+        <a th:href="@{/logout}" th:method="POST"><i class='bx bx-log-out'></i></a>
+    </div>
+</div>
+<input type="hidden" id="csrfToken" name="_csrf" th:value="${_csrf.token}" />
+<div class="main-container clearfix gutter-lg">
+    <div class="profile-info-container d-flex flex-column align-items-center">
+        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="profile-avatar">
+        <div class="profile-info text-center mt-2">
+            <h2 th:text="${client.username}"></h2>
+            <p class="color-fg-muted" th:text="${client.email}"></p>
+            <a th:href="${client.githubProfile}" class="Link--primary" target="_blank">GitHub Профиль</a>
+            <p class="color-fg-default mt-3" th:text="${client.about}"></p>
+        </div>
+        <div class="mt-3">
+            <a th:href="@{/friends/list}" class="btn-link">Друзья</a>
+        </div>
+        <div class="friends-list d-flex flex-wrap justify-content-center mt-3">
+            <th:block th:each="friend, iterStat : ${friends}">
+                <th:block th:if="${iterStat.index < 4}">
+                    <div class="d-flex flex-column align-items-center m-2">
+                        <a th:href="@{/friends/{id}(id=${friend.id})}">
+                            <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar" class="friend-avatar">
+                            <span th:text="${friend.username}" class="Link--secondary"></span>
+                        </a>
+                    </div>
+                </th:block>
+            </th:block>
+        </div>
+    </div>
+    <div class="projects-container">
+        <div class="d-flex flex-items-center flex-justify-between" style="border: none;">
+            <h2 class="">Мои Проекты</h2>
+            <div class="d-flex">
+                <input type="text" id="projectSearchInput" placeholder="Поиск проектов..." oninput="filterProjects()" class="form-control input-sm" style="border: 1px solid #d1d5da; border-radius: 6px;">
+                <a th:href="@{/projects/userProfile/new}" class="btn-custom ml-3" style="border: none;">
+                    <i class='bx bx-plus'></i>
+                </a>
+            </div>
+        </div>
+        <ul class="list-style-none mt-3">
+            <th:block th:each="project : ${projects}">
+                <li class="Box-row project-item p-3 mb-3" style="border: 1px solid #d1d5da; border-radius: 6px;" th:data-project-id="${project.id}">
+                    <div class="d-flex flex-items-center flex-justify-between">
+                        <strong class="f4" style="color: #000000;" th:text="${project.name}"></strong>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline btn-open"><i class='bx bx-folder-open'></i></button>
+                            <button class="btn btn-sm btn-outline btn-info"><i class='bx bx-info-circle'></i></button>
+                            <form th:action="@{/projects/delete/{id}(id=${project.id})}" method="post" style="display: inline;" onsubmit="return confirm('Вы действительно хотите удалить проект?');">
+                                <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+                                <button type="submit" class="btn btn-sm btn-danger"><i class='bx bx-trash'></i></button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="project-details mt-2" style="display: none;">
+                        <p><strong>Имя проекта:</strong> <span th:text="${project.name}"></span></p>
+                        <p><strong>ReadMe:</strong> <span th:text="${project.readMe}"></span></p>
+                        <p><strong>Язык:</strong> <span th:text="${project.language}"></span></p>
+                        <a th:href="@{/projects/edit/{id}(id=${project.id})}" class="btn btn-outline btn-sm mt-2">Редактировать</a>
+                    </div>
+                </li>
+            </th:block>
+        </ul>
+    </div>
+</div>
+<script>
+    const infoButtons = document.querySelectorAll('.btn-info');
+    infoButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const projectItem = button.closest('.project-item');
+            const projectDetails = projectItem.querySelector('.project-details');
+            projectDetails.style.display = (projectDetails.style.display === 'none' || projectDetails.style.display === '') ? 'block' : 'none';
+        });
+    });
+
+    function filterProjects() {
+        const searchInput = document.getElementById('projectSearchInput').value.toLowerCase();
+        const projectItems = document.querySelectorAll('.project-item');
+        projectItems.forEach(item => {
+            const projectName = item.querySelector('strong').textContent.toLowerCase();
+            if (projectName.includes(searchInput)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+</script>
 </body>
+
 </html>

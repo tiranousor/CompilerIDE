@@ -1,6 +1,6 @@
 package com.example.CompilerIDE.controller;
 
-import com.example.CompilerIDE.Dto.CompileRequest;
+import com.example.CompilerIDE.dto.CompileRequest;
 import com.example.CompilerIDE.services.CodeCompilationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

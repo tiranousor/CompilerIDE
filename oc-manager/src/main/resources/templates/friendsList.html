@@ -4,63 +4,164 @@
     <meta charset="UTF-8">
     <title>Friends & Requests</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
-        /* General styles */
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'VT323', monospace;
+        }
+
         body {
-            font-family: 'Montserrat', sans-serif;
-            background: linear-gradient(70deg, #8EC5FC, #E0C3FC);
-            padding: 20px;
+            background: #000000;
+            color: #FFC300;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
         }
+
+        .matrix {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .matrix span {
+            position: absolute;
+            top: -10vh;
+            font-size: 18px;
+            color: #FFC300;
+            opacity: 0.8;
+            animation: fall 10s linear infinite;
+            white-space: pre;
+        }
+
+        @keyframes fall {
+            0% { top: -10vh; opacity: 0; }
+            20% { opacity: 1; }
+            100% { top: 110vh; opacity: 0; }
+        }
+
         .container {
+            background-color: rgba(0, 0, 0, 0.9);
+            border: 3px solid #FFC300;
+            border-radius: 25px;
+            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
+            width: 100%;
             max-width: 800px;
-            margin: 0 auto;
-            background-color: #FFFFFF;
-            border-radius: 15px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
             padding: 30px;
+            overflow-y: auto;
         }
+
         h1, h2 {
             text-align: center;
-            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+            color: #FFC300;
         }
+
         .section {
             margin-bottom: 30px;
         }
+
         ul {
             list-style: none;
             padding: 0;
         }
+
         li {
             display: flex;
             align-items: center;
             gap: 15px;
             padding: 10px;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid #333;
         }
+
         li:last-child {
             border-bottom: none;
         }
+
         img {
             width: 50px;
             height: 50px;
             border-radius: 50%;
             object-fit: cover;
+            border: 2px solid #FFC300;
         }
+
         button {
+            background-color: transparent;
+            border: 2px solid #FFC300;
+            color: #FFC300;
+            padding: 5px 10px;
+            border-radius: 5px;
             cursor: pointer;
+            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
         }
+
+        button:hover {
+            background-color: #FFC300;
+            color: #000000;
+            box-shadow: 0 0 10px rgba(255, 234, 0, 0.6);
+        }
+
         .search-form {
             text-align: center;
             margin-bottom: 20px;
         }
+
+        .search-form input {
+            background-color: #333;
+            border: 2px solid #FFC300;
+            color: #FFC300;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            width: 90%;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .search-form input:focus {
+            border-color: #17A846;
+            box-shadow: 0 0 10px rgba(23, 168, 70, 0.6);
+        }
+
+        .search-form button {
+            margin-left: 10px;
+        }
+
+        .friend-username {
+            color: #E0E0E0;
+            font-size: 20px;
+            text-decoration: none;
+        }
+
+        .friend-username:hover {
+            color: #FFC300;
+        }
     </style>
 </head>
 <body>
+<div class="matrix" id="matrixContainer"></div>
+
 <div class="container">
     <h1>Friends & Requests</h1>
 
-    <!-- Friend Requests Section -->
-    <div class="section">
+    <!-- Friend Requests Section (Only show if there are requests) -->
+    <div class="section" th:if="${receivedRequests != null && !receivedRequests.isEmpty()}">
         <h2>Incoming Friend Requests</h2>
         <div th:if="${error}" style="color: red;">
             <p th:text="${error}"></p>
@@ -72,7 +173,7 @@
             <th:block th:each="request : ${receivedRequests}">
                 <li>
                     <img th:src="${request.sender.avatarUrl != null ? request.sender.avatarUrl : '/noAvatar.png'}" alt="Avatar">
-                    <span th:text="${request.sender.username}">Username</span>
+                    <span class="friend-username" th:text="${request.sender.username}">Username</span>
                     <form th:action="@{/friends/acceptRequest/{requestId}(requestId=${request.id})}" method="post" style="display: inline;">
                         <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
                         <button type="submit">Accept</button>
@@ -97,7 +198,7 @@
             <th:block th:each="user : ${users}">
                 <li>
                     <img th:src="${user.avatarUrl != null ? user.avatarUrl : '/noAvatar.png'}" alt="Avatar">
-                    <span th:text="${user.username}">Username</span>
+                    <span class="friend-username" th:text="${user.username}">Username</span>
                     <form th:action="@{/friends/sendRequest/{receiverId}(receiverId=${user.id})}" method="post" style="display: inline;">
                         <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
                         <button type="submit">Add Friend</button>
@@ -114,11 +215,31 @@
             <th:block th:each="friend : ${friends}">
                 <li>
                     <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar">
-                    <a th:href="@{/userProfile/{id}(id=${friend.id})}" th:text="${friend.username}">Friend Username</a>
+                    <a class="friend-username" th:href="@{/userProfile/{id}(id=${friend.id})}" th:text="${friend.username}">Friend Username</a>
                 </li>
             </th:block>
         </ul>
     </div>
 </div>
+
+<script>
+    // Matrix Animation
+    const matrixContainer = document.getElementById('matrixContainer');
+    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+    function createMatrixSpan() {
+        const span = document.createElement('span');
+        span.textContent = characters.charAt(Math.floor(Math.random() * characters.length));
+        span.style.left = Math.random() * 100 + 'vw';
+        span.style.animationDuration = Math.random() * 5 + 5 + 's';
+        span.style.opacity = Math.random() * 0.5 + 0.5;
+        matrixContainer.appendChild(span);
+        setTimeout(() => {
+            matrixContainer.removeChild(span);
+        }, 10000);
+    }
+
+    setInterval(createMatrixSpan, 150);
+</script>
 </body>
 </html>

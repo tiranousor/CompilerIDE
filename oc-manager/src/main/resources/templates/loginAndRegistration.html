@@ -1,24 +1,22 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <title>Retro Login & Register Page</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Press Start 2P', cursive;
+            font-family: 'VT323', monospace; /* Apply the VT323 font */
         }
 
         body {
             background: #000000;
-            color: #FFEA00;
+            color: #FFC300;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -30,33 +28,41 @@
 
         .container {
             background-color: rgba(0, 0, 0, 0.9);
-            border: 3px solid #FFEA00;
+            border: 3px solid #FFC300;
             border-radius: 25px;
             box-shadow: 0 6px 15px rgba(255, 234, 0, 0.2);
             position: relative;
             overflow: hidden;
             width: 768px;
             max-width: 100%;
-            min-height: 480px;
-            padding: 20px;
+            min-height: 550px; /* Increased height */
+            padding: 40px; /* More padding for a spacious look */
+        }
+
+        .container h1 {
+            font-size: 32px; /* Larger font size for headings */
+            margin-bottom: 20px;
+        }
+
+        .container h3 {
+            font-size: 24px; /* Larger font size for subheadings */
         }
 
         .container p {
-            font-size: 12px;
-            line-height: 18px;
-            letter-spacing: 1px;
+            font-size: 16px; /* Increased font size for paragraphs */
+            line-height: 24px;
             margin: 15px 0;
-            color: #FFEA00;
+            color: #FFC300;
         }
 
         .container span {
-            font-size: 10px;
-            color: #FFEA00;
+            font-size: 14px; /* Increased font size for spans */
+            color: #FFC300;
         }
 
         .container a {
-            color: #FFEA00;
-            font-size: 13px;
+            color: #FFC300;
+            font-size: 16px; /* Increased font size for links */
             text-decoration: none;
             margin: 15px 0 10px;
             transition: color 0.3s;
@@ -67,10 +73,10 @@
         }
 
         .container button {
-            background-color: #FFEA00;
+            background-color: #FFC300;
             color: #000000;
-            font-size: 12px;
-            padding: 10px 35px;
+            font-size: 16px; /* Larger font size for buttons */
+            padding: 12px 40px; /* Larger padding for buttons */
             border: none;
             border-radius: 12px;
             font-weight: 600;
@@ -82,14 +88,14 @@
 
         .container button.hidden {
             background-color: transparent;
-            border: 2px solid #FFEA00;
-            color: #FFEA00;
-            padding: 10px 25px;
+            border: 2px solid #FFC300;
+            color: #FFC300;
+            padding: 12px 30px; /* Larger padding for hidden buttons */
             transition: background-color 0.3s, color 0.3s;
         }
 
         .container button.hidden:hover {
-            background-color: #FFEA00;
+            background-color: #FFC300;
             color: #000000;
         }
 
@@ -105,14 +111,14 @@
 
         .container input {
             background-color: #333333;
-            border: 2px solid #FFEA00;
+            border: 2px solid #FFC300;
             margin: 10px 0;
-            padding: 12px 20px;
-            font-size: 12px;
+            padding: 14px 20px; /* Larger padding for input fields */
+            font-size: 16px; /* Larger font size for input fields */
             border-radius: 10px;
             width: 100%;
             outline: none;
-            color: #FFEA00;
+            color: #FFC300;
             transition: border-color 0.3s;
         }
 
@@ -180,7 +186,7 @@
         }
 
         .toggle {
-            background-color: #FFEA00;
+            background-color: #FFC300;
             height: 100%;
             color: #000000;
             position: relative;
@@ -237,8 +243,8 @@
         .matrix span {
             position: absolute;
             top: -10vh;
-            font-size: 18px;
-            color: #FFEA00;
+            font-size: 24px; /* Larger font size for falling letters */
+            color: #FFC300;
             opacity: 0.8;
             animation: fall 10s linear infinite;
             white-space: pre;
@@ -267,7 +273,7 @@
     <div class="form-container sign-in">
         <form action="/process_login" method="post">
             <h1>Войти</h1>
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
             <span style="margin-top:20px;">Войти с помощью Логина и пароля</span>
             <input type="text" id="username" name="username" placeholder="Введите Логин" required>
             <input type="password" id="password" name="password" placeholder="Введите Пароль" required>
@@ -312,23 +318,15 @@
 
     function createMatrixSpan() {
         const span = document.createElement('span');
-        let trailLength = Math.floor(Math.random() * 5) + 5;  // Define length of the trail (5-10 characters)
-        let trailText = '';
-
-        for (let i = 0; i < trailLength; i++) {
-            trailText += characters.charAt(Math.floor(Math.random() * characters.length)) + '\n';
-        }
-
-        span.textContent = trailText;
+        span.textContent = characters.charAt(Math.floor(Math.random() * characters.length));
         span.style.left = Math.random() * 100 + 'vw';
         span.style.animationDuration = Math.random() * 5 + 5 + 's';
         span.style.opacity = Math.random() * 0.5 + 0.5;
-
         matrixContainer.appendChild(span);
 
         setTimeout(() => {
             matrixContainer.removeChild(span);
-        }, 10000); // Remove after animation completes
+        }, 10000);
     }
 
     setInterval(createMatrixSpan, 150);

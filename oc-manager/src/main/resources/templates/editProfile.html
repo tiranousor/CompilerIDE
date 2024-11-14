@@ -4,121 +4,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <title>Редактировать Аккаунт</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
-
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
+    <style th:inline="css">
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Roboto', sans-serif;
         }
 
-        body {
-                       background: linear-gradient(70deg, #8EC5FC, #E0C3FC);
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 20px;
+            background-color: #f6f8fa;
+            border-bottom: 1px solid #d1d5da;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 900;
+            box-sizing: border-box;
+        }
 
+        .header .user-info {
             display: flex;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
         }
 
-        .container {
-            background-color: #fff;
-            border-radius: 30px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        .header .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .main-container {
+            margin-top: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 0 20px;
+            box-sizing: border-box;
+            width: 100%;
+            gap: 40px;
+        }
+
+        .edit-container {
             width: 600px;
-            max-width: 100%;
+            max-width: 90%;
             padding: 30px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
 
         h1 {
-            font-size: 24px;
-            font-weight: 600;
+            font-size: 28px;
             margin-bottom: 20px;
+            color: #24292e;
+        }
+
+        #preview {
+            margin: 0 auto 10px;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 3px solid #d1d5da;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            object-fit: cover;
+            background-color: #f6f8fa;
+        }
+
+        .icon-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .file-upload-icon {
+            font-size: 40px;
+            color: #0366d6;
+            cursor: pointer;
+            transition: color 0.3s, transform 0.3s;
+        }
+
+        .file-upload-icon:hover {
+            color: #17A846;
+            transform: scale(1.1);
+        }
+
+        input[type="file"] {
+            display: none;
         }
 
         .form-control {
             width: 100%;
             padding: 10px;
-            font-size: 14px;
+            font-size: 16px;
             margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: #eee;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid #d1d5da;
+            border-radius: 6px;
+            background-color: #f6f8fa;
+            color: #24292e;
             outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
 
         .form-control:focus {
-            border-color: #1DB954;
+            border-color: #0366d6;
+            box-shadow: 0 0 10px rgba(3, 102, 214, 0.3);
         }
 
         .btn-primary {
-            background-color: #1DB954;
+            background-color: #0366d6;
             color: #fff;
             padding: 10px 45px;
-            border: 1px solid transparent;
-            border-radius: 8px;
+            border: none;
+            border-radius: 6px;
             font-weight: 600;
-            text-transform: uppercase;
             cursor: pointer;
-            margin-top: 20px;
+            text-transform: uppercase;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .btn-primary:hover {
+            background-color: #005bb5;
+            box-shadow: 0 0 15px rgba(0, 91, 181, 0.6);
         }
 
         .form-error {
-            color: red;
-            font-size: 12px;
-            margin-top: -5px;
-        }
-
-        p {
-            margin-bottom: 20px;
-        }
-
-        #preview {
-            margin: 0 auto 20px;
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-            object-fit: cover;
-            display: block;
+            color: #d73a49;
+            font-size: 14px;
+            margin-top: -10px;
+            margin-bottom: 10px;
+            text-align: left;
         }
     </style>
 </head>
 
-<body>
+<body class="p-3">
+<div class="header">
+    <div class="user-info">
+        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/static/noAvatar.png'}" alt="User Avatar">
+        <span class="username" th:text="${client.username}"></span>
+    </div>
+    <div class="actions">
+        <a th:href="@{/logout}" th:method="POST"><i class='bx bx-log-out'></i></a>
+    </div>
+</div>
 
-<div class="container">
-    <h1>Редактировать аккаунт</h1>
+<div class="main-container clearfix gutter-lg">
+    <div class="edit-container">
+        <h1>Редактировать Аккаунт</h1>
+        <img id="preview" th:src="${client.avatarUrl != null ? client.avatarUrl : '/static/noAvatar.png'}" alt=" "/>
 
-    <img id="preview" th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="Предпросмотр изображения"/>
+        <div class="icon-wrapper">
+            <label for="avatarFile">
+                <i class='bx bx-upload file-upload-icon'></i>
+            </label>
+        </div>
+        <input type="file" id="avatarFile" name="avatarFile" accept="image/*" onchange="previewImage(event)" />
 
-    <form th:action="@{/edit/{id}(id=${client.id})}" th:method="POST" th:object="${client}" enctype="multipart/form-data">
-        <input type="file" name="avatarFile" class="form-control" accept="image/*" onchange="previewImage(event)" />
-        <div class="form-error" th:if="${#fields.hasErrors('avatarUrl')}" th:errors="*{avatarUrl}"></div>
+        <form th:action="@{/edit/{id}(id=${client.id})}" th:method="POST" th:object="${client}" enctype="multipart/form-data">
+            <input type="file" name="avatarFile" class="form-control" accept="image/*" onchange="previewImage(event)" />
+            <div class="form-error" th:if="${#fields.hasErrors('avatarUrl')}" th:errors="*{avatarUrl}"></div>
 
-        <input type="text" class="form-control" th:field="*{username}" id="username" placeholder="Username" th:classappend="${#fields.hasErrors('username')} ? 'error' : 'form-control'"/>
-        <div class="form-error" th:if="${#fields.hasErrors('username')}" th:text="*{username}"></div>
+            <input type="text" class="form-control" th:field="*{username}" id="username" placeholder="Username" />
+            <div class="form-error" th:if="${#fields.hasErrors('username')}" th:text="*{username}"></div>
 
-        <input type="text" class="form-control" th:field="*{email}" id="email" placeholder="Email" th:classappend="${#fields.hasErrors('email')} ? 'error' : 'form-control'"/>
-        <div class="form-error" th:if="${#fields.hasErrors('email')}" th:text="*{email}"></div>
+            <input type="text" class="form-control" th:field="*{email}" id="email" placeholder="Email" />
+            <div class="form-error" th:if="${#fields.hasErrors('email')}" th:text="*{email}"></div>
 
-        <input type="text" class="form-control" th:field="*{githubProfile}" id="githubProfile" placeholder="GitHub URL" th:classappend="${#fields.hasErrors('githubProfile')} ? 'error' : 'form-control'"/>
-        <div class="form-error" th:if="${#fields.hasErrors('githubProfile')}" th:text="*{githubProfile}"></div>
+            <input type="text" class="form-control" th:field="*{githubProfile}" id="githubProfile" placeholder="GitHub URL" />
+            <div class="form-error" th:if="${#fields.hasErrors('githubProfile')}" th:text="*{githubProfile}"></div>
 
-        <input type="text" class="form-control" th:field="*{about}" id="about" placeholder="About" th:classappend="${#fields.hasErrors('about')} ? 'error' : 'form-control'"/>
-        <div class="form-error" th:if="${#fields.hasErrors('about')}" th:text="*{about}"></div>
+            <input type="text" class="form-control" th:field="*{about}" id="about" placeholder="About" />
+            <div class="form-error" th:if="${#fields.hasErrors('about')}" th:text="*{about}"></div>
+            <input type="hidden" th:field="*{password}" id="password" placeholder="New Password" th:classappend="${#fields.hasErrors('password')} ? 'error' : 'form-control'"/>
+            <div class="form-error" th:if="${#fields.hasErrors('password')}" th:text="*{password}"></div>
 
-        <input type="hidden" th:field="*{password}" id="password" placeholder="New Password" th:classappend="${#fields.hasErrors('password')} ? 'error' : 'form-control'"/>
-        <div class="form-error" th:if="${#fields.hasErrors('password')}" th:text="*{password}"></div>
+            <div>
+                <label for="backgroundColor"></label>
+                <input type="hidden" type="color" id="backgroundColor" th:field="*{backgroundColor}" class="form-control" />
+                <div class="form-error" th:if="${#fields.hasErrors('backgroundColor')}" th:errors="*{backgroundColor}"></div>
+            </div>
 
-        <button type="submit" class="btn-primary">Сохранить изменения</button>
-    </form>
+            <div>
+                <label for="mainColor"></label>
+                <input type="hidden" type="color" id="mainColor" th:field="*{mainColor}" class="form-control" />
+                <div class="form-error" th:if="${#fields.hasErrors('mainColor')}" th:errors="*{mainColor}"></div>
+            </div>
+
+            <button type="submit" class="btn-primary">Сохранить изменения</button>
+        </form>
+    </div>
 </div>
 
 <script>
@@ -137,7 +223,6 @@
         }
     }
 </script>
-
 </body>
 
 </html>
