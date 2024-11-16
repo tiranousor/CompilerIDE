@@ -1,243 +1,1175 @@
-<!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<!--<!DOCTYPE html>-->
+<!--<html lang="en" xmlns:th="http://www.thymeleaf.org">-->
 
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>User Profile</title>-->
+<!--    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">-->
+<!--    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>-->
+<!--    <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">-->
+<!--    <style th:inline="css">-->
+<!--        * {-->
+<!--            font-family: 'VT323', monospace;-->
+<!--        }-->
+
+<!--        .profile-avatar {-->
+<!--            width: 220px;-->
+<!--            height: 220px;-->
+<!--            border-radius: 50%;-->
+<!--            object-fit: cover;-->
+<!--            margin-bottom: 20px;-->
+<!--            box-shadow: 0 0 25px rgba(255, 234, 0, 0.2), 0 0 50px rgba(142, 197, 252, 0.3);-->
+<!--        }-->
+
+<!--        .friend-avatar {-->
+<!--            width: 50px;-->
+<!--            height: 50px;-->
+<!--            border-radius: 50%;-->
+<!--            box-shadow: 0 0 25px rgba(255, 234, 0, 0.2), 0 0 50px rgba(142, 197, 252, 0.3);-->
+<!--            object-fit: cover;-->
+<!--        }-->
+
+<!--        .btn-custom {-->
+<!--            background-color: transparent;-->
+<!--            padding: 5px;-->
+<!--            border-radius: 6px;-->
+<!--            cursor: pointer;-->
+<!--            transition: background-color 0.3s ease;-->
+<!--        }-->
+
+<!--        .btn-custom:hover {-->
+<!--            background-color: #f6f8fa;-->
+<!--        }-->
+
+<!--        .header {-->
+<!--            display: flex;-->
+<!--            justify-content: space-between;-->
+<!--            align-items: center;-->
+<!--            padding: 5px 20px;-->
+<!--            background-color: #f6f8fa;-->
+<!--            border-bottom: 1px solid #d1d5da;-->
+<!--            width: 100%;-->
+<!--            position: fixed;-->
+<!--            top: 0;-->
+<!--            left: 0;-->
+<!--            z-index: 900;-->
+<!--            box-sizing: border-box;-->
+<!--        }-->
+
+<!--        .header .user-info {-->
+<!--            display: flex;-->
+<!--            align-items: center;-->
+<!--        }-->
+
+<!--        .header .user-info img {-->
+<!--            width: 40px;-->
+<!--            height: 40px;-->
+<!--            border-radius: 50%;-->
+<!--            margin-right: 10px;-->
+<!--        }-->
+
+<!--        .header .actions {-->
+<!--            display: flex;-->
+<!--            align-items: center;-->
+<!--            gap: 15px;-->
+<!--        }-->
+
+<!--        .header .actions a {-->
+<!--            display: flex;-->
+<!--            align-items: center;-->
+<!--            color: #24292e;-->
+<!--            text-decoration: none;-->
+<!--            font-size: 24px;-->
+<!--            transition: color 0.3s ease;-->
+<!--        }-->
+
+<!--        .header .actions a:hover {-->
+<!--            color: #0366d6;-->
+<!--        }-->
+
+<!--        .header .actions .icon {-->
+<!--            font-size: 24px;-->
+<!--            cursor: pointer;-->
+<!--        }-->
+
+<!--        .Box {-->
+<!--            box-shadow: none;-->
+<!--            border: none;-->
+<!--        }-->
+
+<!--        .main-container {-->
+<!--            margin-top: 80px;-->
+<!--            display: flex;-->
+<!--            justify-content: center;-->
+<!--            align-items: flex-start;-->
+<!--            padding: 0 20px;-->
+<!--            box-sizing: border-box;-->
+<!--            width: 100%;-->
+<!--            gap: 40px;-->
+<!--        }-->
+
+<!--        .profile-info-container {-->
+<!--            width: 35%;-->
+<!--            max-width: 400px;-->
+<!--            padding: 20px;-->
+<!--            background-color: #ffffff;-->
+<!--            text-align: center;-->
+<!--        }-->
+
+<!--        .projects-container {-->
+<!--            width: 60%;-->
+<!--            padding: 20px;-->
+<!--            background-color: #ffffff;-->
+<!--        }-->
+
+<!--        .btn-link {-->
+<!--            background: none;-->
+<!--            color: #0366d6;-->
+<!--            text-decoration: underline;-->
+<!--            cursor: pointer;-->
+<!--            padding: 0;-->
+<!--            font-size: 1em;-->
+<!--        }-->
+
+<!--        .profile-info-container .profile-avatar {-->
+<!--            align-self: center;-->
+<!--        }-->
+
+<!--        .d-flex.gap-2 > button {-->
+<!--            margin-right: 10px;-->
+<!--        }-->
+<!--    </style>-->
+<!--</head>-->
+
+<!--<body class="Box p-3">-->
+<!--<div class="header">-->
+<!--    <div class="user-info">-->
+<!--        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar">-->
+<!--        <span class="username" th:text="${client.username}"></span>-->
+<!--    </div>-->
+<!--    <div class="actions">-->
+<!--        <a th:href="@{/edit/{id}(id=${client.id})}"><i class='bx bx-user'></i></a>-->
+<!--        <a th:href="@{/logout}" th:method="POST"><i class='bx bx-log-out'></i></a>-->
+<!--    </div>-->
+<!--</div>-->
+<!--<input type="hidden" id="csrfToken" name="_csrf" th:value="${_csrf.token}" />-->
+<!--<div class="main-container clearfix gutter-lg">-->
+<!--    <div class="profile-info-container d-flex flex-column align-items-center">-->
+<!--        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="profile-avatar">-->
+<!--        <div class="profile-info text-center mt-2">-->
+<!--            <h2 th:text="${client.username}"></h2>-->
+<!--            <p class="color-fg-muted" th:text="${client.email}"></p>-->
+<!--            <a th:href="${client.githubProfile}" class="Link&#45;&#45;primary" target="_blank">GitHub Профиль</a>-->
+<!--            <p class="color-fg-default mt-3" th:text="${client.about}"></p>-->
+<!--        </div>-->
+<!--        <div class="mt-3">-->
+<!--            <a th:href="@{/friends/list}" class="btn-link">Друзья</a>-->
+<!--        </div>-->
+<!--        <div class="friends-list d-flex flex-wrap justify-content-center mt-3">-->
+<!--            <th:block th:each="friend, iterStat : ${friends}">-->
+<!--                <th:block th:if="${iterStat.index < 4}">-->
+<!--                    <div class="d-flex flex-column align-items-center m-2">-->
+<!--                        <a th:href="@{/friends/{id}(id=${friend.id})}">-->
+<!--                            <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar" class="friend-avatar">-->
+<!--                            <span th:text="${friend.username}" class="Link&#45;&#45;secondary"></span>-->
+<!--                        </a>-->
+<!--                    </div>-->
+<!--                </th:block>-->
+<!--            </th:block>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--    <div class="projects-container">-->
+<!--        <div class="d-flex flex-items-center flex-justify-between" style="border: none;">-->
+<!--            <h2 class="">Мои Проекты</h2>-->
+<!--            <div class="d-flex">-->
+<!--                <input type="text" id="projectSearchInput" placeholder="Поиск проектов..." oninput="filterProjects()" class="form-control input-sm" style="border: 1px solid #d1d5da; border-radius: 6px;">-->
+<!--                <a th:href="@{/projects/userProfile/new}" class="btn-custom ml-3" style="border: none;">-->
+<!--                    <i class='bx bx-plus'></i>-->
+<!--                </a>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--        <ul class="list-style-none mt-3">-->
+<!--            <th:block th:each="project : ${projects}">-->
+<!--                <li class="Box-row project-item p-3 mb-3" style="border: 1px solid #d1d5da; border-radius: 6px;" th:data-project-id="${project.id}">-->
+<!--                    <div class="d-flex flex-items-center flex-justify-between">-->
+<!--                        <strong class="f4" style="color: #000000;" th:text="${project.name}"></strong>-->
+<!--                        <div class="d-flex gap-2">-->
+<!--                            <button class="btn btn-sm btn-outline btn-open"><i class='bx bx-folder-open'></i></button>-->
+<!--                            <button class="btn btn-sm btn-outline btn-info"><i class='bx bx-info-circle'></i></button>-->
+<!--                            <form th:action="@{/projects/delete/{id}(id=${project.id})}" method="post" style="display: inline;" onsubmit="return confirm('Вы действительно хотите удалить проект?');">-->
+<!--                                <input type="hidden" name="_csrf" th:value="${_csrf.token}" />-->
+<!--                                <button type="submit" class="btn btn-sm btn-danger"><i class='bx bx-trash'></i></button>-->
+<!--                            </form>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                    <div class="project-details mt-2" style="display: none;">-->
+<!--                        <p><strong>Имя проекта:</strong> <span th:text="${project.name}"></span></p>-->
+<!--                        <p><strong>ReadMe:</strong> <span th:text="${project.readMe}"></span></p>-->
+<!--                        <p><strong>Язык:</strong> <span th:text="${project.language}"></span></p>-->
+<!--                        <a th:href="@{/projects/edit/{id}(id=${project.id})}" class="btn btn-outline btn-sm mt-2">Редактировать</a>-->
+<!--                    </div>-->
+<!--                </li>-->
+<!--            </th:block>-->
+<!--        </ul>-->
+<!--    </div>-->
+<!--</div>-->
+<!--<script>-->
+<!--    const infoButtons = document.querySelectorAll('.btn-info');-->
+<!--    infoButtons.forEach(button => {-->
+<!--        button.addEventListener('click', (e) => {-->
+<!--            e.stopPropagation();-->
+<!--            const projectItem = button.closest('.project-item');-->
+<!--            const projectDetails = projectItem.querySelector('.project-details');-->
+<!--            projectDetails.style.display = (projectDetails.style.display === 'none' || projectDetails.style.display === '') ? 'block' : 'none';-->
+<!--        });-->
+<!--    });-->
+
+<!--    function filterProjects() {-->
+<!--        const searchInput = document.getElementById('projectSearchInput').value.toLowerCase();-->
+<!--        const projectItems = document.querySelectorAll('.project-item');-->
+<!--        projectItems.forEach(item => {-->
+<!--            const projectName = item.querySelector('strong').textContent.toLowerCase();-->
+<!--            if (projectName.includes(searchInput)) {-->
+<!--                item.style.display = '';-->
+<!--            } else {-->
+<!--                item.style.display = 'none';-->
+<!--            }-->
+<!--        });-->
+<!--    }-->
+<!--</script>-->
+<!--</body>-->
+
+<!--</html>-->
+<!DOCTYPE html>
+<html lang="en" xmlns:sec="http://www.w3.org/1999/xhtml" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile</title>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
-    <style th:inline="css">
-        * {
-            font-family: 'VT323', monospace;
+    <meta name="projectId" th:content="${projectId}">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <meta name="fileStructure" th:content="${fileStructure}">
+    <link rel="icon" href="/favicon.png" type="image/png">
+    <title>jsTree и Monaco Editor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
         }
 
-        .profile-avatar {
-            width: 220px;
-            height: 220px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 20px;
-            box-shadow: 0 0 25px rgba(255, 234, 0, 0.2), 0 0 50px rgba(142, 197, 252, 0.3);
-        }
-
-        .friend-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            box-shadow: 0 0 25px rgba(255, 234, 0, 0.2), 0 0 50px rgba(142, 197, 252, 0.3);
-            object-fit: cover;
-        }
-
-        .btn-custom {
-            background-color: transparent;
-            padding: 5px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .btn-custom:hover {
-            background-color: #f6f8fa;
-        }
-
-        .header {
+        #container {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 5px 20px;
-            background-color: #f6f8fa;
-            border-bottom: 1px solid #d1d5da;
+            height: 100%;
+            background-color: #282c34;
+        }
+
+        #sidebar {
+            width: 300px;
+            background: #21252b;
+            color: #ffffff;
+            overflow: hidden;
+            transition: width 0.3s ease;
+        }
+
+        #jstree {
+            overflow: auto;
+            height: calc(100% - 60px);
+            padding: 20px;
+            border-right: 1px solid #333;
+        }
+
+        #editor-container {
+            position: relative;
+            height: 100%;
+            flex-grow: 1;
+            transition: width 0.3s ease;
+        }
+
+        #editor {
             width: 100%;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 900;
-            box-sizing: border-box;
+            height: 100%;
         }
 
-        .header .user-info {
+        .icon-panel {
+            width: 60px;
+            background: #1f1f1f;
+            color: #fff;
             display: flex;
+            flex-direction: column;
             align-items: center;
+            padding-top: 15px;
+            border-right: 1px solid #333;
         }
 
-        .header .user-info img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-
-        .header .actions {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .header .actions a {
-            display: flex;
-            align-items: center;
-            color: #24292e;
-            text-decoration: none;
-            font-size: 24px;
-            transition: color 0.3s ease;
-        }
-
-        .header .actions a:hover {
-            color: #0366d6;
-        }
-
-        .header .actions .icon {
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        .Box {
-            box-shadow: none;
+        .icon-panel button {
+            background: none;
             border: none;
+            color: #fff;
+            margin: 10px 0;
+            cursor: pointer;
+            font-size: 24px;
+            transition: transform 0.2s, color 0.3s;
         }
 
-        .main-container {
-            margin-top: 80px;
+        .icon-panel button:hover {
+            transform: scale(1.1);
+            color: #61dafb;
+        }
+
+        .btn-primary-custom {
+            color: #fff;
+            background-color: #007bff;
+            border-color: #007bff;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .btn-primary-custom:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        #compile-output {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #2a2d3e;
+            padding: 15px;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            max-height: 200px;
+            overflow-y: auto;
+            border-top: 1px solid #333;
+        }
+
+        #compile-output h3 {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .code-explorer-heading {
+            text-align: center;
+            background: #333;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.1em;
+            border-bottom: 1px solid #444;
+        }
+
+        .btn-group {
             display: flex;
             justify-content: center;
-            align-items: flex-start;
-            padding: 0 20px;
-            box-sizing: border-box;
-            width: 100%;
-            gap: 40px;
+            padding: 10px;
+            background: #282c34;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
         }
 
-        .profile-info-container {
-            width: 35%;
-            max-width: 400px;
-            padding: 20px;
-            background-color: #ffffff;
-            text-align: center;
+        /* Стили для выделения строк с ошибками */
+        .line-decoration-error {
+            background-color: rgba(255, 0, 0, 0.3);
         }
-
-        .projects-container {
-            width: 60%;
-            padding: 20px;
-            background-color: #ffffff;
+        .glyph-margin-error {
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="16" width="16"><circle cx="8" cy="8" r="6" fill="red"/></svg>') no-repeat center center;
+            width: 16px;
+            height: 16px;
         }
-
-        .btn-link {
-            background: none;
-            color: #0366d6;
-            text-decoration: underline;
+        #compile-result ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        #compile-result li {
+            margin-bottom: 5px;
+        }
+        #compile-result a.compile-error {
+            color: #61dafb;
+            text-decoration: none;
             cursor: pointer;
-            padding: 0;
-            font-size: 1em;
         }
-
-        .profile-info-container .profile-avatar {
-            align-self: center;
-        }
-
-        .d-flex.gap-2 > button {
-            margin-right: 10px;
+        #compile-result a.compile-error:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
-
-<body class="Box p-3">
-<div class="header">
-    <div class="user-info">
-        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar">
-        <span class="username" th:text="${client.username}"></span>
+<body>
+<div id="container">
+    <div class="icon-panel">
+        <button id="profile-button" title="Profile" data-url="/userProfile">
+            <i class="fas fa-user-circle"></i>
+        </button>
+        <button id="project-button" title="Project Tree">
+            <i class="fas fa-project-diagram"></i>
+        </button>
+        <button id="save-button" title="Save Project">
+            <i class="fas fa-save"></i>
+        </button>
+        <button id="compile-button" title="Compile Code">
+            <i class="fas fa-play"></i>
+        </button>
     </div>
-    <div class="actions">
-        <a th:href="@{/edit/{id}(id=${client.id})}"><i class='bx bx-user'></i></a>
-        <a th:href="@{/logout}" th:method="POST"><i class='bx bx-log-out'></i></a>
+    <div id="sidebar">
+        <div id="jstree" data-file-structure="\${fileStructure}" data-project-name="${projectName}"></div>
+    </div>
+    <div id="editor-container">
+        <div id="editor"></div>
+        <div id="compile-output" style="display: none;">
+            <h3>Результат компиляции:</h3>
+            <pre id="compile-result"></pre>
+        </div>
     </div>
 </div>
-<input type="hidden" id="csrfToken" name="_csrf" th:value="${_csrf.token}" />
-<div class="main-container clearfix gutter-lg">
-    <div class="profile-info-container d-flex flex-column align-items-center">
-        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="profile-avatar">
-        <div class="profile-info text-center mt-2">
-            <h2 th:text="${client.username}"></h2>
-            <p class="color-fg-muted" th:text="${client.email}"></p>
-            <a th:href="${client.githubProfile}" class="Link--primary" target="_blank">GitHub Профиль</a>
-            <p class="color-fg-default mt-3" th:text="${client.about}"></p>
-        </div>
-        <div class="mt-3">
-            <a th:href="@{/friends/list}" class="btn-link">Друзья</a>
-        </div>
-        <div class="friends-list d-flex flex-wrap justify-content-center mt-3">
-            <th:block th:each="friend, iterStat : ${friends}">
-                <th:block th:if="${iterStat.index < 4}">
-                    <div class="d-flex flex-column align-items-center m-2">
-                        <a th:href="@{/friends/{id}(id=${friend.id})}">
-                            <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar" class="friend-avatar">
-                            <span th:text="${friend.username}" class="Link--secondary"></span>
-                        </a>
-                    </div>
-                </th:block>
-            </th:block>
-        </div>
-    </div>
-    <div class="projects-container">
-        <div class="d-flex flex-items-center flex-justify-between" style="border: none;">
-            <h2 class="">Мои Проекты</h2>
-            <div class="d-flex">
-                <input type="text" id="projectSearchInput" placeholder="Поиск проектов..." oninput="filterProjects()" class="form-control input-sm" style="border: 1px solid #d1d5da; border-radius: 6px;">
-                <a th:href="@{/projects/userProfile/new}" class="btn-custom ml-3" style="border: none;">
-                    <i class='bx bx-plus'></i>
-                </a>
-            </div>
-        </div>
-        <ul class="list-style-none mt-3">
-            <th:block th:each="project : ${projects}">
-                <li class="Box-row project-item p-3 mb-3" style="border: 1px solid #d1d5da; border-radius: 6px;" th:data-project-id="${project.id}">
-                    <div class="d-flex flex-items-center flex-justify-between">
-                        <strong class="f4" style="color: #000000;" th:text="${project.name}"></strong>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-outline btn-open"><i class='bx bx-folder-open'></i></button>
-                            <button class="btn btn-sm btn-outline btn-info"><i class='bx bx-info-circle'></i></button>
-                            <form th:action="@{/projects/delete/{id}(id=${project.id})}" method="post" style="display: inline;" onsubmit="return confirm('Вы действительно хотите удалить проект?');">
-                                <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
-                                <button type="submit" class="btn btn-sm btn-danger"><i class='bx bx-trash'></i></button>
-                            </form>
-                        </div>
-                    </div>
-                    <div class="project-details mt-2" style="display: none;">
-                        <p><strong>Имя проекта:</strong> <span th:text="${project.name}"></span></p>
-                        <p><strong>ReadMe:</strong> <span th:text="${project.readMe}"></span></p>
-                        <p><strong>Язык:</strong> <span th:text="${project.language}"></span></p>
-                        <a th:href="@{/projects/edit/{id}(id=${project.id})}" class="btn btn-outline btn-sm mt-2">Редактировать</a>
-                    </div>
-                </li>
-            </th:block>
-        </ul>
-    </div>
-</div>
+<div id="message"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
 <script>
-    const infoButtons = document.querySelectorAll('.btn-info');
-    infoButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const projectItem = button.closest('.project-item');
-            const projectDetails = projectItem.querySelector('.project-details');
-            projectDetails.style.display = (projectDetails.style.display === 'none' || projectDetails.style.display === '') ? 'block' : 'none';
+    $(document).ready(function() {
+        $('#profile-button').on('click', function() {
+            const profileUrl = $(this).data('url');
+            window.location.href = profileUrl;
         });
-    });
 
-    function filterProjects() {
-        const searchInput = document.getElementById('projectSearchInput').value.toLowerCase();
-        const projectItems = document.querySelectorAll('.project-item');
-        projectItems.forEach(item => {
-            const projectName = item.querySelector('strong').textContent.toLowerCase();
-            if (projectName.includes(searchInput)) {
-                item.style.display = '';
-            } else {
-                item.style.display = 'none';
-            }
+        $(function() {
+            let editor;
+            let currentFile = null;
+            const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+            const projectId = document.querySelector('meta[name="projectId"]').content;
+            let isUndoing = false;
+            const undoStack = [];
+            let pendingCreations = 0;
+            let duplicateNameError = false;
+            let isSidebarOpen = false; // Инициализация состояния боковой панели
+            let isSaving = false;
+
+            $('#project-button').on('click', function() {
+                if (isSidebarOpen) {
+                    $('#sidebar').css('width', '0');
+                    $('#editor-container').css('width', 'calc(100% - 50px)'); // Вернем всю ширину для редактора
+                    $(this).removeClass('active');
+                } else {
+                    $('#sidebar').css('width', '300px'); // Устанавливаем ширину боковой панели
+                    $('#editor-container').css('width', 'calc(100% - 350px)'); // Сжимаем редактор, чтобы он не выходил за экран
+                    $(this).addClass('active');
+                }
+                isSidebarOpen = !isSidebarOpen;
+            });
+
+            $('#compile-button').on('click', function() {
+                compileCode();
+            });
+
+            const getLanguageFromFilename = (filename) => {
+                const extension = filename.split('.').pop().toLowerCase();
+                const languageMap = {
+                    'js': 'javascript',
+                    'html': 'html',
+                    'css': 'css',
+                    'json': 'json',
+                    'md': 'markdown',
+                    'py': 'python',
+                    'java': 'java',
+                    'c': 'c',
+                    'cpp': 'cpp',
+                    'ts': 'typescript',
+                };
+                return languageMap[extension] || 'plaintext';
+            };
+
+            const compileCode = () => {
+                saveCurrentFile(); // Сохраняем текущий файл
+                saveProject(false); // Сохраняем проект без отображения сообщения
+
+                if (!currentFile || !currentFile.data || !currentFile.data.content) {
+                    showMessage("Нет открытого файла для компиляции.", "error");
+                    return;
+                }
+
+                const language = getLanguageFromFilename(currentFile.text);
+                const compileRequest = {
+                    project_id: projectId,
+                    language: language
+                };
+
+                $.ajax({
+                    url: '/compile',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    headers: {
+                        [csrfHeader]: csrfToken
+                    },
+                    data: JSON.stringify(compileRequest),
+                    success: function(response) {
+                        console.log("Результат компиляции:", response);
+                        displayCompileResult(response);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Ошибка при компиляции:", error);
+                        // Попытка парсинга ответа сервера
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            displayCompileResult(response);
+                        } catch (e) {
+                            showMessage("Ошибка при компиляции.", "error");
+                        }
+                    }
+                });
+            };
+
+            // Функция для отображения результата компиляции
+            const displayCompileResult = (result) => {
+                $('#compile-output').show();
+                $('#compile-result').empty(); // Очищаем предыдущие результаты
+
+                if (result.returncode === 0) {
+                    $('#compile-result').append('<h3>Компиляция прошла успешно!</h3>');
+                } else {
+                    $('#compile-result').append('<h3>Результат компиляции:</h3>');
+                    if (Array.isArray(result.stderr)) {
+                        const errorList = $('<ul></ul>');
+                        result.stderr.forEach(error => {
+                            const errorItem = $('<li></li>');
+                            const errorLink = $('<a href="#" class="compile-error"></a>')
+                                .text(`${error.message} (${error.file}:${error.line}:${error.column})`)
+                                .data('line', error.line)
+                                .data('column', error.column);
+                            errorItem.append(errorLink);
+                            errorList.append(errorItem);
+                        });
+                        $('#compile-result').append(errorList);
+                    } else if (typeof result.stderr === 'string') {
+                        $('#compile-result').append(`<pre>${result.stderr}</pre>`);
+                    } else {
+                        $('#compile-result').append('<pre>Неизвестная ошибка компиляции.</pre>');
+                    }
+                }
+            };
+
+            // Добавление обработчика кликов по ошибкам компиляции
+            $(document).on('click', '.compile-error', function(e) {
+                e.preventDefault();
+                const line = $(this).data('line');
+                const column = $(this).data('column') || 1;
+                if (editor && line > 0) {
+                    const position = { lineNumber: line, column: column };
+                    editor.revealPositionInCenter(position);
+                    editor.setPosition(position);
+                    editor.focus();
+
+                    // Добавление выделения строки с ошибкой
+                    if (window.errorDecorations) {
+                        editor.deltaDecorations(window.errorDecorations, []);
+                    }
+                    window.errorDecorations = editor.deltaDecorations([], [{
+                        range: new monaco.Range(line, 1, line, 1),
+                        options: {
+                            isWholeLine: true,
+                            className: 'line-decoration-error',
+                            glyphMarginClassName: 'glyph-margin-error'
+                        }
+                    }]);
+                }
+            });
+
+            const showMessage = (msg, type = 'error') => {
+                const messageDiv = $('#message');
+                messageDiv.text(msg);
+                messageDiv.removeClass('message-success message-error');
+                if (type === 'success') {
+                    messageDiv.addClass('message-success');
+                } else {
+                    messageDiv.addClass('message-error');
+                }
+                messageDiv.fadeIn(500).delay(2000).fadeOut(500);
+            };
+
+            const isValidName = (name) => {
+                if (!name || typeof name !== 'string') {
+                    return false;
+                }
+                const trimmedName = name.trim();
+                if (trimmedName.length === 0) {
+                    return false;
+                }
+                const invalidPatterns = ['/', '\\', '..'];
+                for (const pattern of invalidPatterns) {
+                    if (trimmedName.startsWith(pattern) || trimmedName.includes(pattern)) {
+                        return false;
+                    }
+                }
+                const prohibitedChars = ['<', '>', ':', '"', '|', '?', '*', '\0'];
+                for (const char of prohibitedChars) {
+                    if (trimmedName.includes(char)) {
+                        return false;
+                    }
+                }
+                return true;
+            };
+
+            const saveCurrentFile = () => {
+                if (currentFile && editor) {
+                    const newContent = editor.getValue();
+                    if (currentFile.data.content !== newContent) {
+                        currentFile.data.content = newContent;
+                        console.log(`Содержимое файла "${currentFile.text}" сохранено.`);
+                    }
+                }
+            };
+
+            const clearEditorIfDeleted = (node) => {
+                if (currentFile && node.id === currentFile.id) {
+                    editor.setValue('');
+                    currentFile = null;
+                    console.log(`Файл "${node.text}" удалён. Редактор очищен.`);
+                    return;
+                }
+                if (node.type === 'folder' && node.children && node.children.length > 0) {
+                    const tree = $('#jstree').jstree(true);
+                    node.children.forEach(childId => {
+                        const child = tree.get_node(childId);
+                        clearEditorIfDeleted(child);
+                    });
+                }
+            };
+
+            const checkUniqueName = (node, name, type, excludeId = null) => {
+                const tree = $('#jstree').jstree(true);
+                const childIds = tree.get_node(node.id).children;
+                let isUnique = true;
+                childIds.forEach(function(childId) {
+                    const childNode = tree.get_node(childId);
+                    const childText = childNode.text.trim();
+                    const childType = childNode.type;
+                    if (childText.toLowerCase() === name.trim().toLowerCase() && childType === type) {
+                        if (excludeId && childId === excludeId) {
+                            return;
+                        }
+                        isUnique = false;
+                        return false;
+                    }
+                });
+                return isUnique;
+            };
+
+            const getFullPath = (node) => {
+                const tree = $('#jstree').jstree(true);
+                const path = [];
+                let current = node;
+                while (current && current.id !== "#") {
+                    path.unshift(current.text);
+                    current = tree.get_node(current.parent);
+                }
+                path.shift();
+                return path.join('/');
+            };
+
+            const gatherFiles = (node) => {
+                const tree = $('#jstree').jstree(true);
+                const files = [];
+                node.children.forEach(childId => {
+                    const child = tree.get_node(childId);
+                    const fileObj = {
+                        id: child.id,
+                        text: child.text,
+                        path: getFullPath(child),
+                        type: child.type,
+                        data: child.type === 'file' ? { content: child.data.content || "" } : undefined,
+                        state: child.state,
+                        files: child.type === 'folder' ? gatherFiles(child) : undefined
+                    };
+                    files.push(fileObj);
+                });
+                return files;
+            };
+
+            const mapToBackendFormat = (gatheredFiles) => {
+                return gatheredFiles.map(fileObj => {
+                    const mappedObj = {
+                        path: fileObj.path,
+                        content: fileObj.type === 'file' ? fileObj.data.content : null,
+                        type: fileObj.type === 'folder' ? 'folder' : null
+                    };
+                    if (fileObj.type === 'folder') {
+                        mappedObj.files = fileObj.files && fileObj.files.length > 0 ? mapToBackendFormat(fileObj.files) : [];
+                    }
+                    return mappedObj;
+                });
+            };
+
+            const getProjectJSON = () => {
+                const tree = $('#jstree').jstree(true);
+                const root = tree.get_node("root");
+                const gatheredFiles = gatherFiles(root);
+                const mappedFiles = mapToBackendFormat(gatheredFiles);
+                const project = {
+                    files: mappedFiles
+                };
+                return project;
+            };
+
+            const saveProject = (showSuccessMessage = true) => {
+                if (isSaving) {
+                    console.log("Сохранение уже выполняется, пропуск текущего цикла автосохранения.");
+                    return;
+                }
+                isSaving = true;
+                saveCurrentFile();
+                const projectJSON = getProjectJSON();
+                console.log("Сформированный JSON проекта:", JSON.stringify(projectJSON, null, 2));
+                if (!projectJSON.files || projectJSON.files.length === 0) {
+                    console.log("Проект пустой, сохранение не требуется.");
+                    isSaving = false;
+                    return;
+                }
+                $.ajax({
+                    url: `/projects/${projectId}/save`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    headers: {
+                        [csrfHeader]: csrfToken
+                    },
+                    data: JSON.stringify(projectJSON),
+                    success: function(response) {
+                        console.log("Проект успешно сохранён!");
+                        if (showSuccessMessage) {
+                            showMessage("Проект успешно сохранён!", "success");
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Ошибка при сохранении проекта:", error);
+                        showMessage("Ошибка при сохранении проекта.", "error");
+                    },
+                    complete: function() {
+                        isSaving = false;
+                    }
+                });
+            };
+
+            const createNodeRecursively = (parent, nodeData, position) => {
+                const tree = $('#jstree').jstree(true);
+                position = (typeof position === 'number' && position < 0) ? 'last' : position;
+                pendingCreations++;
+                console.log(`Восстанавливаем узел: ${nodeData.text}, Тип: ${nodeData.type}, ID: ${nodeData.id}`);
+                tree.create_node(parent, {
+                    id: nodeData.id,
+                    text: nodeData.text,
+                    type: nodeData.type,
+                    data: nodeData.type === 'file' ? { content: nodeData.data.content || "" } : {},
+                    state: nodeData.state
+                }, position, function(new_node) {
+                    console.log(`Узел "${new_node.text}" восстановлен.`);
+                    if (nodeData.files && nodeData.files.length > 0) {
+                        nodeData.files.forEach(child => {
+                            createNodeRecursively(new_node.id, child, 'last');
+                        });
+                    }
+                    pendingCreations--;
+                    if (pendingCreations === 0) {
+                        isUndoing = false;
+                        console.log("Восстановление всех узлов завершено.");
+                    }
+                });
+            };
+
+            const loadFile = (node) => {
+                if (node.type === 'file') {
+                    const content = node.data && node.data.content ? node.data.content : "";
+                    const language = getLanguageFromFilename(node.text);
+                    if (editor) {
+                        isUndoing = true;
+                        const currentModel = editor.getModel();
+                        if (currentModel) {
+                            monaco.editor.setModelLanguage(currentModel, language);
+                            editor.setValue(content);
+                        }
+                        isUndoing = false;
+                        console.log(`Файл "${node.text}" загружен в редактор с языком "${language}".`);
+                    }
+                    currentFile = node;
+                }
+            };
+
+            const undo = () => {
+                if (undoStack.length === 0) {
+                    console.log("Undo Stack пуст.");
+                    return;
+                }
+                const lastAction = undoStack.pop();
+                console.log("Undoing Action:", lastAction);
+                isUndoing = true;
+                const tree = $('#jstree').jstree(true);
+                switch(lastAction.action) {
+                    case 'delete':
+                        tree.delete_node(lastAction.node);
+                        break;
+                    case 'create':
+                        createNodeRecursively(lastAction.parent, lastAction.node, lastAction.position);
+                        break;
+                    case 'rename':
+                        tree.rename_node(lastAction.node, lastAction.old_text);
+                        break;
+                    case 'move':
+                        tree.move_node(lastAction.node, lastAction.old_parent, lastAction.old_position);
+                        break;
+                    default:
+                        console.warn('Неизвестное действие для отмены:', lastAction.action);
+                }
+            };
+
+            const handleRename = (data) => {
+                console.log(`handleRename вызван для узла: ${data.node.id}, Тип: ${data.node.type}, Старое имя: ${data.old}, Новое имя: ${data.text}`);
+                if (!isUndoing) {
+                    if (data.node.id === "root") {
+                        showMessage("Нельзя переименовывать корневую папку!");
+                        const tree = $('#jstree').jstree(true);
+                        tree.rename_node(data.node, data.old);
+                        return;
+                    }
+                    if (!isValidName(data.text)) {
+                        showMessage("Недопустимое имя.");
+                        const tree = $('#jstree').jstree(true);
+                        tree.rename_node(data.node, data.old);
+                        return;
+                    }
+                    const parent = data.node.parent;
+                    const tree = $('#jstree').jstree(true);
+                    const siblings = tree.get_node(parent).children;
+                    let isUnique = true;
+                    siblings.forEach(function(childId) {
+                        const childNode = tree.get_node(childId);
+                        const childText = childNode.text.trim();
+                        const childType = childNode.type;
+                        if (childText.toLowerCase() === data.text.trim().toLowerCase() && childType === data.node.type && childId !== data.node.id) {
+                            isUnique = false;
+                            return false;
+                        }
+                    });
+                    if (!isUnique) {
+                        showMessage("Узел с таким именем уже существует в этой папке.");
+                        tree.rename_node(data.node, data.old);
+                        return;
+                    }
+                    undoStack.push({
+                        action: 'rename',
+                        node: data.node.id,
+                        old_text: data.old,
+                        new_text: data.text
+                    });
+                    console.log("Action Recorded to Undo Stack:", { action: 'rename', node: data.node.id, old_text: data.old, new_text: data.text });
+                }
+                if (currentFile && data.node.id === currentFile.id && currentFile.type === 'file') {
+                    const newLanguage = getLanguageFromFilename(data.text);
+                    monaco.editor.setModelLanguage(editor.getModel(), newLanguage);
+                    console.log(`Язык синтаксиса обновлён на "${newLanguage}" для файла "${data.text}".`);
+                }
+            };
+
+            const isMoveNameUnique = (targetNode, node) => {
+                const tree = $('#jstree').jstree(true);
+                const childIds = tree.get_node(targetNode.id).children;
+                let isUnique = true;
+                childIds.forEach(function(childId) {
+                    const childNode = tree.get_node(childId);
+                    const childText = childNode.text.trim();
+                    const childType = childNode.type;
+                    if (childText.toLowerCase() === node.text.trim().toLowerCase() && childType === node.type) {
+                        if (childId === node.id) {
+                            return;
+                        }
+                        isUnique = false;
+                        return false;
+                    }
+                });
+                return isUnique;
+            };
+
+            const initializeJsTree = () => {
+                const fileStructureJson = document.querySelector('meta[name="fileStructure"]').getAttribute('content');
+                const projectName = $('#jstree').data('project-name');
+                let fileTreeData = [];
+                if (fileStructureJson) {
+                    try {
+                        fileTreeData = JSON.parse(fileStructureJson);
+                    } catch (e) {
+                        console.error("Ошибка при парсинге JSON для fileStructure:", e);
+                    }
+                }
+                if (!fileTreeData || fileTreeData.length === 0) {
+                    fileTreeData = [{
+                        id: "root",
+                        text: projectName || "Проект",
+                        type: "folder",
+                        children: [],
+                        state: { opened: true }
+                    }];
+                }
+                $('#jstree').jstree({
+                    core: {
+                        check_callback: function (operation, node, parent, position, more) {
+                            const tree = $('#jstree').jstree(true);
+                            if (operation === "move_node") {
+                                const movingNode = node;
+                                const targetParentNode = tree.get_node(parent);
+                                if (movingNode.id === "root") {
+                                    return false;
+                                }
+                                if (targetParentNode.type !== "folder") {
+                                    return false;
+                                }
+                                if (parent === "#") {
+                                    return false;
+                                }
+                                if (!isMoveNameUnique(targetParentNode, movingNode)) {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        },
+                        data: fileTreeData
+                    },
+                    plugins: ['contextmenu', 'dnd', 'types'],
+                    types: {
+                        folder: { icon: 'jstree-folder' },
+                        file: { icon: 'jstree-file' }
+                    },
+                    contextmenu: {
+                        items: function(node) {
+                            const tree = $("#jstree").jstree(true);
+                            const menuItems = {};
+                            if (node.type !== 'folder') {
+                                menuItems.Rename = {
+                                    separator_before: false,
+                                    separator_after: false,
+                                    label: "Переименовать",
+                                    action: function () { tree.edit(node); }
+                                };
+                                menuItems.Remove = {
+                                    separator_before: false,
+                                    separator_after: false,
+                                    label: "Удалить",
+                                    action: function () {
+                                        if (node.id === "root") {
+                                            return;
+                                        }
+                                        const parent = node.parent;
+                                        const parentNode = tree.get_node(parent);
+                                        const position = parentNode.children.indexOf(node.id) !== -1 ? parentNode.children.indexOf(node.id) : 'last';
+                                        if (!isUndoing) {
+                                            const fullNodeData = {
+                                                id: node.id,
+                                                text: node.text,
+                                                type: node.type,
+                                                data: node.type === 'file' ? { content: node.data.content || "" } : undefined,
+                                                state: node.state,
+                                                files: node.type === 'folder' ? gatherFiles(node) : undefined
+                                            };
+                                            undoStack.push({
+                                                action: 'create',
+                                                node: fullNodeData,
+                                                parent: parent,
+                                                position: position
+                                            });
+                                            console.log("Action Recorded to Undo Stack:", { action: 'create', node: fullNodeData, parent: parent, position: position });
+                                        }
+                                        clearEditorIfDeleted(node);
+                                        tree.delete_node(node);
+                                    }
+                                };
+                            } else {
+                                menuItems.Create = {
+                                    separator_before: false,
+                                    separator_after: false,
+                                    label: "Создать",
+                                    action: false,
+                                    submenu: {
+                                        CreateFile: {
+                                            label: "Файл",
+                                            action: function () {
+                                                const newFileName = prompt("Введите имя нового файла:", "Новый файл.js");
+                                                if (!newFileName) {
+                                                    return;
+                                                }
+                                                if (!isValidName(newFileName)) {
+                                                    showMessage("Недопустимое имя файла.");
+                                                    return;
+                                                }
+                                                if (!checkUniqueName(node, newFileName, 'file')) {
+                                                    showMessage("Файл с таким именем уже существует в этой папке.");
+                                                    return;
+                                                }
+                                                const newId = 'file_' + Date.now();
+                                                tree.create_node(node, {
+                                                    id: newId,
+                                                    text: newFileName,
+                                                    type: "file",
+                                                    data: { content: "" },
+                                                    state: { opened: true }
+                                                }, "last", function(new_node) {
+                                                    setTimeout(function() {
+                                                        tree.select_node(new_node);
+                                                    }, 0);
+                                                });
+                                            }
+                                        },
+                                        CreateFolder: {
+                                            label: "Папка",
+                                            action: function () {
+                                                const newFolderName = prompt("Введите имя новой папки:", "Новая папка");
+                                                if (!newFolderName) {
+                                                    return;
+                                                }
+                                                if (!isValidName(newFolderName)) {
+                                                    showMessage("Недопустимое имя папки.");
+                                                    return;
+                                                }
+                                                if (!checkUniqueName(node, newFolderName, 'folder')) {
+                                                    showMessage("Папка с таким именем уже существует в этой папке.");
+                                                    return;
+                                                }
+                                                const newId = 'folder_' + Date.now();
+                                                tree.create_node(node, {
+                                                    id: newId,
+                                                    text: newFolderName,
+                                                    type: "folder",
+                                                    state: { opened: true }
+                                                }, "last", function(new_node) {
+                                                    setTimeout(function() {
+                                                        tree.select_node(new_node);
+                                                    }, 0);
+                                                });
+                                            }
+                                        }
+                                    }
+                                };
+                                if (node.id !== "root") {
+                                    menuItems.Rename = {
+                                        separator_before: false,
+                                        separator_after: false,
+                                        label: "Переименовать",
+                                        action: function () {
+                                            tree.edit(node);
+                                        }
+                                    };
+                                    menuItems.Remove = {
+                                        separator_before: false,
+                                        separator_after: false,
+                                        label: "Удалить",
+                                        action: function () {
+                                            if (node.id === "root") {
+                                                return;
+                                            }
+                                            const parent = node.parent;
+                                            const parentNode = tree.get_node(parent);
+                                            const position = parentNode.children.indexOf(node.id) !== -1 ? parentNode.children.indexOf(node.id) : 'last';
+                                            if (!isUndoing) {
+                                                const fullNodeData = {
+                                                    id: node.id,
+                                                    text: node.text,
+                                                    type: node.type,
+                                                    data: node.type === 'file' ? { content: node.data.content || "" } : undefined,
+                                                    state: node.state,
+                                                    files: node.type === 'folder' ? gatherFiles(node) : undefined
+                                                };
+                                                undoStack.push({
+                                                    action: 'create',
+                                                    node: fullNodeData,
+                                                    parent: parent,
+                                                    position: position
+                                                });
+                                                console.log("Action Recorded to Undo Stack:", { action: 'create', node: fullNodeData, parent: parent, position: position });
+                                            }
+                                            clearEditorIfDeleted(node);
+                                            tree.delete_node(node);
+                                        }
+                                    };
+                                }
+                            }
+                            return menuItems;
+                        }
+                    }
+                })
+                .on('create_node.jstree', function (e, data) {
+                    if (data.node.type === 'file' && !isUndoing) {
+                        data.node.data = { "content": "" };
+                    }
+                    if (!isUndoing) {
+                        undoStack.push({
+                            action: 'delete',
+                            node: data.node.id
+                        });
+                        console.log("Action Recorded to Undo Stack:", { action: 'delete', node: data.node.id });
+                    }
+                })
+                .on('rename_node.jstree', function (e, data) {
+                    handleRename(data);
+                })
+                .on('delete_node.jstree', function (e, data) {
+                    clearEditorIfDeleted(data.node);
+                })
+                .on('move_node.jstree', function (e, data) {
+                    if (!isUndoing) {
+                        undoStack.push({
+                            action: 'move',
+                            node: data.node.id,
+                            old_parent: data.old_parent,
+                            old_position: data.old_position
+                        });
+                        console.log("Action Recorded to Undo Stack:", { action: 'move', node: data.node.id, old_parent: data.old_parent, old_position: data.old_position });
+                    }
+                })
+                .on('dnd_stop.vakata', function (e, data) {
+                    if (duplicateNameError) {
+                        showMessage("В целевой папке уже существует узел с таким именем.");
+                        duplicateNameError = false;
+                    }
+                })
+                .on('select_node.jstree', function (e, data) {
+                    saveCurrentFile();
+                    if (data.node.type === 'file') {
+                        loadFile(data.node);
+                    }
+                });
+                $(document).on('keydown', function(e) {
+                    if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+                        e.preventDefault();
+                        console.log("Ctrl+Z нажато");
+                        undo();
+                    }
+                });
+                $('#save-button').on('click', function() {
+                    saveProject();
+                });
+                require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs' }});
+                require(['vs/editor/editor.main'], function() {
+                    editor = monaco.editor.create(document.getElementById('editor'), {
+                        value: '',
+                        language: 'plaintext',
+                        theme: 'vs-dark',
+                        automaticLayout: true
+                    });
+                    editor.onDidChangeModelContent(function() {
+                        if (isUndoing) {
+                            return;
+                        }
+                        if (currentFile) {
+                            currentFile.data.content = editor.getValue();
+                            console.log(`Содержимое файла "${currentFile.text}" обновлено.`);
+                        }
+                    });
+                });
+            };
+
+            initializeJsTree();
+
+            setInterval(function() {
+                console.log("Автосохранение проекта...");
+                saveProject(false);
+            }, 15000);
         });
-    }
 </script>
 </body>
-
 </html>

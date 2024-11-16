@@ -125,6 +125,29 @@
             background: #282c34;
             box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
         }
+            .line-decoration-error {
+        background-color: rgba(255, 0, 0, 0.3);
+    }
+    .glyph-margin-error {
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="16" width="16"><circle cx="8" cy="8" r="6" fill="red"/></svg>') no-repeat center center;
+        width: 16px;
+        height: 16px;
+    }
+    #compile-result ul {
+        list-style-type: none;
+        padding-left: 0;
+    }
+    #compile-result li {
+        margin-bottom: 5px;
+    }
+    #compile-result a.compile-error {
+        color: #61dafb;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    #compile-result a.compile-error:hover {
+        text-decoration: underline;
+    }
 
     </style>
 </head>
@@ -249,20 +272,58 @@
             });
         };
 
-        // Функция для отображения результата компиляции
-        const displayCompileResult = (result) => {
-            $('#compile-output').show();
-            const output = `
-                stdout:
-                ${result.stdout || ''}
+const displayCompileResult = (result) => {
+    $('#compile-output').show();
+    $('#compile-result').empty(); // Очищаем предыдущие результаты
 
-                stderr:
-                ${result.stderr || ''}
+    if (result.returncode === 0) {
+        $('#compile-result').append('<h3>Компиляция прошла успешно!</h3>');
+    } else {
+        $('#compile-result').append('<h3>Результат компиляции:</h3>');
+        if (Array.isArray(result.stderr)) {
+            const errorList = $('<ul></ul>');
+            result.stderr.forEach(error => {
+                const errorItem = $('<li></li>');
+                const errorLink = $('<a href="#" class="compile-error"></a>')
+                    .text(`${error.message} (${error.file}:${error.line}:${error.column})`)
+                    .data('line', error.line)
+                    .data('column', error.column);
+                errorItem.append(errorLink);
+                errorList.append(errorItem);
+            });
+            $('#compile-result').append(errorList);
+        } else if (typeof result.stderr === 'string') {
+            $('#compile-result').append(`<pre>${result.stderr}</pre>`);
+        } else {
+            $('#compile-result').append('<pre>Неизвестная ошибка компиляции.</pre>');
+        }
+    }
+};
+$(document).on('click', '.compile-error', function(e) {
+    e.preventDefault();
+    const line = $(this).data('line');
+    const column = $(this).data('column') || 1;
+    if (editor && line > 0) {
+        const position = { lineNumber: line, column: column };
+        editor.revealPositionInCenter(position);
+        editor.setPosition(position);
+        editor.focus();
 
-                returncode: ${result.returncode}
-            `;
-            $('#compile-result').text(output);
-        };
+        // Добавление выделения строки с ошибкой
+        if (window.errorDecorations) {
+            editor.deltaDecorations(window.errorDecorations, []);
+        }
+        window.errorDecorations = editor.deltaDecorations([], [{
+            range: new monaco.Range(line, 1, line, 1),
+            options: {
+                isWholeLine: true,
+                className: 'line-decoration-error',
+                glyphMarginClassName: 'glyph-margin-error'
+            }
+        }]);
+    }
+});
+
 
         const showMessage = (msg, type = 'error') => {
             const messageDiv = $('#message');

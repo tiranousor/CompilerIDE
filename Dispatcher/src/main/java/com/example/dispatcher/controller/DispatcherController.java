@@ -79,7 +79,6 @@ public class DispatcherController {
         return deferredResult;
     }
 
-
     private void dispatchTasks() {
         while (true) {
             try {
@@ -139,7 +138,6 @@ public class DispatcherController {
         }
     }
 
-
     private RestTemplate createRestTemplateWithTimeouts() {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(5000);
@@ -175,5 +173,4 @@ public class DispatcherController {
             return futureResult;
         }
     }
-
 }
