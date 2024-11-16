@@ -2,16 +2,28 @@ package com.example.CompilerIDE.util;
 
 import java.util.List;
 import java.util.Map;
-
 public class CompilationException extends RuntimeException {
-    private final List<Map<String, Object>> errors;
+    private String fileName;
+    private int lineNumber;
+    private int columnNumber;
 
-    public CompilationException(String message, List<Map<String, Object>> errors) {
+    public CompilationException(String message, String fileName, int lineNumber, int columnNumber) {
         super(message);
-        this.errors = errors;
+        this.fileName = fileName;
+        this.lineNumber = lineNumber;
+        this.columnNumber = columnNumber;
     }
 
-    public List<Map<String, Object>> getErrors() {
-        return errors;
+    // Геттеры
+    public String getFileName() {
+        return fileName;
+    }
+
+    public int getLineNumber() {
+        return lineNumber;
+    }
+
+    public int getColumnNumber() {
+        return columnNumber;
     }
 }
