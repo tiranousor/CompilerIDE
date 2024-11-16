@@ -52,6 +52,7 @@ public class DispatcherController {
     @PostMapping("/compile")
     public DeferredResult<ResponseEntity<?>> submitTask(@RequestBody Map<String, String> payload) {
         DeferredResult<ResponseEntity<?>> deferredResult = new DeferredResult<>(60000L);
+        logger.info("Получен запрос на компиляцию с payload: {}", payload);
 
         deferredResult.onTimeout(() -> {
             logger.error("Время ожидания результата задачи истекло");

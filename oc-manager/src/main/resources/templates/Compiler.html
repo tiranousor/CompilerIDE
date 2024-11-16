@@ -2,10 +2,10 @@
 <html lang="en" xmlns:sec="http://www.w3.org/1999/xhtml" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <meta name="projectId" th:content="${projectId}">
-    <meta name="_csrf" th:content="${_csrf.token}" />
-    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
-    <meta name="fileStructure" th:content="${fileStructure}">
+    <meta name="projectId" th:content="\${projectId}">
+    <meta name="_csrf" th:content="\${_csrf.token}" />
+    <meta name="_csrf_header" th:content="\${_csrf.headerName}" />
+    <meta name="fileStructure" th:content="\${fileStructure}">
     <link rel="icon" href="/favicon.png" type="image/png">
     <title>jsTree и Monaco Editor</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
@@ -125,6 +125,7 @@
             background: #282c34;
             box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
         }
+
     </style>
 </head>
 <body>
@@ -146,7 +147,7 @@
     </div>
     <div id="sidebar">
         <!--        <div id="jstree"></div>-->
-        <div id="jstree" data-file-structure="${fileStructure}" data-project-name="${projectName}"></div>
+        <div id="jstree" data-file-structure="\${fileStructure}" data-project-name="\${projectName}"></div>
 
         <!--        <button id="save-button">Сохранить проект</button>-->
     </div>
