@@ -6,97 +6,62 @@
     <meta name="_csrf" th:content="${_csrf.token}" />
     <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     <meta name="fileStructure" th:content="${fileStructure}">
+    <link rel="icon" href="/favicon.png" type="image/png">
     <title>jsTree и Monaco Editor</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         body, html {
             height: 100%;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
         }
+
         #container {
             display: flex;
             height: 100%;
+            background-color: #282c34;
         }
-       #sidebar {
-        width: 0;
-        border-right: 1px solid #ccc;
-        overflow: hidden;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        transition: width 0.3s ease;
+
+        #sidebar {
+            width: 300px;
+            background: #21252b;
+            color: #ffffff;
+            overflow: hidden;
+            transition: width 0.3s ease;
         }
+
         #jstree {
-<!--            flex: 1;-->
             overflow: auto;
-            min-height: 200px;
+            height: calc(100% - 60px);
             padding: 20px;
+            border-right: 1px solid #333;
         }
-        #save-button {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #save-button:hover {
-            background-color: #218838;
-        }
+
         #editor-container {
             position: relative;
             height: 100%;
             flex-grow: 1;
             transition: width 0.3s ease;
         }
+
         #editor {
             width: 100%;
             height: 100%;
         }
-        .jstree-contextmenu {
-            z-index: 1000;
-        }
-        #message {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            padding: 10px;
-            border-radius: 5px;
-            display: none;
-            z-index: 1001;
-        }
-        .message-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .message-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .jstree-folder {
-            background: url('https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default-folder.png') no-repeat center center;
-            background-size: 16px 16px;
-        }
-        .jstree-file {
-            background: url('https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default-file.png') no-repeat center center;
-            background-size: 16px 16px;
-        }
+
         .icon-panel {
-            width: 50px;
-            background: #333;
+            width: 60px;
+            background: #1f1f1f;
             color: #fff;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: 20px;
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            padding-top: 15px;
+            border-right: 1px solid #333;
         }
+
         .icon-panel button {
             background: none;
             border: none;
@@ -104,13 +69,61 @@
             margin: 10px 0;
             cursor: pointer;
             font-size: 24px;
-            transition: transform 0.2s;
+            transition: transform 0.2s, color 0.3s;
         }
+
         .icon-panel button:hover {
-            transform: scale(1.2);
+            transform: scale(1.1);
+            color: #61dafb;
         }
-        .icon-panel button.active {
-            color: #28a745;
+
+        .btn-primary-custom {
+            color: #fff;
+            background-color: #007bff;
+            border-color: #007bff;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .btn-primary-custom:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        #compile-output {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #2a2d3e;
+            padding: 15px;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            max-height: 200px;
+            overflow-y: auto;
+            border-top: 1px solid #333;
+        }
+
+        #compile-output h3 {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .code-explorer-heading {
+            text-align: center;
+            background: #333;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.1em;
+            border-bottom: 1px solid #444;
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+            background: #282c34;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
         }
     </style>
 </head>
@@ -126,6 +139,10 @@
         <button id="save-button" title="Save Project">
             <i class="fas fa-save"></i>
         </button>
+        <button id="compile-button" title="Compile Code">
+            <i class="fas fa-play"></i>
+        </button>
+
     </div>
     <div id="sidebar">
         <!--        <div id="jstree"></div>-->
@@ -135,6 +152,10 @@
     </div>
     <div id="editor-container">
         <div id="editor"></div>
+        <div id="compile-output" style="display: none;">
+            <h3>Результат компиляции:</h3>
+            <pre id="compile-result"></pre>
+        </div>
     </div>
 </div>
 <div id="message"></div>
@@ -174,6 +195,9 @@
             }
             isSidebarOpen = !isSidebarOpen;
         });
+        $('#compile-button').on('click', function() {
+            compileCode();
+        });
         const getLanguageFromFilename = (filename) => {
             const extension = filename.split('.').pop().toLowerCase();
             const languageMap = {
@@ -190,6 +214,55 @@
             };
             return languageMap[extension] || 'plaintext';
         };
+                const compileCode = () => {
+            saveCurrentFile(); // Сохраняем текущий файл
+            saveProject(false); // Сохраняем проект без отображения сообщения
+
+            if (!currentFile || !currentFile.data || !currentFile.data.content) {
+                showMessage("Нет открытого файла для компиляции.", "error");
+                return;
+            }
+
+            const language = getLanguageFromFilename(currentFile.text);
+            const compileRequest = {
+                project_id: projectId,
+                language: language
+            };
+
+            $.ajax({
+                url: '/compile',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: {
+                    [csrfHeader]: csrfToken
+                },
+                data: JSON.stringify(compileRequest),
+                success: function(response) {
+                    console.log("Результат компиляции:", response);
+                    displayCompileResult(response);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Ошибка при компиляции:", error);
+                    showMessage("Ошибка при компиляции.", "error");
+                }
+            });
+        };
+
+        // Функция для отображения результата компиляции
+        const displayCompileResult = (result) => {
+            $('#compile-output').show();
+            const output = `
+                stdout:
+                ${result.stdout || ''}
+
+                stderr:
+                ${result.stderr || ''}
+
+                returncode: ${result.returncode}
+            `;
+            $('#compile-result').text(output);
+        };
+
         const showMessage = (msg, type = 'error') => {
             const messageDiv = $('#message');
             messageDiv.text(msg);

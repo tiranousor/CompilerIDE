@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
@@ -7,236 +7,593 @@
     <title>User Profile</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <!-- Подключение Bootstrap для вкладок и выпадающих меню -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+    <style th:inline="css">
+        :root {
+            --background-color: [[${backgroundColor} ?: '#000000']];
+            --main-color: [[${mainColor} ?: '#FFC300']];
+        }
 
         * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
             font-family: 'VT323', monospace;
         }
 
-        .profile-avatar {
-            width: 220px;
-            height: 220px;
-            border-radius: 50%;
-            object-fit: cover;
+        body {
+            background: #000000;
+            color: #FFC300;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .container {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            width: 80%;
+            max-width: 1200px;
+            height: 90%;
+            overflow: hidden;
+        }
+
+        .projects-container {
+            flex-grow: 1;
+            background-color: rgba(0, 0, 0, 0.9);
+            border: 3px solid #FFC300;
+            border-radius: 25px;
+            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
+            padding: 25px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            max-height: 100%;
+            box-sizing: border-box;
+        }
+
+        .projects-container::-webkit-scrollbar {
+<!--            margin-top:20px;-->
+<!--            margin-bottom:20px;-->
+            width: 10px;
+        }
+
+        .projects-container::-webkit-scrollbar-thumb {
+            background: #FFC300;
+            border-radius: 5px;
+        }
+
+        .projects-container::-webkit-scrollbar-thumb:hover {
+            background: #FFD700;
+        }
+
+        .projects-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .projects-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
-            box-shadow: 0 0 25px rgba(255, 234, 0, 0.2), 0 0 50px rgba(142, 197, 252, 0.3);
+        }
+
+        .projects-header h2 {
+            font-size: 24px;
+            color: #FFFFFF;
+        }
+
+        .project-name {
+            font-size: 20px;
+            color: #FFFFFF;
+        }
+
+        .add-btn {
+            background-color: transparent;
+            text-decoration: none;
+            border: none;
+            color: #FFC300;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 35px;
+            transition: box-shadow 0.3s ease-in-out;
+        }
+
+        .add-btn:hover {
+            box-shadow: 0 0 20px rgba(255, 234, 0, 0.4), 0 0 40px rgba(255, 234, 0, 0.2);
+        }
+
+        .project-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .project-item {
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            border: 3px solid #FFC300;
+            border-radius: 25px;
+            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.2);
+            background-color: rgba(0, 0, 0, 0.8);
+            word-wrap: break-word;
+            white-space: normal;
+            overflow: hidden;
+        }
+
+        .project-item:hover {
+            box-shadow: 0 0 25px rgba(255, 234, 0, 0.8), 0 0 50px rgba(142, 197, 252, 0.5);
+            border-color: rgba(255, 234, 0, 0.2);
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 100%;
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 10px;
+            max-width: calc(100% - 20px);
+            flex-wrap: wrap;
+        }
+
+        .project-actions button {
+            background-color: transparent;
+            border: 2px solid #FFC300;
+            color: #FFC300;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+        }
+
+        .project-actions button:hover {
+            background-color: #FFC300;
+            color: #000000;
+            box-shadow: 0 0 10px rgba(255, 234, 0, 0.6);
+        }
+
+        .project-details {
+            margin-top: 15px;
+            background-color: #F7F9FA;
+            padding: 20px;
+            border-radius: 15px;
+            display: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .project-details p {
+            margin-bottom: 12px;
+            font-size: 15px;
+            color: #555;
+        }
+
+        .project-details-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .project-details-actions .btn-edit,
+        .project-details-actions .btn-continue,
+        .project-details-actions .btn-delete {
+            background-color: #1DB954;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 15px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .project-details-actions .btn-delete {
+            background-color: #FF4D4F;
+        }
+
+        .back-btn,
+        .settings-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: transparent;
+            border: none;
+            color: #FFC300;
+            font-size: 30px;
+            cursor: pointer;
+            transition: color 0.3s ease, box-shadow 0.3s;
+        }
+
+        .back-btn:hover,
+        .settings-btn:hover {
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(255, 234, 0, 0.6);
+        }
+
+        .back-btn {
+            left: 20px;
+        }
+
+        .settings-menu {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            height: 100%;
+            width: 300px;
+            background-color: rgba(0, 0, 0, 0.9);
+            border: 2px solid #FFC300;
+            border-radius: 10px 0 0 10px;
+            box-shadow: -2px 0 10px rgba(255, 234, 0, 0.4);
+            transition: right 0.4s ease;
+            z-index: 100;
+            padding: 25px;
+            color: #FFC300;
+        }
+
+        .settings-menu a {
+            display: block;
+            padding: 12px;
+            color: #FFC300;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 18px;
+            border-radius: 8px;
+            transition: background-color 0.3s, box-shadow 0.3s;
+            box-shadow: none;
+        }
+
+        .settings-menu a:hover {
+            box-shadow: 0 0 15px rgba(255, 234, 0, 0.6);
+            background-color: rgba(255, 234, 0, 0.1);
+        }
+
+        .edit-profile-btn {
+            display: block;
+            padding: 12px;
+            font-size: 18px;
+            color: #FFC300;
+            background-color: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .edit-profile-btn:hover {
+            box-shadow: 0 0 15px rgba(255, 234, 0, 0.6);
+            background-color: rgba(255, 234, 0, 0.1);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+            z-index: 50;
+        }
+
+        .overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .settings-menu.active {
+            right: 0;
+        }
+
+        .matrix {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .matrix span {
+            position: absolute;
+            top: -10vh;
+            font-size: 18px;
+            color: #FFC300;
+            opacity: 0.8;
+            animation: fall 10s linear infinite;
+            white-space: pre;
+        }
+
+        @keyframes fall {
+            0% {
+                top: -10vh;
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 110vh;
+                opacity: 0;
+            }
+        }
+
+        .friends-section {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .friends-list {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .friend-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 60px;
         }
 
         .friend-avatar {
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            box-shadow: 0 0 25px rgba(255, 234, 0, 0.2), 0 0 50px rgba(142, 197, 252, 0.3);
             object-fit: cover;
+            margin-bottom: 5px;
+            border: 2px solid #FFC300;
         }
 
-        .btn-custom {
-            background-color: transparent;
-            padding: 5px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
+        .friend-username {
+            color: #17A846;
+            font-size: 14px;
+            text-align: center;
+            text-decoration: none;
         }
 
-        .btn-custom:hover {
-            background-color: #f6f8fa;
+        #notificationsList {
+            list-style: none;
+            padding: 0;
+            width: 100%;
         }
 
-        .header {
+        #notificationsList li {
+            background-color: #F9FBFC;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 5px 20px;
-            background-color: #f6f8fa;
-            border-bottom: 1px solid #d1d5da;
-            width: 100%;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 900;
-            box-sizing: border-box;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
-        .header .user-info {
+        .notification-info {
             display: flex;
-            align-items: center;
+            flex-direction: column;
         }
 
-        .header .user-info img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-
-        .header .actions {
+        .notification-buttons {
             display: flex;
-            align-items: center;
-            gap: 15px;
+            gap: 10px;
         }
 
-        .header .actions a {
-            display: flex;
-            align-items: center;
-            color: #24292e;
-            text-decoration: none;
-            font-size: 24px;
-            transition: color 0.3s ease;
-        }
-
-        .header .actions a:hover {
-            color: #0366d6;
-        }
-
-        .header .actions .icon {
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        .Box {
-            box-shadow: none;
+        .btn-accept {
+            background-color: #1DB954;
+            color: #fff;
             border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
         }
 
-        .main-container {
-            margin-top: 80px;
+        .btn-accept:hover {
+            background-color: #17a44c;
+        }
+
+        .btn-reject {
+            background-color: #FF4D4F;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-reject:hover {
+            background-color: #e60000;
+        }
+
+        .profile-container {
+            width: 290px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+            border: 3px solid #FFC300;
+            border-radius: 25px;
+            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .profile-avatar {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 20px;
+            box-shadow: 0 0 25px rgba(255, 234, 0, 0.2), 0 0 50px rgba(142, 197, 252, 0.3);
+            background-color: #333;
+        }
+
+        .profile-info {
+            text-align: center;
+        }
+
+        .profile-info p {
+            margin-bottom: 10px;
+            font-size: 18px;
+            color: #FFC300;
+        }
+
+        .profile-info a {
+            color: #17A846;
+            font-size: 18px;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .profile-info a:hover {
+            color: #ffffff;
+        }
+
+        .view-all-friends {
+            text-decoration: none;
+            color: #1DB954;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .view-all-friends:hover {
+            text-decoration: underline;
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: 20px;
+            width: 45px;
+            height: 45px;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
-            padding: 0 20px;
-            box-sizing: border-box;
-            width: 100%;
-            gap: 40px;
-        }
-
-        .profile-info-container {
-            width: 35%;
-            max-width: 400px;
-            padding: 20px;
-            background-color: #ffffff;
-            text-align:center;
-        }
-
-        .projects-container {
-            width: 60%;
-            padding: 20px;
-            background-color: #ffffff;
-        }
-
-        .btn-link {
-            background: none;
-            color: #0366d6;
-            text-decoration: underline;
+            align-items: center;
+            border-radius: 50%;
             cursor: pointer;
-            padding: 0;
-            font-size: 1em;
+            right: 20px;
         }
 
-        .profile-info-container .profile-avatar {
-            align-self: center;
+        .search-bar {
+            margin-left: auto;
+            margin-right: 15px;
+        }
+
+        #projectSearchInput {
+            padding: 5px 10px;
+            font-size: 16px;
+            border: 2px solid #FFC300;
+            border-radius: 8px;
+            background-color: #000000;
+            color: #FFC300;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #projectSearchInput::placeholder {
+            color: rgba(255, 195, 0, 0.6);
+        }
+
+        #projectSearchInput:focus {
+            border-color: #FFD700;
+            box-shadow: 0 0 10px rgba(255, 195, 0, 0.8);
         }
     </style>
 </head>
 
-<body class="Box p-3">
-<div class="header">
-    <div class="user-info">
-        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar">
-        <span class="username" th:text="${client.username}"></span>
-    </div>
-    <div class="actions">
-        <a th:href="@{/edit/{id}(id=${client.id})}"><i class='bx bx-user'></i></a>
-        <a th:href="@{/logout}" th:method="POST"><i class='bx bx-log-out'></i></a>
-    </div>
-</div>
+<body>
 <input type="hidden" id="csrfToken" name="_csrf" th:value="${_csrf.token}" />
-<div class="main-container clearfix gutter-lg">
-    <div class="profile-info-container d-flex flex-column align-items-center">
+<div class="matrix" id="matrixContainer"></div>
+<div class="container">
+    <div class="profile-container">
         <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="profile-avatar">
-        <div class="profile-info text-center mt-2">
-            <h2 th:text="${client.username}"></h2>
-            <p class="color-fg-muted" th:text="${client.email}"></p>
-            <a th:href="${client.githubProfile}" class="Link--primary" target="_blank">GitHub Профиль</a>
-            <p class="color-fg-default mt-3" th:text="${client.about}"></p>
+        <div class="profile-info">
+            <p class="info-item" th:text="${client.username}">Имя пользователя</p>
+            <p class="info-item" th:text="${client.email}">example@example.com</p>
+            <p class="info-item">
+                <a th:href="${client.githubProfile}" target="_blank">GitHub Профиль</a>
+            </p>
+            <p class="info-item" th:text="${client.about}">О себе</p>
         </div>
-        <div class="mt-3">
-            <a th:href="@{/friends/list}" class="btn-link">Друзья</a>
-
-        </div>
-        <div class="friends-list d-flex flex-wrap justify-content-center mt-3">
-            <th:block th:each="friend, iterStat : ${friends}">
-                <th:block th:if="${iterStat.index < 4}">
-                    <div class="d-flex flex-column align-items-center m-2">
-                        <a th:href="@{/friends/{id}(id=${friend.id})}">
-                            <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar" class="friend-avatar">
-                            <span th:text="${friend.username}" class="Link--secondary"></span>
-                        </a>
-                    </div>
+        <div class="friends-section">
+            <a th:href="@{/friends/list}" class="view-all-friends">Друзья</a>
+            <div class="friends-list">
+                <th:block th:each="friend, iterStat : ${friends}">
+                    <th:block th:if="${iterStat.index < 4}">
+                        <div class="friend-item">
+                            <a th:href="@{/friends/{id}(id=${friend.id})}">
+                                <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar" class="friend-avatar">
+                                <span th:text="${friend.username}" class="friend-username">Имя друга</span>
+                            </a>
+                        </div>
+                    </th:block>
                 </th:block>
-            </th:block>
+            </div>
         </div>
     </div>
     <div class="projects-container">
-        <div class=" d-flex flex-items-center flex-justify-between" style="border: none;">
-            <h2 class="">Мои Проекты</h2>
-            <div class="d-flex">
-                <input type="text" id="projectSearchInput" placeholder="Поиск проектов..." oninput="filterProjects()" class="form-control input-sm" style="border: 1px solid #d1d5da; border-radius: 6px;">
-                <a th:href="@{/projects/userProfile/new}" class="btn-custom ml-3" style="border: none;">
-                    <i class='bx bx-plus'></i>
-                </a>
+        <div class="projects-header">
+            <h2>Мои Проекты</h2>
+            <div class="search-bar">
+                <input type="text" id="projectSearchInput" placeholder="Поиск проектов..." oninput="filterProjects()" />
             </div>
+            <a th:href="@{/projects/userProfile/new}" class="add-btn">
+                <i class='bx bx-plus'></i>
+            </a>
         </div>
-        <ul class="list-style-none mt-3">
+        <ul class="project-list">
             <th:block th:each="project : ${projects}">
-                <li class="Box-row project-item p-3 mb-3" style="border: 1px solid #d1d5da; border-radius: 6px;" th:data-project-id="${project.id}">
-                    <div class="d-flex flex-items-center flex-justify-between">
-                        <strong class="f4" style="color: #000000;" th:text="${project.name}"></strong>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-outline btn-open"><i class='bx bx-folder-open'></i></button>
-                            <button class="btn btn-sm btn-outline btn-info"><i class='bx bx-info-circle'></i></button>
+                <li class="project-item" th:data-project-id="${project.id}">
+                    <div class="project-header">
+                        <span class="project-name" th:text="${project.name}">Project Name</span>
+                        <div class="project-actions">
+                            <button class="btn-open"><i class='bx bx-folder-open'></i></button>
+                            <button class="btn-info"><i class='bx bx-info-circle'></i></button>
                             <form th:action="@{/projects/delete/{id}(id=${project.id})}" method="post" style="display: inline;" onsubmit="return confirm('Вы действительно хотите удалить проект?');">
                                 <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
-                                <button type="submit" class="btn btn-sm btn-danger"><i class='bx bx-trash'></i></button>
+                                <button type="submit" class="btn-delete"><i class='bx bx-trash'></i></button>
                             </form>
                         </div>
                     </div>
-                    <div class="project-details mt-2" style="display: none;">
-                        <p><strong>Имя проекта:</strong> <span th:text="${project.name}"></span></p>
-                        <p><strong>ReadMe:</strong> <span th:text="${project.readMe}"></span></p>
-                        <p><strong>Язык:</strong> <span th:text="${project.language}"></span></p>
-                        <a th:href="@{/projects/edit/{id}(id=${project.id})}" class="btn btn-outline btn-sm mt-2">Редактировать</a>
+                    <div class="project-details" style="display: none;">
+                        <p><strong>Имя проекта:</strong> <span th:text="${project.name}">Имя проекта</span></p>
+                        <p><strong>ReadMe:</strong> <span th:text="${project.readMe}">ReadMe</span></p>
+                        <p><strong>Язык:</strong> <span th:text="${project.language}">Язык</span></p>
+                        <div class="project-details-actions">
+                            <a th:href="@{/projects/edit/{id}(id=${project.id})}" class="btn-edit">Редактировать</a>
+                        </div>
                     </div>
                 </li>
             </th:block>
         </ul>
     </div>
 </div>
-
-<!-- Кнопка настроек -->
-<div class="settings-btn">
+<button class="settings-btn">
     <i class='bx bx-cog'></i>
-</div>
-<div class="search-btn">
-    <a th:href="@{/friends/search}">
-        <i class='bx bx-search'></i>
-    </a>
-</div>
-<!-- Меню настроек -->
+</button>
 <div class="settings-menu" id="settingsMenu">
     <a th:href="@{/edit/{id}(id=${client.id})}">Редактировать профиль</a>
     <form th:action="@{/logout}" th:method="POST">
         <input type="submit" value="Выход" class="edit-profile-btn" />
     </form>
 </div>
-
-<!-- Overlay -->
 <div class="overlay" id="overlay"></div>
-
 <script>
-    // Существующий код для меню настроек
     const settingsBtn = document.querySelector('.settings-btn');
     const settingsMenu = document.getElementById('settingsMenu');
     const overlay = document.getElementById('overlay');
@@ -251,9 +608,7 @@
         overlay.classList.remove('active');
     });
 
-    // Код для раскрытия информации о проекте
     const infoButtons = document.querySelectorAll('.btn-info');
-
     infoButtons.forEach(button => {
         button.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -263,11 +618,44 @@
         });
     });
 
+    document.addEventListener('DOMContentLoaded', function () {
+        const openButtons = document.querySelectorAll('.btn-open');
+        openButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const projectItem = button.closest('.project-item');
+                const projectId = projectItem.getAttribute('data-project-id');
+                if (projectId) {
+                    window.location.href = `/Compiler/project/${projectId}`;
+                } else {
+                    console.error("Project ID не найден");
+                }
+            });
+        });
+    });
+
+    const matrixContainer = document.getElementById('matrixContainer');
+    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+    function createMatrixSpan() {
+        const span = document.createElement('span');
+        span.textContent = characters.charAt(Math.floor(Math.random() * characters.length));
+        span.style.left = Math.random() * 100 + 'vw';
+        span.style.animationDuration = Math.random() * 5 + 5 + 's';
+        span.style.opacity = Math.random() * 0.5 + 0.5;
+        matrixContainer.appendChild(span);
+        setTimeout(() => {
+            matrixContainer.removeChild(span);
+        }, 10000);
+    }
+
+    setInterval(createMatrixSpan, 150);
+
     function filterProjects() {
         const searchInput = document.getElementById('projectSearchInput').value.toLowerCase();
         const projectItems = document.querySelectorAll('.project-item');
         projectItems.forEach(item => {
-            const projectName = item.querySelector('strong').textContent.toLowerCase();
+            const projectName = item.querySelector('.project-name').textContent.toLowerCase();
             if (projectName.includes(searchInput)) {
                 item.style.display = '';
             } else {
@@ -275,43 +663,7 @@
             }
         });
     }
-
-    // Функция для отклонения запроса на дружбу
-    function rejectFriendRequest(requestId, listItem) {
-        fetch('/friends/rejectRequest', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRF-TOKEN': getCsrfToken()
-            },
-            body: `requestId=${requestId}`
-        })
-            .then(response => response.text())
-            .then(data => {
-                if (data === 'success') {
-                    // Удаляем уведомление из списка
-                    listItem.remove();
-                    alert('Friend request rejected.');
-                } else {
-                    alert('Error: ' + data);
-                }
-            })
-            .catch(error => console.error('Error rejecting friend request:', error));
-    }
-
-    // Функция для получения CSRF токена из скрытого поля
-    function getCsrfToken() {
-        const token = document.querySelector('input[name="_csrf"]').value;
-        return token;
-    }
-
-    // Fetch notifications every 30 seconds
-    setInterval(fetchNotifications, 30000);
-
-    // Initial fetch
-    fetchNotifications();
 </script>
-
 </body>
 
 </html>

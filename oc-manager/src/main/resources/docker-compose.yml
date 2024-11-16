@@ -12,13 +12,7 @@ services:
       MINIO_ROOT_PASSWORD: 88888888556556556
     command: server /data --console-address ":9001"
 
-  redis:
-    image: "redis:6.2"
-    container_name: redis
-    ports:
-      - "6379:6379"  # Порт для Redis
-    networks:
-      - app-network
+
 
 networks:
   app-network:
