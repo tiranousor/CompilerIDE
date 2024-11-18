@@ -24,14 +24,9 @@ public class CompilationController {
         this.codeCompilationService = codeCompilationService;
     }
 
-//    @PostMapping
-//    @ResponseBody
-//    public String compileCode(@RequestBody CompileRequest request) {
-//
-//        return codeCompilationService.compileCode(request);
-//    }
 @PostMapping
 public ResponseEntity<?> compileCode(@RequestBody CompileRequest request) {
+    System.out.println("1" + request);
     try {
         Map<String, Object> response = codeCompilationService.compileCode(request);
         return ResponseEntity.ok(response);

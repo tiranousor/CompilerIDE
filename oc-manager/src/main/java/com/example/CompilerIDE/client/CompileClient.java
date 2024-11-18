@@ -9,12 +9,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.Map;
 
 
-//@FeignClient(name = "dispatcher", url = "http://localhost:8081")
-//public interface CompileClient {
-//    @PostMapping(value = "/compile", consumes = "application/json")
-//    String compileCode(@RequestBody Map<String, String> request);
-//}
-
 @FeignClient(name = "dispatcher", url = "http://localhost:8081")
 public interface CompileClient {
     @PostMapping(value = "/compile", consumes = "application/json")

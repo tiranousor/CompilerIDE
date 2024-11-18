@@ -24,8 +24,6 @@ public class DispatcherController {
     @Value("${WORKER_URLS}")
     private String workerUrlsString;
 
-    private List<String> workerUrls;
-
     // Карта для отслеживания состояния Worker'ов
     private final Map<String, Boolean> workerStatus = new ConcurrentHashMap<>();
 
@@ -37,7 +35,7 @@ public class DispatcherController {
 
     @PostConstruct
     public void init() {
-        workerUrls = Arrays.asList(workerUrlsString.split(","));
+        List<String> workerUrls = Arrays.asList(workerUrlsString.split(","));
         logger.info("Dispatcher инициализирован с Worker URL: {}", workerUrls);
 
         restTemplate = createRestTemplateWithTimeouts();

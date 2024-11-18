@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.net.URLConnection;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -221,6 +222,24 @@ public String editProjectForm(@PathVariable("id") int projectId, Model model, Au
 
         List<ProjectAccessLog> accessLogs = projectAccessLogRepository.findByProject(projectOpt.get());
         return ResponseEntity.ok(accessLogs);
+    }
+
+    @PostMapping("/{projectId}/mainClass")
+    public ResponseEntity<?> updateMainClass(@PathVariable Integer projectId, @RequestBody Map<String, String> payload) {
+        String mainClass = payload.get("mainClass");
+        if (mainClass == null || mainClass.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Имя главного класса не может быть пустым");
+        }
+
+        Project project = projectService.findById(projectId).orElse(null);
+        if (project == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Проект не найден");
+        }
+
+        project.setMainClass(mainClass);
+        projectService.save(project);
+
+        return ResponseEntity.ok().body("Имя главного класса обновлено");
     }
 
     @PostMapping("/{projectId}/save")

@@ -9,25 +9,18 @@ import io.minio.messages.Item;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.*;
 import java.nio.file.*;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.w3c.dom.*;
 
 @RestController
 public class WorkerController {
@@ -59,207 +52,45 @@ public class WorkerController {
 
     @PostMapping(value = "/compile", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> compileProject(@RequestBody Map<String, String> payload) {
+        String projectId = payload.get("project_id");
+        String language = payload.get("language");
+        String mainClassName = payload.get("mainClassName");
+
+        if (!"java".equalsIgnoreCase(language)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Текущая поддержка только языка Java"));
+        }
+
+        Path projectDir = Paths.get("/tmp", projectId);
+        String projectPrefix = "projects/" + projectId + "/";
+
         try {
-            String projectId = payload.get("project_id");
-            String language = payload.get("language");
+            prepareProjectDirectory(projectDir);
+            downloadProjectFiles(projectPrefix, projectDir);
 
-            if (projectId == null || language == null) {
-                return ResponseEntity.badRequest().body("project_id и language обязательны");
+            boolean isMavenProject = Files.exists(projectDir.resolve("pom.xml"));
+
+            if (isMavenProject) {
+                return handleMavenProject(projectDir, mainClassName, projectId);
+            } else {
+                return handleNonMavenProject(projectDir, mainClassName, projectId);
             }
 
-            if (!"java".equalsIgnoreCase(language)) {
-                return ResponseEntity.badRequest().body("Текущая поддержка только языка Java");
-            }
-
-            Path projectDir = Paths.get("/tmp", projectId);
-            String projectPrefix = "projects/" + projectId + "/";
-
-            try {
-                FileSystemUtils.deleteRecursively(projectDir.toFile());
-                Files.createDirectories(projectDir);
-
-                downloadProjectFiles(projectPrefix, projectDir);
-
-                Path pomPath = projectDir.resolve("pom.xml");
-                boolean isMavenProject = Files.exists(pomPath);
-
-                long compileTimeout = 60;
-                long runTimeout = 30;
-                String compileOutput;
-                int compileExitCode;
-
-                if (isMavenProject) {
-                    boolean isMainClassDefined = isMainClassDefinedInPom(pomPath);
-                    if (isMainClassDefined) {
-                        ProcessBuilder compileBuilder = new ProcessBuilder("mvn", "clean", "compile");
-                        compileBuilder.directory(projectDir.toFile());
-                        compileBuilder.redirectErrorStream(true);
-                        Process compileProcess = compileBuilder.start();
-                        compileOutput = readProcessOutput(compileProcess.getInputStream(), compileTimeout, TimeUnit.SECONDS);
-                        boolean compileFinished = compileProcess.waitFor(compileTimeout, TimeUnit.SECONDS);
-                        compileExitCode = compileProcess.waitFor();
-
-                        if (compileExitCode != 0) {
-                            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                                    "stdout", compileOutput,
-                                    "stderr", "Compilation failed or timed out",
-                                    "returncode", compileExitCode
-                            ));
-                        }
-
-                        ProcessBuilder runBuilder = new ProcessBuilder("mvn", "exec:java");
-                        runBuilder.directory(projectDir.toFile());
-                        runBuilder.redirectErrorStream(true);
-                        Process runProcess = runBuilder.start();
-                        String runOutput = readProcessOutput(runProcess.getInputStream(), runTimeout, TimeUnit.SECONDS);
-                        boolean runFinished = runProcess.waitFor(runTimeout, TimeUnit.SECONDS);
-                        int runExitCode = runProcess.exitValue();
-
-                        if (!runFinished) {
-                            runProcess.destroyForcibly();
-                            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                                    "stdout", runOutput,
-                                    "stderr", "Execution timed out",
-                                    "returncode", runExitCode
-                            ));
-                        }
-                        return ResponseEntity.ok(Map.of(
-                                "stdout", runOutput,
-                                "stderr", "",
-                                "returncode", runExitCode
-                        ));
-                    } else {
-                        Optional<String> mainClass = findMainClassInJavaFiles(projectDir);
-                        if (mainClass.isEmpty()) {
-                            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                                    "error", "Не найден класс с методом main в .java файлах"
-                            ));
-                        }
-
-                        ProcessBuilder compileBuilder = new ProcessBuilder("mvn", "clean", "compile");
-                        compileBuilder.directory(projectDir.toFile());
-                        compileBuilder.redirectErrorStream(true);
-                        Process compileProcess = compileBuilder.start();
-                        compileOutput = readProcessOutput(compileProcess.getInputStream(), compileTimeout, TimeUnit.SECONDS);
-                        boolean compileFinished = compileProcess.waitFor(compileTimeout, TimeUnit.SECONDS);
-                        compileExitCode = compileProcess.waitFor();
-
-                        if (compileExitCode != 0) {
-                            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                                    "stdout", compileOutput,
-                                    "stderr", "Compilation failed or timed out",
-                                    "returncode", compileExitCode
-                            ));
-                        }
-
-                        ProcessBuilder runBuilder = new ProcessBuilder("java", "-cp", "target/classes", mainClass.get());
-                        runBuilder.directory(projectDir.toFile());
-                        runBuilder.redirectErrorStream(true);
-                        Process runProcess = runBuilder.start();
-                        String runOutput = readProcessOutput(runProcess.getInputStream(), runTimeout, TimeUnit.SECONDS);
-                        boolean runFinished = runProcess.waitFor(runTimeout, TimeUnit.SECONDS);
-                        int runExitCode = runProcess.exitValue();
-
-                        if (!runFinished) {
-                            runProcess.destroyForcibly();
-                            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                                    "stdout", runOutput,
-                                    "stderr", "Execution timed out",
-                                    "returncode", runExitCode
-                            ));
-                        }
-                        ;
-
-                        return ResponseEntity.ok(Map.of(
-                                "stdout", runOutput,
-                                "stderr", "",
-                                "returncode", runExitCode
-                        ));
-                    }
-                } else {
-                    List<Path> javaFiles = new ArrayList<>();
-                    Files.walk(projectDir)
-                            .filter(path -> path.toString().endsWith(".java"))
-                            .forEach(javaFiles::add);
-
-                    if (javaFiles.isEmpty()) {
-                        return ResponseEntity.badRequest().body("Нет .java файлов для компиляции");
-                    }
-
-                    List<String> javacCommand = new ArrayList<>();
-                    javacCommand.add("javac");
-                    for (Path javaFile : javaFiles) {
-                        javacCommand.add(javaFile.toString());
-                    }
-
-                    ProcessBuilder javacBuilder = new ProcessBuilder(javacCommand);
-                    javacBuilder.directory(projectDir.toFile());
-                    javacBuilder.redirectErrorStream(true);
-                    Process javacProcess = javacBuilder.start();
-                    compileOutput = readProcessOutput(javacProcess.getInputStream(), compileTimeout, TimeUnit.SECONDS);
-                    boolean compileFinished = javacProcess.waitFor(compileTimeout, TimeUnit.SECONDS);
-                    compileExitCode = javacProcess.exitValue();
-
-                    if (!compileFinished || compileExitCode != 0) {
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                                "stdout", compileOutput,
-                                "stderr", "Compilation failed or timed out",
-                                "returncode", compileExitCode
-                        ));
-                    }
-
-                    Optional<String> mainClass = findMainClassInJavaFiles(projectDir);
-
-                    if (mainClass.isEmpty()) {
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                                "error", "Не найден класс с методом main"
-                        ));
-                    }
-
-                    ProcessBuilder runBuilder = new ProcessBuilder("java", "-cp", projectDir.toString(), mainClass.get());
-                    runBuilder.directory(projectDir.toFile());
-                    runBuilder.redirectErrorStream(true);
-                    Process runProcess = runBuilder.start();
-                    String runOutput = readProcessOutput(runProcess.getInputStream(), runTimeout, TimeUnit.SECONDS);
-                    boolean runFinished = runProcess.waitFor(runTimeout, TimeUnit.SECONDS);
-                    int runExitCode = runProcess.exitValue();
-                    if (!runFinished) {
-                        logger.info("Ошибка отправки результата компиляции: stdout={}, stderr={}, returncode={}", runOutput, "", runExitCode);
-                        runProcess.destroyForcibly();
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                                "stdout", runOutput,
-                                "stderr", "Execution timed out",
-                                "returncode", runExitCode
-                        ));
-                    }
-                    logger.info("Отправка результата компиляции: stdout={}, stderr={}, returncode={}", runOutput, "", runExitCode);
-                    return ResponseEntity.ok(Map.of(
-                            "stdout", runOutput,
-                            "stderr", "",
-                            "returncode", runExitCode
-                    ));
-                }
-
-            } catch (MinioException | InvalidKeyException | NoSuchAlgorithmException e) {
-                logger.error("MinioException при компиляции проекта '{}': {}", projectId, e.getMessage());
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
-            } catch (IOException e) {
-                logger.error("IOException при компиляции проекта '{}': {}", projectId, e.getMessage());
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
-            } catch (InterruptedException e) {
-                logger.error("InterruptedException при компиляции проекта '{}': {}", projectId, e.getMessage());
-                Thread.currentThread().interrupt();
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Процесс был прерван"));
-            } catch (Exception e) {
-                logger.error("Ошибка при компиляции проекта '{}': {}", projectId, e.getMessage());
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Ошибка компиляции проекта"));
-            } finally {
-                FileSystemUtils.deleteRecursively(projectDir.toFile());
-                logger.info("Временные файлы проекта '{}' успешно удалены.", projectId);
-            }
-        }catch (Exception e) {
-            logger.error("Unexpected exception in compileProject: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Internal server error"));
+        } catch (MinioException | InvalidKeyException | NoSuchAlgorithmException e) {
+            logger.error("MinioException при компиляции проекта '{}': {}", projectId, e.getMessage());
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        } catch (IOException e) {
+            logger.error("IOException при компиляции проекта '{}': {}", projectId, e.getMessage());
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        } catch (InterruptedException e) {
+            logger.error("InterruptedException при компиляции проекта '{}': {}", projectId, e.getMessage());
+            Thread.currentThread().interrupt();
+            return ResponseEntity.status(500).body(Map.of("error", "Процесс был прерван"));
+        } catch (Exception e) {
+            logger.error("Ошибка при компиляции проекта '{}': {}", projectId, e.getMessage());
+            return ResponseEntity.status(500).body(Map.of("error", "Ошибка компиляции проекта"));
+        } finally {
+            FileSystemUtils.deleteRecursively(projectDir.toFile());
+            logger.info("Временные файлы проекта '{}' успешно удалены.", projectId);
         }
     }
 
@@ -268,94 +99,18 @@ public class WorkerController {
         return ResponseEntity.ok(Map.of("status", "ok"));
     }
 
-    private Optional<String> findMainClassInJavaFiles(Path projectDir) throws IOException {
-        Pattern mainPattern = Pattern.compile("public\\s+static\\s+void\\s+main\\s*\\(\\s*String\\s*\\[\\]\\s*args\\s*\\)");
-
-        List<Path> javaFiles = new ArrayList<>();
-        Files.walk(projectDir)
-                .filter(path -> path.toString().endsWith(".java"))
-                .forEach(javaFiles::add);
-
-        for (Path javaFile : javaFiles) {
-            boolean hasMain = false;
-            String packageName = "";
-
-            try (BufferedReader reader = Files.newBufferedReader(javaFile)) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    if (line.trim().startsWith("package ")) {
-                        int start = "package ".length();
-                        int end = line.indexOf(';', start);
-                        if (end > start) {
-                            packageName = line.substring(start, end).trim();
-                        }
-                    }
-
-                    Matcher matcher = mainPattern.matcher(line);
-                    if (matcher.find()) {
-                        hasMain = true;
-                        break;
-                    }
-                }
-            } catch (IOException e) {
-                logger.error("Ошибка при чтении файла '{}': {}", javaFile, e.getMessage());
-                continue;
-            }
-
-            if (hasMain) {
-                String className = javaFile.getFileName().toString().replace(".java", "");
-                String fullyQualifiedName = packageName.isEmpty() ? className : packageName + "." + className;
-                logger.info("Найден класс с методом main: {}", fullyQualifiedName);
-                return Optional.of(fullyQualifiedName);
-            }
-        }
-
-        return Optional.empty();
+    /**
+     * Подготавливает директорию проекта: удаляет существующую и создает новую.
+     */
+    private void prepareProjectDirectory(Path projectDir) throws IOException {
+        FileSystemUtils.deleteRecursively(projectDir.toFile());
+        Files.createDirectories(projectDir);
+        logger.info("Директория проекта '{}' подготовлена.", projectDir.toString());
     }
 
-    private boolean isMainClassDefinedInPom(Path pomPath) {
-        try {
-            File pomFile = pomPath.toFile();
-            if (!pomFile.exists()) {
-                return false;
-            }
-
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            Document doc = dBuilder.parse(pomFile);
-            doc.getDocumentElement().normalize();
-
-            NodeList pluginList = doc.getElementsByTagName("plugin");
-            for (int i = 0; i < pluginList.getLength(); i++) {
-                Node pluginNode = pluginList.item(i);
-                if (pluginNode.getNodeType() == Node.ELEMENT_NODE) {
-                    Element pluginElement = (Element) pluginNode;
-                    String artifactId = pluginElement.getElementsByTagName("artifactId").item(0).getTextContent();
-                    if ("exec-maven-plugin".equals(artifactId)) {
-                        NodeList configList = pluginElement.getElementsByTagName("configuration");
-                        if (configList.getLength() > 0) {
-                            Element configElement = (Element) configList.item(0);
-                            NodeList mainClassList = configElement.getElementsByTagName("mainClass");
-                            if (mainClassList.getLength() > 0) {
-                                String mainClass = mainClassList.item(0).getTextContent().trim();
-                                if (!mainClass.isEmpty()) {
-                                    logger.info("mainClass определён в pom.xml: {}", mainClass);
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            logger.info("mainClass не определён в pom.xml.");
-            return false;
-        } catch (Exception e) {
-            logger.error("Ошибка при чтении pom.xml: {}", e.getMessage());
-            return false;
-        }
-    }
-
+    /**
+     * Скачивает все файлы проекта из MinIO в локальную директорию.
+     */
     private void downloadProjectFiles(String prefix, Path projectDir) throws MinioException, IOException, InvalidKeyException, NoSuchAlgorithmException {
         Iterable<Result<Item>> results = minioClient.listObjects(
                 ListObjectsArgs.builder()
@@ -395,14 +150,121 @@ public class WorkerController {
         }
     }
 
-    private String readProcessOutput(InputStream inputStream, long timeout, TimeUnit unit) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        StringBuilder out = new StringBuilder();
-        long endTime = System.nanoTime() + unit.toNanos(timeout);
-        String line;
-        while ((line = reader.readLine()) != null && System.nanoTime() < endTime) {
-            out.append(line).append("\n");
+    /**
+     * Обрабатывает Maven-проекты: компилирует и запускает их.
+     */
+    private ResponseEntity<?> handleMavenProject(Path projectDir, String mainClassName, String projectId) throws IOException, InterruptedException {
+        // Компиляция Maven-проекта
+        String compileOutput = executeCommand(Arrays.asList("mvn", "clean", "compile"), projectDir, 60);
+        if (compileOutput == null) {
+            return buildErrorResponse("Compilation timed out or failed", 1);
         }
-        return out.toString();
+
+        // Запуск Maven-проекта
+        String runOutput = executeCommand(Arrays.asList("mvn", "exec:java"), projectDir, 30);
+        if (runOutput == null) {
+            return buildErrorResponse("Execution timed out or failed", 1);
+        }
+
+        return buildSuccessResponse(runOutput, "", 0);
     }
+
+    /**
+     * Обрабатывает не-Maven проекты: компилирует и запускает указанный класс.
+     */
+    private ResponseEntity<?> handleNonMavenProject(Path projectDir, String mainClassName, String projectId) throws IOException, InterruptedException {
+        // Компиляция Java-файлов
+        List<Path> javaFiles = collectJavaFiles(projectDir);
+        if (javaFiles.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Нет .java файлов для компиляции"));
+        }
+
+        List<String> javacCommand = new ArrayList<>();
+        javacCommand.add("javac");
+        for (Path javaFile : javaFiles) {
+            javacCommand.add(javaFile.toString());
+        }
+
+        String compileOutput = executeCommand(javacCommand, projectDir, 60);
+        if (compileOutput == null) {
+            return buildErrorResponse("Compilation timed out or failed", 1);
+        }
+
+        // Запуск указанного класса
+        System.out.println(mainClassName);
+        List<String> javaRunCommand = Arrays.asList("java", "-cp", projectDir.toString(), mainClassName.replace(".java", ""));
+        String runOutput = executeCommand(javaRunCommand, projectDir, 30);
+        if (runOutput == null) {
+            return buildErrorResponse("Execution timed out or failed", 1);
+        }
+
+        return buildSuccessResponse(runOutput, "", 0);
+    }
+
+    /**
+     * Собирает все Java-файлы в проекте.
+     */
+    private List<Path> collectJavaFiles(Path projectDir) throws IOException {
+        List<Path> javaFiles = new ArrayList<>();
+        Files.walk(projectDir)
+                .filter(path -> path.toString().endsWith(".java"))
+                .forEach(javaFiles::add);
+        return javaFiles;
+    }
+
+    /**
+     * Выполняет команду и возвращает её вывод. Возвращает null, если команда не завершилась в установленное время.
+     */
+    private String executeCommand(List<String> command, Path workingDir, long timeoutSeconds) throws IOException, InterruptedException {
+        ProcessBuilder processBuilder = new ProcessBuilder(command);
+        processBuilder.directory(workingDir.toFile());
+        processBuilder.redirectErrorStream(true);
+        Process process = processBuilder.start();
+
+        StringBuilder output = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            boolean finished = process.waitFor(timeoutSeconds, TimeUnit.SECONDS);
+            if (!finished) {
+                process.destroyForcibly();
+                logger.error("Команда '{}' превысила время выполнения и была принудительно завершена.", String.join(" ", command));
+                return null;
+            }
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+        }
+
+        int exitCode = process.exitValue();
+        if (exitCode != 0) {
+            logger.error("Команда '{}' завершилась с ошибкой: {}", String.join(" ", command), exitCode);
+            return null;
+        }
+
+        return output.toString();
+    }
+
+    /**
+     * Создаёт успешный ответ.
+     */
+    private ResponseEntity<?> buildSuccessResponse(String stdout, String stderr, int returnCode) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("stdout", stdout);
+        response.put("stderr", stderr);
+        response.put("returncode", returnCode);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Создаёт ошибочный ответ.
+     */
+    private ResponseEntity<?> buildErrorResponse(String stderr, int returnCode) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("stdout", "");
+        response.put("stderr", stderr);
+        response.put("returncode", returnCode);
+        return ResponseEntity.status(500).body(response);
+    }
+
 }

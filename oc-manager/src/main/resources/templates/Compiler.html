@@ -2,10 +2,10 @@
 <html lang="en" xmlns:sec="http://www.w3.org/1999/xhtml" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <meta name="projectId" th:content="\${projectId}">
-    <meta name="_csrf" th:content="\${_csrf.token}" />
-    <meta name="_csrf_header" th:content="\${_csrf.headerName}" />
-    <meta name="fileStructure" th:content="\${fileStructure}">
+    <meta name="projectId" th:content="${projectId}">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <meta name="fileStructure" th:content="${fileStructure}">
     <link rel="icon" href="/favicon.png" type="image/png">
     <title>jsTree и Monaco Editor</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
@@ -61,7 +61,10 @@
             padding-top: 15px;
             border-right: 1px solid #333;
         }
-
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
         .icon-panel button {
             background: none;
             border: none;
@@ -117,6 +120,31 @@
             font-size: 1.1em;
             border-bottom: 1px solid #444;
         }
+        #main-class-container {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 5px;
+            border-radius: 5px;
+            color: white;
+            display: flex;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #main-class-container label {
+            margin-right: 5px;
+        }
+
+        #main-class-input {
+            background: #444;
+            border: 1px solid #555;
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
 
         .btn-group {
             display: flex;
@@ -147,11 +175,15 @@
     </div>
     <div id="sidebar">
         <!--        <div id="jstree"></div>-->
-        <div id="jstree" data-file-structure="\${fileStructure}" data-project-name="\${projectName}"></div>
+        <div id="jstree" data-file-structure="${fileStructure}" data-project-name="${projectName}"></div>
 
         <!--        <button id="save-button">Сохранить проект</button>-->
     </div>
     <div id="editor-container">
+        <div id="main-class-container">
+            <label for="main-class-input">Main Class:</label>
+            <input type="text" id="main-class-input" name="mainClass" th:value="${mainClass}" />
+        </div>
         <div id="editor"></div>
         <div id="compile-output" style="display: none;">
             <h3>Результат компиляции:</h3>
@@ -181,8 +213,43 @@
         const undoStack = [];
         let pendingCreations = 0;
         let duplicateNameError = false;
-         let isSidebarOpen = false; // Инициализация состояния боковой панели
+        let isSidebarOpen = false; // Инициализация состояния боковой панели
         let isSaving = false;
+
+    const saveMainClass = () => {
+        console.log("saveMainClass вызвана");
+        const mainClassInput = document.getElementById('main-class-input');
+        let mainClassName = mainClassInput.value.trim();
+
+        // Удаляем .java, если оно есть, добавим его позже
+        if (mainClassName.endsWith('.java')) {
+            mainClassName = mainClassName.slice(0, -5);
+        }
+        console.log("Сохранение Main Class. projectId:", projectId);
+        // Отправляем на сервер для сохранения
+        $.ajax({
+            url: `/projects/${projectId}/mainClass`,
+            type: 'POST',
+            contentType: 'application/json',
+            headers: {
+                [csrfHeader]: csrfToken
+            },
+            data: JSON.stringify({ mainClass: mainClassName }),
+            success: function(response) {
+                console.log("Имя главного класса успешно сохранено");
+                showMessage("Имя главного класса сохранено", "success");
+            },
+            error: function(xhr, status, error) {
+                console.error("Ошибка при сохранении имени главного класса:", error);
+                showMessage("Ошибка при сохранении имени главного класса", "error");
+            }
+        });
+    };
+
+    // Обработчик изменения поля ввода имени главного класса
+    $('#main-class-input').on('change', function() {
+        saveMainClass();
+    });
 
     $('#project-button').on('click', function() {
             if (isSidebarOpen) {
@@ -215,39 +282,84 @@
             };
             return languageMap[extension] || 'plaintext';
         };
-                const compileCode = () => {
-            saveCurrentFile(); // Сохраняем текущий файл
-            saveProject(false); // Сохраняем проект без отображения сообщения
+        const compileCode = () => {
+            // Получаем кнопку компиляции
+            const compileButton = $('#compile-button');
 
-            if (!currentFile || !currentFile.data || !currentFile.data.content) {
-                showMessage("Нет открытого файла для компиляции.", "error");
-                return;
-            }
+            // Отключаем кнопку
+            compileButton.prop('disabled', true);
+            compileButton.css('opacity', '0.6'); // Визуальное обозначение отключения
 
-            const language = getLanguageFromFilename(currentFile.text);
-            const compileRequest = {
-                project_id: projectId,
-                language: language
-            };
+            // Начинаем процесс сохранения проекта
+            saveProject(false)
+                .then(function() {
+                    // Проверяем, был ли проект успешно сохранён
+                    if (!currentFile) {
+                        showMessage("Нет открытого файла для компиляции.", "error");
+                        // Включаем кнопку обратно
+                        compileButton.prop('disabled', false);
+                        compileButton.css('opacity', '1');
+                        return;
+                    }
 
-            $.ajax({
-                url: '/compile',
-                type: 'POST',
-                contentType: 'application/json',
-                headers: {
-                    [csrfHeader]: csrfToken
-                },
-                data: JSON.stringify(compileRequest),
-                success: function(response) {
-                    console.log("Результат компиляции:", response);
-                    displayCompileResult(response);
-                },
-                error: function(xhr, status, error) {
-                    console.error("Ошибка при компиляции:", error);
-                    showMessage("Ошибка при компиляции.", "error");
-                }
-            });
+                    const language = getLanguageFromFilename(currentFile.text);
+
+                    const mainClassInput = document.getElementById('main-class-input');
+                    let mainClassName = mainClassInput.value.trim();
+                    if (!mainClassName) {
+                        showMessage("Введите название класса для компиляции.", "error");
+                        // Включаем кнопку обратно
+                        compileButton.prop('disabled', false);
+                        compileButton.css('opacity', '1');
+                        return;
+                    }
+                    // Добавляем .java, если отсутствует
+                    if (!mainClassName.endsWith('.java')) {
+                        mainClassName += '.java';
+                    }
+
+                    const compileRequest = {
+                        project_id: Number(projectId), // Преобразуем в число, если требуется
+                        language: language,
+                        mainClassName: mainClassName
+                    };
+
+                    console.log("Отправка compileRequest:", compileRequest);
+
+                    // Отправляем запрос на компиляцию
+                    $.ajax({
+                        url: '/compile',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        headers: {
+                            [csrfHeader]: csrfToken
+                        },
+                        data: JSON.stringify(compileRequest),
+                    })
+                    .done(function(response) {
+                        console.log("Результат компиляции:", response);
+                        displayCompileResult(response);
+                        showMessage("Компиляция завершена успешно.", "success");
+                    })
+                    .fail(function(xhr, status, error) {
+                        console.error("Ошибка при компиляции:", error);
+                        showMessage("Ошибка при компиляции.", "error");
+                    })
+                    .always(function() {
+                        // Включаем кнопку обратно после завершения запроса
+                        compileButton.prop('disabled', false);
+                        compileButton.css('opacity', '1');
+                    });
+                })
+                .fail(function() {
+                    // Если сохранение проекта не удалось, включаем кнопку обратно
+                    compileButton.prop('disabled', false);
+                    compileButton.css('opacity', '1');
+                    showMessage("Не удалось сохранить проект перед компиляцией.", "error");
+                });
         };
+
+
 
         // Функция для отображения результата компиляции
         const displayCompileResult = (result) => {
@@ -394,7 +506,7 @@
         const saveProject = (showSuccessMessage = true) => {
             if (isSaving) {
                 console.log("Сохранение уже выполняется, пропуск текущего цикла автосохранения.");
-                return;
+                return $.Deferred().resolve().promise(); // Возвращаем уже выполненный промис
             }
             isSaving = true;
             saveCurrentFile();
@@ -403,9 +515,9 @@
             if (!projectJSON.files || projectJSON.files.length === 0) {
                 console.log("Проект пустой, сохранение не требуется.");
                 isSaving = false;
-                return;
+                return $.Deferred().resolve().promise();
             }
-            $.ajax({
+            return $.ajax({
                 url: `/projects/${projectId}/save`,
                 type: 'POST',
                 contentType: 'application/json',
@@ -413,21 +525,22 @@
                     [csrfHeader]: csrfToken
                 },
                 data: JSON.stringify(projectJSON),
-                success: function(response) {
-                    console.log("Проект успешно сохранён!");
-                    if (showSuccessMessage) {
-                        showMessage("Проект успешно сохранён!", "success");
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error("Ошибка при сохранении проекта:", error);
-                    showMessage("Ошибка при сохранении проекта.", "error");
-                },
-                complete: function() {
-                    isSaving = false;
+            })
+            .done(function(response) {
+                console.log("Проект успешно сохранён!");
+                if (showSuccessMessage) {
+                    showMessage("Проект успешно сохранён!", "success");
                 }
+            })
+            .fail(function(xhr, status, error) {
+                console.error("Ошибка при сохранении проекта:", error);
+                showMessage("Ошибка при сохранении проекта.", "error");
+            })
+            .always(function() {
+                isSaving = false;
             });
         };
+
         const createNodeRecursively = (parent, nodeData, position) => {
             const tree = $('#jstree').jstree(true);
             position = (typeof position === 'number' && position < 0) ? 'last' : position;
