@@ -1,16 +1,23 @@
 package com.example.dispatcher.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
+
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.async.DeferredResult;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -34,6 +41,7 @@ public class DispatcherController {
 
     // Пул потоков для обработки задач
     private final ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private final ObjectMapper objectMapper = new ObjectMapper(); // Добавлено
 
     @PostConstruct
     public void init() {
@@ -50,13 +58,13 @@ public class DispatcherController {
     }
 
     @PostMapping("/compile")
-    public DeferredResult<ResponseEntity<?>> submitTask(@RequestBody Map<String, String> payload) {
-        DeferredResult<ResponseEntity<?>> deferredResult = new DeferredResult<>(60000L);
+    public DeferredResult<ResponseEntity<Map<String, Object>>> submitTask(@RequestBody Map<String, String> payload) {
+        DeferredResult<ResponseEntity<Map<String, Object>>> deferredResult = new DeferredResult<>(60000L);
         logger.info("Получен запрос на компиляцию с payload: {}", payload);
 
         deferredResult.onTimeout(() -> {
             logger.error("Время ожидания результата задачи истекло");
-            deferredResult.setErrorResult(ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT).body("Время ожидания результата задачи истекло"));
+            deferredResult.setErrorResult(ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT).body(Map.of("message", "Время ожидания результата задачи истекло")));
         });
 
         String taskId = UUID.randomUUID().toString();
@@ -67,7 +75,7 @@ public class DispatcherController {
             deferredResult.setResult(ResponseEntity.ok(result));
         }).exceptionally(ex -> {
             logger.error("Ошибка при обработке задачи: {}", ex.getMessage(), ex);
-            deferredResult.setErrorResult(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при обработке задачи"));
+            deferredResult.setErrorResult(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Ошибка при обработке задачи")));
             return null;
         });
 
@@ -120,12 +128,41 @@ public class DispatcherController {
                                 request,
                                 new ParameterizedTypeReference<Map<String, Object>>() {}
                         );
+
+                        // Обеспечиваем, что stderr всегда является списком
+                        Map<String, Object> responseBody = response.getBody();
+                        if (responseBody != null) {
+                            Object stderrObj = responseBody.getOrDefault("stderr", Collections.emptyList());
+                            if (stderrObj instanceof String) {
+                                responseBody.put("stderr", Collections.singletonList(Map.of("message", stderrObj)));
+                            }
+                            // Убедитесь, что returnCode присутствует и имеет правильный формат
+                            Object returnCodeObj = responseBody.getOrDefault("returnCode", 0);
+                            if (returnCodeObj instanceof String) {
+                                try {
+                                    responseBody.put("returnCode", Integer.parseInt((String) returnCodeObj));
+                                } catch (NumberFormatException e) {
+                                    responseBody.put("returnCode", 0);
+                                }
+                            }
+                        }
+
                         logger.info("Получен ответ от Worker '{}': {}", workerUrlForLambda, response.getBody());
-                        task.getFutureResult().complete(response.getBody());
-                    } catch (Exception e) {
-                        logger.error("Ошибка при отправке задачи на Worker '{}': {}", workerUrlForLambda, e.getMessage(), e);
-                        task.getFutureResult().completeExceptionally(e);
-                    } finally {
+                        task.getFutureResult().complete(responseBody);
+                    } catch (HttpClientErrorException | HttpServerErrorException ex) { // Изменено
+                    logger.error("Ошибка при отправке задачи на Worker '{}': {}", workerUrlForLambda, ex.getMessage(), ex);
+                    String responseBody = ex.getResponseBodyAsString();
+                    Map<String, Object> errorMap;
+                    try {
+                        errorMap = objectMapper.readValue(responseBody, new TypeReference<Map<String, Object>>() {});
+                    } catch (IOException jsonEx) {
+                        errorMap = Map.of("message", "Ошибка при обработке задачи");
+                    }
+                    task.getFutureResult().complete(errorMap); // Передаём детали ошибки
+                } catch (Exception e) {
+                    logger.error("Ошибка при отправке задачи на Worker '{}': {}", workerUrlForLambda, e.getMessage(), e);
+                    task.getFutureResult().completeExceptionally(e);
+                } finally {
                         workerStatus.put(workerUrlForLambda, true);
                         logger.info("Worker освободился: {}", workerUrlForLambda);
                     }
@@ -149,7 +186,18 @@ public class DispatcherController {
     public ResponseEntity<?> getStatus() {
         return ResponseEntity.ok(workerStatus);
     }
+    @GetMapping("/status")
+    public String getWorkerStatus(Model model) {
+        // Подсчитываем количество доступных воркеров
+        long availableWorkers = workerStatus.values().stream()
+                .filter(Boolean::booleanValue) // Оставляем только доступных (true)
+                .count();
 
+        // Передаём данные в модель
+        model.addAttribute("availableWorkers", availableWorkers);
+        model.addAttribute("usedSpace", "123"); // Пример для usedSpace, замените на реальные данные
+        return "status"; // Имя шаблона HTML (например, status.html)
+    }
     private static class Task {
         private final String taskId;
         private final Map<String, String> payload;

@@ -9,59 +9,35 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.nio.file.*;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 @Service
 public class CompilationService {
 
-//    private final FileStorageClient fileStorageClient;
-    private final ProjectStructRepository projectStructRepository;
+    public Map<String, Object> parseCompilationOutput(String stderr) {
+        Map<String, Object> response = new HashMap<>();
+        List<Map<String, Object>> errors = new ArrayList<>();
+        String[] lines = stderr.split("\n");
+        Pattern pattern = Pattern.compile("(.+\\.java):(\\d+): error: (.+)"); // Регулярное выражение для ошибок компилятора Java
 
-    @Autowired
-    public CompilationService(ProjectStructRepository projectStructRepository) {
-        this.projectStructRepository = projectStructRepository;
+        for (String line : lines) {
+            Matcher matcher = pattern.matcher(line);
+            if (matcher.find()) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("file", matcher.group(1));
+                error.put("line", Integer.parseInt(matcher.group(2)));
+                error.put("message", matcher.group(3));
+                error.put("column", 0); // Можно доработать, если информация о колонке доступна
+                errors.add(error);
+            }
+        }
+
+        response.put("stdout", "");
+        response.put("stderr", errors);
+        response.put("returncode", errors.isEmpty() ? 0 : 1);
+        return response;
     }
-
-//    public String compileProject(Project project) throws IOException, InterruptedException {
-//        // Создаем временную директорию для компиляции
-//        Path tempDir = Files.createTempDirectory("project_" + project.getId());
-//
-//        // Загружаем файлы проекта с File Storage Server
-//        List<ProjectStruct> projectFiles = projectStructRepository.findByProject(project);
-//        for (ProjectStruct fileStruct : projectFiles) {
-//            byte[] fileContent = fileStorageClient.downloadFile(
-//                    project.getId().toString(), fileStruct.getPath(), fileStruct.getName());
-//            Path filePath = tempDir.resolve(fileStruct.getPath()).resolve(fileStruct.getName());
-//            Files.createDirectories(filePath.getParent());
-//            Files.write(filePath, fileContent);
-//        }
-//
-//        // Компиляция с помощью Docker-контейнера
-//        ProcessBuilder processBuilder = new ProcessBuilder("javac", "Main.java");
-//        processBuilder.directory(tempDir.toFile());
-//        processBuilder.redirectErrorStream(true);
-//
-//        Process process = processBuilder.start();
-//        StringBuilder output = new StringBuilder();
-//        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-//            String line;
-//            while ((line = reader.readLine()) != null) {
-//                output.append(line).append("\n");
-//            }
-//        }
-//
-//        process.waitFor();
-//
-//        // Возвращаем результат компиляции
-//        return output.toString();
-//    }
-//
-//    private void deleteDirectory(File directoryToBeDeleted) {
-//        File[] allContents = directoryToBeDeleted.listFiles();
-//        if (allContents != null) {
-//            for (File file : allContents) {
-//                deleteDirectory(file);
-//            }
-//        }
-//        directoryToBeDeleted.delete();
-//    }
 }

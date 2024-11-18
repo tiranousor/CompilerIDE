@@ -42,7 +42,8 @@ public class SecurityConfiguration {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/banned", "/sendUnbanRequest").hasAuthority("ROLE_BANNED")
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/users/**").hasRole("ADMIN")
+
                         .requestMatchers("/userProfile").hasRole("USER")
                         .requestMatchers(AUTH_WHITELIST).permitAll()
                         .anyRequest().authenticated()
