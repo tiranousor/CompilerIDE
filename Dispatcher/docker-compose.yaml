@@ -6,6 +6,8 @@ services:
       - "6379:6379"  # Порт для Redis
     networks:
       - app-network
+    restart: always
+
   minio:
     image: minio/minio:RELEASE.2024-11-07T00-52-20Z
     container_name: minio

@@ -51,6 +51,9 @@ public class Project {
     @ToString.Exclude
     private Client client;
 
+    @Column(name = "main_class")
+    private String mainClass;
+
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @ToString.Exclude
     private List<ProjectStruct> projectsStruct;

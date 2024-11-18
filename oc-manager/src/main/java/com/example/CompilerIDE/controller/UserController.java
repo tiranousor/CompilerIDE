@@ -88,6 +88,7 @@ public class UserController {
         }
 
         model.addAttribute("projectId", projectId);
+        model.addAttribute("mainClass", project.getMainClass());
 
         List<String> filePaths = minioService.listFiles("projects/" + projectId + "/");
         if (filePaths == null) {
