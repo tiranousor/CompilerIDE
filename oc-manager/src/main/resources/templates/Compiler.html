@@ -188,11 +188,15 @@
     </div>
     <div id="sidebar">
         <!--        <div id="jstree"></div>-->
-        <div id="jstree" data-file-structure="\${fileStructure}" data-project-name="\${projectName}"></div>
+        <div id="jstree" data-file-structure="${fileStructure}" data-project-name="\${projectName}"></div>
 
         <!--        <button id="save-button">Сохранить проект</button>-->
     </div>
     <div id="editor-container">
+        <div id="main-class-container">
+            <label for="main-class-input">Main Class:</label>
+            <input type="text" id="main-class-input" name="mainClass" th:value="${mainClass}" />
+        </div>
         <div id="editor"></div>
         <div id="compile-output" style="display: none;">
             <h3>Результат компиляции:</h3>
