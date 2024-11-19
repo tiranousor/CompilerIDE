@@ -3,21 +3,32 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Запросы на разблокировку</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
-    <style th:inline="css">
+    <style>
         * {
             font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            color: #24292e;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            min-height: 100vh;
         }
 
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 5px 20px;
+            padding: 10px 20px;
             background-color: #f6f8fa;
             border-bottom: 1px solid #d1d5da;
             width: 100%;
@@ -33,11 +44,10 @@
             align-items: center;
         }
 
-        .header .user-info img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 10px;
+        .header .user-info span {
+            font-size: 24px;
+            font-weight: 700;
+            color: #24292e;
         }
 
         .header .actions {
@@ -54,9 +64,14 @@
             font-size: 24px;
             transition: color 0.3s ease;
         }
-
+.header .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
         .header .actions a:hover {
-            color: #0366d6;
+            color: #d73a49;
         }
 
         .main-container {
@@ -64,17 +79,23 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            padding: 0 20px;
+            padding: 20px;
             width: 100%;
-            gap: 40px;
         }
 
         .requests-container {
-            width: 100%;
+            width: 90%;
+            max-width: 1000px;
             padding: 20px;
-            background-color: #ffffff;
+            border: 1px solid #d1d5da;
             border-radius: 10px;
-            border-bottom: none;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #24292e;
+            text-align: center;
+            margin-bottom: 20px;
         }
 
         table {
@@ -86,63 +107,97 @@
 
         th, td {
             padding: 12px 15px;
-            text-align: left;
+            text-align: center;
             border-bottom: 1px solid #d1d5da;
+            font-size: 16px;
         }
 
         th {
-            font-size: 20px;
-        }
-
-        td {
             font-size: 18px;
         }
 
-         600px
-            word-wrap: break-word;
+        .action-icons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
         }
 
-        .btn {
-            border-radius: 6px;
-            padding: 5px 10px;
+        .action-icons i {
+            font-size: 20px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
-            font-size: 1em;
-            border: none;
+            transition: color 0.3s;
         }
 
-        .btn-approve {
-            background-color: #28a745;
-            color: #ffffff;
+        .action-icons .approve-icon {
+            color: #28a745;
         }
 
-        .btn-approve:hover {
-            background-color: #218838;
+        .action-icons .approve-icon:hover {
+            color: #218838;
         }
 
-        .btn-decline {
-            background-color: #d73a49;
-            color: #ffffff;
+        .action-icons .decline-icon {
+            color: #d73a49;
         }
 
-        .btn-decline:hover {
-            background-color: #b31d28;
+        .action-icons .decline-icon:hover {
+            color: #b31d28;
         }
+                .header .notification-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-container {
+            position: relative;
+        }
+
+        .notification-icon {
+            font-size: 24px;
+            position: relative;
+            cursor: pointer;
+            color: #0366d6;
+        }
+
+        .notification-icon:hover {
+            color: #0056b3;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #FF4D4F;
+            color: #FFF;
+            border-radius: 50%;
+            font-size: 12px;
+            padding: 3px 6px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .notification-badge.visible {
+            display: inline-block;
+        }
+
     </style>
 </head>
 
-<body class="p-3">
+<body>
 <div class="header">
     <div class="user-info">
         <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar">
         <span class="username" th:text="${client.username}"></span>
-    </div>
+    </div>,
     <div class="actions">
-        <a th:href="@{/logout}" th:method="POST"><i class='bx bx-log-out'></i></a>
+            <form th:action="@{/logout}" th:method="POST" style="margin: 0;">
+                <button type="submit" class="logout-icon" title="Logout" style="border: none; background: none;"><i class='bx bx-log-out'></i></button>
+            </form>
     </div>
 </div>
 
-<div class="main-container clearfix ">
+<div class="main-container">
     <div class="requests-container">
         <h1>Запросы на разблокировку</h1>
         <table>
@@ -158,20 +213,26 @@
             <tr th:each="request : ${unbanRequests}">
                 <td th:text="${request.client.username}"></td>
                 <td th:text="${request.message}" class="message-column"></td>
-                <td th:text="${#temporals.format(request.requestTime,  'yyyy-MM-dd HH:mm:ss')}"></td>
+                <td th:text="${#temporals.format(request.requestTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
                 <td>
-                    <form th:action="@{/admin/unbanUser/{id}(id=${request.id})}" method="post" style="display:inline;">
-                        <button type="submit" class="btn btn-approve">Одобрить</button>
-                    </form>
-                    <form th:action="@{/admin/declineUnbanRequest/{id}(id=${request.id})}" method="post" style="display:inline;">
-                        <button type="submit" class="btn btn-decline">Отклонить</button>
-                    </form>
+                    <div class="action-icons">
+                        <form th:action="@{/admin/unbanUser/{id}(id=${request.id})}" method="post" style="display:inline;">
+                            <button type="submit" style="background: none; border: none; cursor: pointer;">
+                                <i class='bx bx-check approve-icon' title="Одобрить"></i>
+                            </button>
+                        </form>
+                        <form th:action="@{/admin/declineUnbanRequest/{id}(id=${request.id})}" method="post" style="display:inline;">
+                            <button type="submit" style="background: none; border: none; cursor: pointer;">
+                                <i class='bx bx-x decline-icon' title="Отклонить"></i>
+                            </button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             </tbody>
         </table>
     </div>
 </div>
-
 </body>
+
 </html>

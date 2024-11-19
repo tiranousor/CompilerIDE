@@ -2,22 +2,21 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Аккаунт заблокирован</title>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap:wght@300;400;500;600;700&display=swap');
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'VT323', monospace;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            font-size: inherit !important;
         }
 
         body {
-            background: #000000;
-            color: #FFC300;
+            background: #f6f8fa;
+            color: #24292e;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -27,30 +26,30 @@
         }
 
         .container {
-            background-color: rgba(0, 0, 0, 0.9);
-            border: 3px solid #FFC300;
-            border-radius: 25px;
-            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
+            background-color: #ffffff;
+            border: 1px solid #d1d5da;
+            border-radius: 10px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
             width: 500px;
-            max-width: 100%;
+            max-width: 90%;
             padding: 30px;
             text-align: center;
         }
 
         h1 {
             font-size: 28px;
-            color: #FFC300;
+            color: #d73a49;
             margin-bottom: 20px;
         }
 
         p {
-            color: #ffffff;
+            color: #586069;
             margin-bottom: 20px;
-            font-size: 18px;
+            font-size: 16px;
         }
 
         .form-label {
-            color: #FFC300;
+            color: #24292e;
             font-size: 16px;
             margin-bottom: 5px;
             display: block;
@@ -58,10 +57,10 @@
         }
 
         .form-control {
-            background-color: #333;
-            border: 2px solid #FFC300;
-            color: #FFC300;
-            border-radius: 8px;
+            background-color: #f6f8fa;
+            border: 1px solid #d1d5da;
+            color: #24292e;
+            border-radius: 6px;
             margin-bottom: 15px;
             padding: 10px;
             font-size: 16px;
@@ -76,12 +75,12 @@
 
         .form-control:focus {
             border-color: #17A846;
-            box-shadow: 0 0 10px rgba(23, 168, 70, 0.6);
+            box-shadow: 0 0 10px rgba(23, 168, 70, 0.3);
         }
 
         .btn-primary {
-            background-color: #1DB954;
-            color: #fff;
+            background-color: #28a745;
+            color: #ffffff;
             border: none;
             padding: 10px 30px;
             border-radius: 8px;
@@ -93,42 +92,13 @@
         }
 
         .btn-primary:hover {
-            background-color: #17A846;
-            box-shadow: 0 0 15px rgba(23, 168, 70, 0.6);
+            background-color: #218838;
+            box-shadow: 0 0 15px rgba(33, 136, 56, 0.6);
         }
 
-        /* Matrix Animation */
-        .matrix {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-            pointer-events: none;
-        }
-
-        .matrix span {
-            position: absolute;
-            top: -10vh;
-            font-size: 18px;
-            color: #FFC300;
-            opacity: 0.8;
-            animation: fall 10s linear infinite;
-            white-space: pre;
-        }
-
-        @keyframes fall {
-            0% { top: -10vh; opacity: 0; }
-            20% { opacity: 1; }
-            100% { top: 110vh; opacity: 0; }
-        }
     </style>
 </head>
 <body>
-<div class="matrix" id="matrixContainer"></div>
-
 <div class="container">
     <h1>Ваш аккаунт заблокирован</h1>
     <p>Пожалуйста, свяжитесь с администратором для получения дополнительной информации.</p>
@@ -149,24 +119,5 @@
     </form>
 </div>
 
-<script>
-    // Matrix Animation
-    const matrixContainer = document.getElementById('matrixContainer');
-    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-
-    function createMatrixSpan() {
-        const span = document.createElement('span');
-        span.textContent = characters.charAt(Math.floor(Math.random() * characters.length));
-        span.style.left = Math.random() * 100 + 'vw';
-        span.style.animationDuration = Math.random() * 5 + 5 + 's';
-        span.style.opacity = Math.random() * 0.5 + 0.5;
-        matrixContainer.appendChild(span);
-        setTimeout(() => {
-            matrixContainer.removeChild(span);
-        }, 10000);
-    }
-
-    setInterval(createMatrixSpan, 150);
-</script>
 </body>
 </html>

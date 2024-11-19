@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Controller
-public class UnbanRequestController {
+public class UnbanRequestController  {
 
     private final UnbanRequestRepository unbanRequestRepository;
     private final ClientRepository clientRepository;

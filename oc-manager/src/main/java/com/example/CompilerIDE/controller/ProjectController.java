@@ -37,7 +37,7 @@ import java.util.Optional;
 
 @Controller
 @RequestMapping("/projects")
-public class ProjectController {
+public class ProjectController  {
     private final ProjectInvitationService projectInvitationService;
     private final ProjectService projectService;
     private final ClientService clientService;
@@ -99,6 +99,9 @@ public class ProjectController {
     @GetMapping("/userProfile/new")
     public String newProjectForm(Authentication authentication, Model model) {
         model.addAttribute("project", new Project());
+        Client client = clientService.findByUsername(authentication.getName()).orElse(null);
+        model.addAttribute("client", client);
+
         return "new_project_form";
     }
 
@@ -124,6 +127,7 @@ public class ProjectController {
             }
         }
         projectTeamService.addCreator(project, clientService.getClient(authentication.getName()).get());
+
         return "redirect:/userProfile";
     }
 
@@ -148,7 +152,7 @@ public String editProjectForm(@PathVariable("id") int projectId, Model model, Au
     }
 
     Client client = clientOpt.get();
-
+    model.addAttribute("client", client);
     Optional<Project> projectOpt = projectService.findById(projectId);
     if (projectOpt.isPresent()) {
         Project project = projectOpt.get();

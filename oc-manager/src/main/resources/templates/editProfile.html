@@ -3,7 +3,6 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Редактировать Аккаунт</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -13,7 +12,8 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Roboto', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            font-size: inherit !important;
         }
 
         .header {
@@ -43,6 +43,25 @@
             margin-right: 10px;
         }
 
+        .header .actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header .actions a {
+            display: flex;
+            align-items: center;
+            color: #24292e;
+            text-decoration: none;
+            font-size: 24px;
+            transition: color 0.3s ease;
+        }
+
+        .header .actions a:hover {
+            color: #0366d6;
+        }
+
         .main-container {
             margin-top: 80px;
             display: flex;
@@ -57,10 +76,9 @@
         .edit-container {
             width: 600px;
             max-width: 90%;
-            padding: 30px;
+            padding: 20px;
             background-color: #ffffff;
             border-radius: 10px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
 
@@ -75,7 +93,7 @@
             width: 150px;
             height: 150px;
             border-radius: 50%;
-            border: 3px solid #d1d5da;
+            border: none;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
             object-fit: cover;
             background-color: #f6f8fa;
@@ -89,7 +107,7 @@
 
         .file-upload-icon {
             font-size: 40px;
-            color: #0366d6;
+            color: #17A846;
             cursor: pointer;
             transition: color 0.3s, transform 0.3s;
         }
@@ -111,18 +129,19 @@
             border: 1px solid #d1d5da;
             border-radius: 6px;
             background-color: #f6f8fa;
-            color: #24292e;
+            color: #6a737d;
+
             outline: none;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
 
         .form-control:focus {
-            border-color: #0366d6;
-            box-shadow: 0 0 10px rgba(3, 102, 214, 0.3);
+            border-color: #17A846;
+            box-shadow: 0 0 10px rgba(23, 168, 70, 0.3);
         }
 
         .btn-primary {
-            background-color: #0366d6;
+            background-color: #28a745;
             color: #fff;
             padding: 10px 45px;
             border: none;
@@ -135,8 +154,8 @@
         }
 
         .btn-primary:hover {
-            background-color: #005bb5;
-            box-shadow: 0 0 15px rgba(0, 91, 181, 0.6);
+            background-color: #218838;
+            box-shadow: 0 0 15px rgba(33, 136, 56, 0.6);
         }
 
         .form-error {
@@ -148,38 +167,38 @@
         }
     </style>
 </head>
-
-<body class="p-3">
 <div class="header">
     <div class="user-info">
-        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/static/noAvatar.png'}" alt="User Avatar">
-        <span class="username" th:text="${client.username}"></span>
+        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar">
+        <span th:text="${client.username}"></span>
     </div>
     <div class="actions">
-        <a th:href="@{/logout}" th:method="POST"><i class='bx bx-log-out'></i></a>
+        <a th:href="@{/edit/{id}(id=${client.id})}"><i class='bx bx-user'></i></a>
+        <form th:action="@{/logout}" th:method="POST" style="margin: 0;">
+            <button type="submit" class="logout-icon" title="Logout" style="border: none; background: none;"><i class='bx bx-log-out'></i></button>
+        </form>
     </div>
 </div>
 
 <div class="main-container clearfix gutter-lg">
-    <div class="edit-container">
+    <div class="edit-container" style="border: 1px solid #d1d5da; border-radius: 6px;">
         <h1>Редактировать Аккаунт</h1>
-        <img id="preview" th:src="${client.avatarUrl != null ? client.avatarUrl : '/static/noAvatar.png'}" alt=" "/>
+        <img id="preview" th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt=" "/>
 
         <div class="icon-wrapper">
             <label for="avatarFile">
                 <i class='bx bx-upload file-upload-icon'></i>
             </label>
         </div>
-        <input type="file" id="avatarFile" name="avatarFile" accept="image/*" onchange="previewImage(event)" />
 
         <form th:action="@{/edit/{id}(id=${client.id})}" th:method="POST" th:object="${client}" enctype="multipart/form-data">
-            <input type="file" name="avatarFile" class="form-control" accept="image/*" onchange="previewImage(event)" />
+            <input type="file"  id="avatarFile" name="avatarFile" class="form-control" accept="image/*" onchange="previewImage(event)" />
             <div class="form-error" th:if="${#fields.hasErrors('avatarUrl')}" th:errors="*{avatarUrl}"></div>
 
             <input type="text" class="form-control" th:field="*{username}" id="username" placeholder="Username" />
             <div class="form-error" th:if="${#fields.hasErrors('username')}" th:text="*{username}"></div>
 
-            <input type="text" class="form-control" th:field="*{email}" id="email" placeholder="Email" />
+            <input type="hidden" class="form-control" th:field="*{email}" id="email" placeholder="Email" />
             <div class="form-error" th:if="${#fields.hasErrors('email')}" th:text="*{email}"></div>
 
             <input type="text" class="form-control" th:field="*{githubProfile}" id="githubProfile" placeholder="GitHub URL" />
@@ -190,19 +209,7 @@
             <input type="hidden" th:field="*{password}" id="password" placeholder="New Password" th:classappend="${#fields.hasErrors('password')} ? 'error' : 'form-control'"/>
             <div class="form-error" th:if="${#fields.hasErrors('password')}" th:text="*{password}"></div>
 
-            <div>
-                <label for="backgroundColor"></label>
-                <input type="hidden" type="color" id="backgroundColor" th:field="*{backgroundColor}" class="form-control" />
-                <div class="form-error" th:if="${#fields.hasErrors('backgroundColor')}" th:errors="*{backgroundColor}"></div>
-            </div>
-
-            <div>
-                <label for="mainColor"></label>
-                <input type="hidden" type="color" id="mainColor" th:field="*{mainColor}" class="form-control" />
-                <div class="form-error" th:if="${#fields.hasErrors('mainColor')}" th:errors="*{mainColor}"></div>
-            </div>
-
-            <button type="submit" class="btn-primary">Сохранить изменения</button>
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
         </form>
     </div>
 </div>

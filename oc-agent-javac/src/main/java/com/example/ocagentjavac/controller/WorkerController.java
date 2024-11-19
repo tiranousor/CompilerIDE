@@ -21,6 +21,8 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestController
 public class WorkerController {
@@ -160,14 +162,50 @@ public class WorkerController {
             return buildErrorResponse("Compilation timed out or failed", 1);
         }
 
+        // Парсинг ошибок компиляции Maven
+        Map<String, Object> parsedErrors = parseCompilationOutput(compileOutput);
+
+        if ((int) parsedErrors.get("returncode") != 0) {
+            return ResponseEntity.status(500).body(parsedErrors);
+        }
+
         // Запуск Maven-проекта
         String runOutput = executeCommand(Arrays.asList("mvn", "exec:java"), projectDir, 30);
         if (runOutput == null) {
             return buildErrorResponse("Execution timed out or failed", 1);
         }
 
-        return buildSuccessResponse(runOutput, "", 0);
+        return buildSuccessResponse(runOutput, Collections.emptyList(), 0);
     }
+
+    /**
+     * Парсит вывод компиляции и извлекает ошибки в структурированный формат.
+     */
+    private Map<String, Object> parseCompilationOutput(String output) {
+        Map<String, Object> response = new HashMap<>();
+        List<Map<String, Object>> errors = new ArrayList<>();
+        String[] lines = output.split("\n");
+        // Регулярное выражение для Maven-ошибок
+        Pattern pattern = Pattern.compile("^(\\S+\\.java):(\\d+):\\s+error:\\s+(.+)$");
+
+        for (String line : lines) {
+            Matcher matcher = pattern.matcher(line);
+            if (matcher.find()) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("file", matcher.group(1));
+                error.put("line", Integer.parseInt(matcher.group(2)));
+                error.put("message", matcher.group(3));
+                error.put("column", 0); // Если информация о колонке доступна, добавьте её
+                errors.add(error);
+            }
+        }
+
+        response.put("stdout", "");
+        response.put("stderr", errors);
+        response.put("returncode", errors.isEmpty() ? 0 : 1);
+        return response;
+    }
+
 
     /**
      * Обрабатывает не-Maven проекты: компилирует и запускает указанный класс.
@@ -198,7 +236,7 @@ public class WorkerController {
             return buildErrorResponse("Execution timed out or failed", 1);
         }
 
-        return buildSuccessResponse(runOutput, "", 0);
+        return buildSuccessResponse(runOutput, Collections.emptyList(), 0);
     }
 
     /**
@@ -248,14 +286,13 @@ public class WorkerController {
     /**
      * Создаёт успешный ответ.
      */
-    private ResponseEntity<?> buildSuccessResponse(String stdout, String stderr, int returnCode) {
+    private ResponseEntity<?> buildSuccessResponse(String stdout, List<Map<String, Object>> stderr, int returnCode) {
         Map<String, Object> response = new HashMap<>();
         response.put("stdout", stdout);
         response.put("stderr", stderr);
         response.put("returncode", returnCode);
         return ResponseEntity.ok(response);
     }
-
     /**
      * Создаёт ошибочный ответ.
      */

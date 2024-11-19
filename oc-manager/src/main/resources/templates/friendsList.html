@@ -4,72 +4,97 @@
     <meta charset="UTF-8">
     <title>Friends & Requests</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap:wght@300;400;500;600;700&display=swap');
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'VT323', monospace;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            font-size: inherit !important;
         }
 
         body {
-            background: #000000;
-            color: #FFC300;
+            color: #24292e;
             display: flex;
             justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
+            align-items: flex-start;
+            padding: 20px;
+            min-height: 100vh;
         }
 
-        .matrix {
-            position: absolute;
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #f6f8fa;
+            border-bottom: 1px solid #d1d5da;
+            width: 100%;
+            position: fixed;
             top: 0;
             left: 0;
+            z-index: 900;
+            box-sizing: border-box;
+        }
+
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+
+
+        .header .actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header .actions a {
+            display: flex;
+            align-items: center;
+            color: #24292e;
+            text-decoration: none;
+            font-size: 24px;
+            transition: color 0.3s ease;
+        }
+
+        .header .actions a:hover {
+                        color: #24292e;
+
+
+        }
+
+        .main-container {
+            margin-top: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
             width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-            pointer-events: none;
-        }
-
-        .matrix span {
-            position: absolute;
-            top: -10vh;
-            font-size: 18px;
-            color: #FFC300;
-            opacity: 0.8;
-            animation: fall 10s linear infinite;
-            white-space: pre;
-        }
-
-        @keyframes fall {
-            0% { top: -10vh; opacity: 0; }
-            20% { opacity: 1; }
-            100% { top: 110vh; opacity: 0; }
         }
 
         .container {
-            background-color: rgba(0, 0, 0, 0.9);
-            border: 3px solid #FFC300;
-            border-radius: 25px;
-            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
-            width: 100%;
-            max-width: 800px;
-            padding: 30px;
-            overflow-y: auto;
+            width: 90%;
+            max-width: 1000px;
+            padding: 20px;
+            border: 1px solid #d1d5da;
+            border-radius: 10px;
+            background-color: #ffffff;
         }
 
         h1, h2 {
             text-align: center;
             margin-bottom: 20px;
             font-size: 28px;
-            color: #FFC300;
+            color: #24292e;
         }
 
         .section {
@@ -86,7 +111,7 @@
             align-items: center;
             gap: 15px;
             padding: 10px;
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid #d1d5da;
         }
 
         li:last-child {
@@ -98,23 +123,22 @@
             height: 50px;
             border-radius: 50%;
             object-fit: cover;
-            border: 2px solid #FFC300;
+            border: 2px solid #d1d5da;
         }
 
         button {
-            background-color: transparent;
-            border: 2px solid #FFC300;
-            color: #FFC300;
+            background-color: #28a745;
+            border: none;
+            color: #ffffff;
             padding: 5px 10px;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+            transition: background-color 0.3s, box-shadow 0.3s;
         }
 
         button:hover {
-            background-color: #FFC300;
-            color: #000000;
-            box-shadow: 0 0 10px rgba(255, 234, 0, 0.6);
+            background-color: #218838;
+            box-shadow: 0 0 10px rgba(33, 136, 56, 0.6);
         }
 
         .search-form {
@@ -122,14 +146,41 @@
             margin-bottom: 20px;
         }
 
+        .action-icons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .action-icons i {
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .action-icons .accept-icon {
+            color: #28a745;
+        }
+
+        .action-icons .accept-icon:hover {
+            color: #218838;
+        }
+
+        .action-icons .reject-icon {
+            color: #d73a49;
+        }
+
+        .action-icons .reject-icon:hover {
+            color: #b31d28;
+        }
         .search-form input {
-            background-color: #333;
-            border: 2px solid #FFC300;
-            color: #FFC300;
+            background-color: #f6f8fa;
+            border: 1px solid #d1d5da;
+            color: #24292e;
             padding: 10px;
             font-size: 16px;
             border-radius: 8px;
-            width: 90%;
+            width: 70%;
             outline: none;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
@@ -144,102 +195,145 @@
         }
 
         .friend-username {
-            color: #E0E0E0;
+            color: #0366d6;
             font-size: 20px;
             text-decoration: none;
         }
 
         .friend-username:hover {
-            color: #FFC300;
+            color: #0056b3;
         }
+
     </style>
 </head>
 <body>
-<div class="matrix" id="matrixContainer"></div>
 
-<div class="container">
-    <h1>Friends & Requests</h1>
-
-    <!-- Friend Requests Section (Only show if there are requests) -->
-    <div class="section" th:if="${receivedRequests != null && !receivedRequests.isEmpty()}">
-        <h2>Incoming Friend Requests</h2>
-        <div th:if="${error}" style="color: red;">
-            <p th:text="${error}"></p>
-        </div>
-        <div th:if="${success}" style="color: green;">
-            <p th:text="${success}"></p>
-        </div>
-        <ul>
-            <th:block th:each="request : ${receivedRequests}">
-                <li>
-                    <img th:src="${request.sender.avatarUrl != null ? request.sender.avatarUrl : '/noAvatar.png'}" alt="Avatar">
-                    <span class="friend-username" th:text="${request.sender.username}">Username</span>
-                    <form th:action="@{/friends/acceptRequest/{requestId}(requestId=${request.id})}" method="post" style="display: inline;">
-                        <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
-                        <button type="submit">Accept</button>
-                    </form>
-                    <form th:action="@{/friends/rejectRequest/{requestId}(requestId=${request.id})}" method="post" style="display: inline;">
-                        <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
-                        <button type="submit">Reject</button>
-                    </form>
-                </li>
-            </th:block>
-        </ul>
+<div class="header">
+    <div class="user-info">
+        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar">
+        <span th:text="${client.username}">User Name</span>
     </div>
+    <div class="actions">
+        <a th:href="@{/edit/{id}(id=${client.id})}"><i class='bx bx-user'></i></a>
+        <form th:action="@{/logout}" th:method="POST" style="margin: 0;">
 
-    <!-- Search Users Section -->
-    <div class="section">
-        <h2>Search Users</h2>
-        <form class="search-form" th:action="@{/friends/list}" method="get">
-            <input type="text" name="username" placeholder="Enter username" th:value="${searchQuery}" required>
-            <button type="submit">Search</button>
+            <button type="submit" class="logout-icon" title="Logout" style="border: none; background: none; color: #28a745;"><i class='bx bx-log-out'></i></button>
         </form>
-        <ul>
-            <th:block th:each="user : ${users}">
-                <li>
-                    <img th:src="${user.avatarUrl != null ? user.avatarUrl : '/noAvatar.png'}" alt="Avatar">
-                    <span class="friend-username" th:text="${user.username}">Username</span>
-                    <form th:action="@{/friends/sendRequest/{receiverId}(receiverId=${user.id})}" method="post" style="display: inline;">
-                        <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
-                        <button type="submit">Add Friend</button>
-                    </form>
-                </li>
-            </th:block>
-        </ul>
-    </div>
-
-    <!-- Friends List Section -->
-    <div class="section">
-        <h2>Your Friends</h2>
-        <ul>
-            <th:block th:each="friend : ${friends}">
-                <li>
-                    <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar">
-                    <a class="friend-username" th:href="@{/userProfile/{id}(id=${friend.id})}" th:text="${friend.username}">Friend Username</a>
-                </li>
-            </th:block>
-        </ul>
     </div>
 </div>
 
+<div class="main-container clearfix gutter-lg">
+    <div class="container">
+        <div class="friends-container">
+        <h1>Друзья</h1>
+
+        <!-- Friend Requests Section -->
+        <div class="section" th:if="${receivedRequests != null && !receivedRequests.isEmpty()}">
+            <h2>Заявки</h2>
+            <div th:if="${error}" style="color: red;">
+                <p th:text="${error}"></p>
+            </div>
+            <div th:if="${success}" style="color: green;">
+                <p th:text="${success}"></p>
+            </div>
+            <ul>
+                <th:block th:each="request : ${receivedRequests}">
+                    <li>
+                        <img th:src="${request.sender.avatarUrl != null ? request.sender.avatarUrl : '/noAvatar.png'}" alt="Avatar">
+                        <span class="friend-username" th:text="${request.sender.username}">Username</span>
+                        <div class="action-icons">
+                            <form th:action="@{/friends/acceptRequest/{requestId}(requestId=${request.id})}" method="post" style="display: inline;">
+                                <button type="submit" style="background: none; border: none; cursor: pointer;">
+                                    <i class='bx bx-check accept-icon' title="Принять"></i>
+                                </button>
+                            </form>
+                            <form th:action="@{/friends/rejectRequest/{requestId}(requestId=${request.id})}" method="post" style="display: inline;">
+                                <button type="submit" style="background: none; border: none; cursor: pointer;">
+                                    <i class='bx bx-x reject-icon' title="Отклонить"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                </th:block>
+            </ul>
+        </div>
+
+        <!-- Search Users Section -->
+        <div class="section">
+            <h2>Поис</h2>
+            <form class="search-form" th:action="@{/friends/list}" method="get">
+                <input type="text" name="username" placeholder="Enter username" th:value="${searchQuery}" required>
+                <button type="submit">Search</button>
+            </form>
+            <ul>
+                <th:block th:each="user : ${users}">
+                    <li>
+                        <img th:src="${user.avatarUrl != null ? user.avatarUrl : '/noAvatar.png'}" alt="Avatar">
+                        <span class="friend-username" th:text="${user.username}">Username</span>
+<!--                        <form th:action="@{/friends/sendRequest/{receiverId}(receiverId=${user.id})}" method="post" style="display: inline;">-->
+<!--                            <button type="submit">Add Friend</button>-->
+<!--                        </form>-->
+
+                        <button type="button" class="add-friend-button" th:data-user-id="${user.id}">
+                            <i class='bx bx-user-plus'></i>
+                        </button>
+                    </li>
+                </th:block>
+            </ul>
+        </div>
+
+        <!-- Friends List Section -->
+        <div class="section">
+            <h2>Your Friends</h2>
+            <ul>
+                <th:block th:each="friend : ${friends}">
+                    <li>
+                        <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar">
+                        <a class="friend-username" th:href="@{/userProfile/{id}(id=${friend.id})}" th:text="${friend.username}">Friend Username</a>
+                    </li>
+                </th:block>
+            </ul>
+        </div>
+    </div>
+</div>
+</div>
+<input type="hidden" id="csrfToken" name="_csrf" th:value="${_csrf.token}" />
+
 <script>
-    // Matrix Animation
-    const matrixContainer = document.getElementById('matrixContainer');
-    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    document.addEventListener('DOMContentLoaded', function () {
+        // Находим все кнопки "Добавить" и добавляем обработчик событий
+        document.querySelectorAll('.add-friend-button').forEach(button => {
+            button.addEventListener('click', function () {
+                const userId = this.getAttribute('data-user-id');
+                const csrfToken = document.querySelector('input[name="_csrf"]').value;
 
-    function createMatrixSpan() {
-        const span = document.createElement('span');
-        span.textContent = characters.charAt(Math.floor(Math.random() * characters.length));
-        span.style.left = Math.random() * 100 + 'vw';
-        span.style.animationDuration = Math.random() * 5 + 5 + 's';
-        span.style.opacity = Math.random() * 0.5 + 0.5;
-        matrixContainer.appendChild(span);
-        setTimeout(() => {
-            matrixContainer.removeChild(span);
-        }, 10000);
-    }
-
-    setInterval(createMatrixSpan, 150);
+                // Выполняем AJAX-запрос к серверу для отправки заявки в друзья
+                fetch(`/friends/sendRequest/${userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
+                    }
+                })
+                .then(response => response.text())
+                .then(data => {
+                    if (data === 'success') {
+                        // Если успешно, изменяем текст кнопки и отключаем ее
+                        button.innerHTML = '<i class="bx bx-check"></i> Запрос отправлен';
+                        button.disabled = true;
+                        button.classList.remove('add-friend-button');
+                    } else {
+                        // В случае ошибки показываем сообщение пользователю
+                        alert('Ошибка: ' + data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при отправке запроса:', error);
+                    alert('Произошла ошибка. Пожалуйста, попробуйте снова.');
+                });
+            });
+        });
+    });
 </script>
 </body>
 </html>

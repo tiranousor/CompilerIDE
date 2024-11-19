@@ -236,7 +236,6 @@ public class UserController {
         existingClient.setEmail(clientForm.getEmail());
         existingClient.setGithubProfile(clientForm.getGithubProfile());
         existingClient.setAbout(clientForm.getAbout());
-
 //        existingClient.setBackgroundColor(clientForm.getBackgroundColor());
 //        existingClient.setMainColor(clientForm.getMainColor());
 

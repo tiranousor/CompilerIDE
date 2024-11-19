@@ -8,10 +8,12 @@ import com.example.CompilerIDE.repositories.ClientRepository;
 import com.example.CompilerIDE.repositories.LoginTimestampRepository;
 import com.example.CompilerIDE.repositories.ProjectRepository;
 import com.example.CompilerIDE.repositories.UnbanRequestRepository;
+import com.example.CompilerIDE.services.ClientService;
 import com.example.CompilerIDE.services.LoginTimestampService;
 import com.example.CompilerIDE.services.MinioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -27,32 +29,38 @@ public class AdminController {
     private final MinioService minioService;
     private final LoginTimestampService loginTimestampService;
     private final UnbanRequestRepository unbanRequestRepository;
-
+    private final ClientService clientService;
     @Autowired
-    public AdminController(ClientRepository clientRepository, ProjectRepository projectRepository, MinioService minioService, LoginTimestampService loginTimestampService, UnbanRequestRepository unbanRequestRepository) {
+    public AdminController(ClientRepository clientRepository, ProjectRepository projectRepository, MinioService minioService, LoginTimestampService loginTimestampService, UnbanRequestRepository unbanRequestRepository, ClientService clientService) {
         this.clientRepository = clientRepository;
         this.projectRepository = projectRepository;
         this.minioService = minioService;
         this.loginTimestampService = loginTimestampService;
         this.unbanRequestRepository = unbanRequestRepository;
+        this.clientService = clientService;
     }
 //    @Secured("ADMIN")
     @GetMapping("/users")
-    public String listUsers(Model model) {
+    public String listUsers(Model model, Authentication authentication) {
         List<Client> users = clientRepository.findAll();
         model.addAttribute("users", users);
+        Client client = clientService.findByUsername(authentication.getName()).orElse(null);
+        model.addAttribute("client", client);
+
         return "admin/user_list";
     }
 
     // Просмотр профиля пользователя по ID
     @GetMapping("/users/{id}")
-    public String viewUserProfile(@PathVariable("id") Integer id, Model model) {
+    public String viewUserProfile(@PathVariable("id") Integer id, Model model, Authentication authentication) {
         Client user = clientRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
         List<Project> projects = projectRepository.findByClient(user);
         model.addAttribute("user", user);
         model.addAttribute("projects", projects);
         List<LoginTimestamp> loginTimestamps = loginTimestampService.findAllByClient(user);
         model.addAttribute("loginTimestamps", loginTimestamps);
+        Client client = clientService.findByUsername(authentication.getName()).orElse(null);
+        model.addAttribute("client", client);
         return "admin/user_profile";
     }
 
@@ -88,10 +96,15 @@ public class AdminController {
         return "admin/user_list";
     }
     @GetMapping("/unbanRequests")
-    public String listUnbanRequests(Model model) {
+    public String listUnbanRequests(Model model, Authentication authentication) {
         List<UnbanRequest> unbanRequests = unbanRequestRepository.findAll();
         model.addAttribute("unbanRequests", unbanRequests);
+
+        Client client = clientService.findByUsername(authentication.getName()).orElse(null);
+        model.addAttribute("client", client);
         return "admin/unban_requests";
+
+
     }
 
     @Secured("ROLE_ADMIN")

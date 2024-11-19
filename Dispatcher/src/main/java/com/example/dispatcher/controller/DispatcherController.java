@@ -127,12 +127,17 @@ public class DispatcherController {
                                 new ParameterizedTypeReference<Map<String, Object>>() {}
                         );
 
-                        // Обеспечиваем, что stderr всегда является списком
+                        // Проверяем, что stderr является списком
                         Map<String, Object> responseBody = response.getBody();
                         if (responseBody != null) {
                             Object stderrObj = responseBody.getOrDefault("stderr", Collections.emptyList());
-                            if (stderrObj instanceof String) {
-                                responseBody.put("stderr", Collections.singletonList(Map.of("message", stderrObj)));
+                            if (!(stderrObj instanceof List)) {
+                                // Если stderr не список, преобразуем его
+                                List<Map<String, Object>> stderrList = new ArrayList<>();
+                                if (stderrObj instanceof String) {
+                                    stderrList.add(Map.of("message", stderrObj));
+                                }
+                                responseBody.put("stderr", stderrList);
                             }
                             // Убедитесь, что returnCode присутствует и имеет правильный формат
                             Object returnCodeObj = responseBody.getOrDefault("returnCode", 0);
@@ -148,19 +153,19 @@ public class DispatcherController {
                         logger.info("Получен ответ от Worker '{}': {}", workerUrlForLambda, response.getBody());
                         task.getFutureResult().complete(responseBody);
                     } catch (HttpClientErrorException | HttpServerErrorException ex) { // Изменено
-                    logger.error("Ошибка при отправке задачи на Worker '{}': {}", workerUrlForLambda, ex.getMessage(), ex);
-                    String responseBody = ex.getResponseBodyAsString();
-                    Map<String, Object> errorMap;
-                    try {
-                        errorMap = objectMapper.readValue(responseBody, new TypeReference<Map<String, Object>>() {});
-                    } catch (IOException jsonEx) {
-                        errorMap = Map.of("message", "Ошибка при обработке задачи");
-                    }
-                    task.getFutureResult().complete(errorMap); // Передаём детали ошибки
-                } catch (Exception e) {
-                    logger.error("Ошибка при отправке задачи на Worker '{}': {}", workerUrlForLambda, e.getMessage(), e);
-                    task.getFutureResult().completeExceptionally(e);
-                } finally {
+                        logger.error("Ошибка при отправке задачи на Worker '{}': {}", workerUrlForLambda, ex.getMessage(), ex);
+                        String responseBody = ex.getResponseBodyAsString();
+                        Map<String, Object> errorMap;
+                        try {
+                            errorMap = objectMapper.readValue(responseBody, new TypeReference<Map<String, Object>>() {});
+                        } catch (IOException jsonEx) {
+                            errorMap = Map.of("message", "Ошибка при обработке задачи");
+                        }
+                        task.getFutureResult().complete(errorMap); // Передаём детали ошибки
+                    } catch (Exception e) {
+                        logger.error("Ошибка при отправке задачи на Worker '{}': {}", workerUrlForLambda, e.getMessage(), e);
+                        task.getFutureResult().completeExceptionally(e);
+                    } finally {
                         workerStatus.put(workerUrlForLambda, true);
                         logger.info("Worker освободился: {}", workerUrlForLambda);
                     }
@@ -172,6 +177,7 @@ public class DispatcherController {
             }
         }
     }
+
 
     private RestTemplate createRestTemplateWithTimeouts() {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();

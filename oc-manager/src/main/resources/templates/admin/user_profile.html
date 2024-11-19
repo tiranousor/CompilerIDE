@@ -2,7 +2,6 @@
 <html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
@@ -11,8 +10,8 @@
         * {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-            font-family: 'Roboto', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            font-size: inherit !important;
         }
 
         .profile-avatar {
@@ -40,7 +39,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 5px 20px;
+            padding: 10px 20px;
             background-color: #f6f8fa;
             border-bottom: 1px solid #d1d5da;
             width: 100%;
@@ -56,13 +55,13 @@
             align-items: center;
         }
 
-        .header .user-info img {
+
+.header .user-info img {
             width: 40px;
             height: 40px;
             border-radius: 50%;
             margin-right: 10px;
         }
-
         .main-container {
             margin-top: 80px;
             display: flex;
@@ -144,6 +143,55 @@
             20% { opacity: 1; }
             100% { top: 110vh; opacity: 0; }
         }
+          .header .notification-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-container {
+            position: relative;
+        }
+
+        .notification-icon {
+            font-size: 24px;
+            position: relative;
+            cursor: pointer;
+            color: #0366d6;
+        }
+
+        .notification-icon:hover {
+            color: #0056b3;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #FF4D4F;
+            color: #FFF;
+            border-radius: 50%;
+            font-size: 12px;
+            padding: 3px 6px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .notification-badge.visible {
+            display: inline-block;
+        }
+
+        .logout-icon {
+            font-size: 24px;
+            color: #24292e;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .logout-icon:hover {
+            color: #d73a49;
+        }
+
     </style>
 </head>
 <body class="p-3">
@@ -152,8 +200,14 @@
         <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar">
         <span class="username" th:text="${client.username}"></span>
     </div>
-    <div class="actions">
-        <a th:href="@{/logout}" th:method="POST"><i class='bx bx-log-out'></i></a>
+    <div class="notification-container">
+        <a href="/admin/unbanRequests" class="notification-icon">
+            &#128276; <!-- Unicode bell icon -->
+            <span class="notification-badge" th:classappend="${notificationCount > 0} ? 'visible' : ''" th:text="${notificationCount}"></span>
+        </a>
+        <form th:action="@{/logout}" th:method="POST" style="margin: 0;">
+            <button type="submit" class="logout-icon" title="Logout" style="border: none; background: none;"><i class='bx bx-log-out'></i></button>
+        </form>
     </div>
 </div>
 <!--<div class="matrix" id="matrixContainer"></div>-->

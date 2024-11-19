@@ -1,213 +1,186 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Редактировать Проект</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
     <style>
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap:wght@300;400;500;600;700&display=swap');
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            font-size: inherit !important;
+        }
 
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-                font-family: 'VT323', monospace;
-            }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 20px;
+            background-color: #f6f8fa;
+            border-bottom: 1px solid #d1d5da;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 900;
+            box-sizing: border-box;
+        }
 
-            body {
-                background: #000000;
-                color: #FFC300;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                flex-direction: column;
-                height: 100vh;
-                overflow: hidden;
-                position: relative;
-            }
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
 
-            .container {
-                background-color: rgba(0, 0, 0, 0.9);
-                border: 3px solid #FFC300;
-                border-radius: 25px;
-                box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
-                width: 600px;
-                max-width: 100%;
-                padding: 30px;
-            }
+        .header .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
 
-            .container h2 {
-                text-align: center;
-                margin-bottom: 20px;
-                font-size: 28px;
-                color: #FFC300;
-            }
+        .header .actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
-            .container form {
-                display: flex;
-                flex-direction: column;
-            }
+        .header .actions a {
+            display: flex;
+            align-items: center;
+            color: #24292e;
+            text-decoration: none;
+            font-size: 24px;
+            transition: color 0.3s ease;
+        }
 
-            .container input,
-            .container select,
-            .container textarea {
-                background-color: #333;
-                border: 2px solid #FFC300;
-                color: #FFC300;
-                margin: 10px 0;
-                padding: 10px;
-                font-size: 16px;
-                width: 100%;
-                border-radius: 8px;
-                outline: none;
-                transition: border-color 0.3s, box-shadow 0.3s;
-            }
+        .header .actions a:hover {
+            color: #0366d6;
+        }
 
-            .container input:focus,
-            .container select:focus,
-            .container textarea:focus {
-                border-color: #17A846;
-                box-shadow: 0 0 10px rgba(23, 168, 70, 0.6);
-            }
+        .main-container {
+            margin-top: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 0 20px;
+            box-sizing: border-box;
+            width: 100%;
+            gap: 40px;
+        }
 
-            .container button {
-                background-color: #1DB954;
-                color: #fff;
-                font-size: 16px;
-                padding: 10px;
-                border: none;
-                border-radius: 8px;
-                font-weight: 600;
-                text-transform: uppercase;
-                margin-top: 15px;
-                cursor: pointer;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-                transition: background-color 0.3s, box-shadow 0.3s;
-            }
+        .edit-container {
+            width: 600px;
+            max-width: 90%;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #d1d5da;
+        }
 
-            .container button:hover {
-                background-color: #17A846;
-                box-shadow: 0 0 15px rgba(23, 168, 70, 0.6);
-            }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #24292e;
+        }
 
-            .form-input {
-                margin-bottom: 15px;
-            }
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            border: 1px solid #d1d5da;
+            border-radius: 6px;
+            background-color: #f6f8fa;
+            color: #6a737d;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
 
-            .form-input label {
-                font-size: 16px;
-                color: #FFC300;
-                margin-bottom: 5px;
-                display: block;
-            }
+        .form-control:focus {
+            border-color: #17A846;
+            box-shadow: 0 0 10px rgba(23, 168, 70, 0.3);
+        }
 
-            .form-error {
-                color: #FF4D4F;
-                font-size: 14px;
-                margin-top: -5px;
-            }
-                    .matrix {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                z-index: -1;
-                pointer-events: none;
-                overflow: hidden;
-            }
+        .btn-primary {
+            background-color: #28a745;
+            color: #fff;
+            padding: 10px 45px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
 
-            .matrix span {
-                position: absolute;
-                top: -10vh;
-                font-size: 18px;
-                color: #FFC300;
-                opacity: 0.8;
-                animation: fall 10s linear infinite;
-                white-space: pre;
-            }
+        .btn-primary:hover {
+            background-color: #218838;
+            box-shadow: 0 0 15px rgba(33, 136, 56, 0.6);
+        }
 
-            @keyframes fall {
-                0% {
-                    top: -10vh;
-                    opacity: 0;
-                }
-
-                20% {
-                    opacity: 1;
-                }
-
-                100% {
-                    top: 110vh;
-                    opacity: 0;
-                }
-            }
+        .form-error {
+            color: #d73a49;
+            font-size: 14px;
+            margin-top: -10px;
+            margin-bottom: 10px;
+            text-align: left;
+        }
     </style>
 </head>
 
-<body>
-
-<div class="matrix" id="matrixContainer"></div>
-
-<div class="container">
-    <h2>Редактировать проект</h2>
-    <form th:action="@{/projects/edit/{id}(id=${project.id})}" method="post" th:object="${project}">
-        <div class="form-input">
-            <label for="name">Название проекта:</label>
-            <input type="text" class="form-control" id="name" name="name" th:field="*{name}" required>
-            <div class="form-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Ошибка в названии проекта</div>
-        </div>
-        <div class="form-input">
-            <label for="language">Язык программирования:</label>
-            <select class="form-control" id="language" name="language" required th:field="*{language}">
-                <option value="">Выберите язык</option>
-                <option value="Java" th:selected="${project.language == 'Java'}">Java</option>
-                <option value="Python" th:selected="${project.language == 'Python'}">Python</option>
-                <option value="C++" th:selected="${project.language == 'C++'}">C++</option>
-            </select>
-            <div class="form-error" th:if="${#fields.hasErrors('language')}" th:errors="*{language}">Ошибка в языке программирования</div>
-        </div>
-        <div class="form-input">
-            <label for="readMe">Read Me:</label>
-            <textarea class="form-control" id="readMe" name="readMe" th:field="*{readMe}" rows="4"></textarea>
-            <div class="form-error" th:if="${#fields.hasErrors('readMe')}" th:errors="*{readMe}">Ошибка в поле Read Me</div>
-        </div>
-
-        <!-- Поле Уровень доступа -->
-        <div class="form-input">
-            <label for="accessLevel">Доступ:</label>
-            <select class="form-control" id="accessLevel" name="accessLevel" required th:field="*{accessLevel}">
-                <option value="">Выберите доступ</option>
-                <option value="PUBLIC" th:selected="${project.accessLevel == 'PUBLIC'}">Публичный</option>
-                <option value="PRIVATE" th:selected="${project.accessLevel == 'PRIVATE'}">Приватный</option>
-            </select>
-            <div class="form-error" th:if="${#fields.hasErrors('accessLevel')}" th:errors="*{accessLevel}">Ошибка в доступе</div>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
-    </form>
+<body class="p-3">
+<div class="header">
+    <div class="user-info">
+        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar">
+        <span th:text="${client.username}"></span>
+    </div>
+    <div class="actions">
+        <a th:href="@{/edit/{id}(id=${client.id})}"><i class='bx bx-user'></i></a>
+        <form th:action="@{/logout}" th:method="POST" style="margin: 0;">
+            <button type="submit" class="logout-icon" title="Logout" style="border: none; background: none;"><i class='bx bx-log-out'></i></button>
+        </form>
+    </div>
 </div>
 
-<script>
-    // Matrix Animation
-    const matrixContainer = document.getElementById('matrixContainer');
-    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+<div class="main-container clearfix gutter-lg">
+    <div class="edit-container">
+        <h1>Редактировать Проект</h1>
+        <form th:action="@{/projects/edit/{id}(id=${project.id})}" method="post" th:object="${project}">
+            <div class="form-input">
+                <input type="text" class="form-control" id="name" name="name" th:field="*{name}" placeholder="Название проекта" required>
+                <div class="form-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Ошибка в названии проекта</div>
+            </div>
+            <div class="form-input">
+                <select class="form-control" id="language" name="language" th:field="*{language}" required>
+                    <option value="">Выберите язык</option>
+                    <option value="Java" th:selected="${project.language == 'Java'}">Java</option>
+                    <option value="Python" th:selected="${project.language == 'Python'}">Python</option>
+                    <option value="C++" th:selected="${project.language == 'C++'}">C++</option>
+                </select>
+                <div class="form-error" th:if="${#fields.hasErrors('language')}" th:errors="*{language}">Ошибка в языке программирования</div>
+            </div>
+            <div class="form-input">
+                <textarea class="form-control" id="readMe" name="readMe" th:field="*{readMe}" rows="4" placeholder="Read Me"></textarea>
+                <div class="form-error" th:if="${#fields.hasErrors('readMe')}" th:errors="*{readMe}">Ошибка в поле Read Me</div>
+            </div>
+            <div class="form-input">
+                <select class="form-control" id="accessLevel" name="accessLevel" th:field="*{accessLevel}" required>
+                    <option value="">Выберите доступ</option>
+                    <option value="PUBLIC" th:selected="${project.accessLevel == 'PUBLIC'}">Публичный</option>
+                    <option value="PRIVATE" th:selected="${project.accessLevel == 'PRIVATE'}">Приватный</option>
+                </select>
+                <div class="form-error" th:if="${#fields.hasErrors('accessLevel')}" th:errors="*{accessLevel}">Ошибка в доступе</div>
+            </div>
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+        </form>
+    </div>
+</div>
 
-    function createMatrixSpan() {
-        const span = document.createElement('span');
-        span.textContent = characters.charAt(Math.floor(Math.random() * characters.length));
-        span.style.left = Math.random() * 100 + 'vw';
-        span.style.animationDuration = Math.random() * 5 + 5 + 's';
-        span.style.opacity = Math.random() * 0.5 + 0.5;
-        matrixContainer.appendChild(span);
-        setTimeout(() => {
-            matrixContainer.removeChild(span);
-        }, 10000);
-    }
-
-    setInterval(createMatrixSpan, 150);
-</script>
 </body>
+
 </html>

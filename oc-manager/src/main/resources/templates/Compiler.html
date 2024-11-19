@@ -252,10 +252,15 @@
                 console.log("Имя главного класса успешно сохранено");
                 showMessage("Имя главного класса сохранено", "success");
             },
-            error: function(xhr, status, error) {
-                console.error("Ошибка при сохранении имени главного класса:", error);
-                showMessage("Ошибка при сохранении имени главного класса", "error");
+    error: function(xhr, status, error) {
+            console.error("Ошибка при сохранении имени главного класса:", error);
+            // Получаем сообщение об ошибке из ответа сервера, если есть
+            let errorMessage = "Ошибка при сохранении имени главного класса";
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMessage = xhr.responseJSON.message;
             }
+            showMessage(errorMessage, "error");
+        }
         });
     };
 
@@ -373,21 +378,82 @@
         };
 
 
+const displayCompileResult = (result) => {
+    $('#compile-output').show();
+    let output = '';
 
-        // Функция для отображения результата компиляции
-        const displayCompileResult = (result) => {
-            $('#compile-output').show();
-            const output = `
-                stdout:
-                ${result.stdout || ''}
+    if (result.stdout) {
+        output += `<h3>Вывод:</h3><pre>${escapeHtml(result.stdout)}</pre>`;
+    }
 
-                stderr:
-                ${result.stderr || ''}
+    if (result.stderr && result.stderr.length > 0) {
+        output += `<h3>Ошибки компиляции:</h3><ul id="error-list">`;
+        result.stderr.forEach((error, index) => {
+            const file = escapeHtml(error.file || 'Неизвестный файл');
+            const line = error.line || 0;
+            const column = error.column || 0;
+            const message = escapeHtml(error.message || 'Неизвестная ошибка');
+            output += `
+                <li class="compile-error" data-file="${file}" data-line="${line}" data-column="${column}">
+                    ${file}:${line}:${column} - ${message}
+                </li>`;
+        });
+        output += `</ul>`;
+    }
 
-                returncode: ${result.returncode}
-            `;
-            $('#compile-result').text(output);
-        };
+    output += `<p>Return Code: ${result.returnCode}</p>`;
+    $('#compile-result').html(output);
+
+    // Добавляем обработчики кликов по ошибкам
+    $('.compile-error').on('click', function() {
+        const file = $(this).data('file');
+        const line = $(this).data('line');
+        const column = $(this).data('column');
+        navigateToCode(file, line, column);
+    });
+};
+
+
+// Функция для безопасного отображения HTML
+const escapeHtml = (unsafe) => {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+};
+const navigateToCode = (fileName, line, column) => {
+    // Найдите узел файла в jsTree
+    const tree = $('#jstree').jstree(true);
+    const allNodes = tree.get_json('#', { flat: true });
+    const targetNode = allNodes.find(node => node.text === fileName && node.type === 'file');
+
+    if (targetNode) {
+        // Выберите узел в jsTree
+        tree.deselect_all();
+        tree.select_node(targetNode);
+
+        // Загрузите файл в редактор, если он не открыт
+        loadFile(targetNode);
+
+        // Перейдите к указанной строке и столбцу в Monaco
+        if (editor && line && column) {
+            editor.revealLineInCenter(line);
+            const model = editor.getModel();
+            if (model) {
+                const position = { lineNumber: line, column: column };
+                editor.setPosition(position);
+                editor.focus();
+                editor.setSelection(new monaco.Selection(line, column, line, column));
+            }
+        }
+    } else {
+        showMessage(`Файл "${fileName}" не найден в проекте.`, "error");
+    }
+};
+
+
 
         const showMessage = (msg, type = 'error') => {
             const messageDiv = $('#message');

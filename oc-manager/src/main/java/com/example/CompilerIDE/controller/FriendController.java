@@ -61,6 +61,7 @@ public class FriendController {
     }
 
     @PostMapping("/sendRequest/{receiverId}")
+    @ResponseBody
     public String sendFriendRequest(@PathVariable("receiverId") Integer receiverId, Authentication authentication) {
         Client sender = clientService.findByUsername(authentication.getName()).orElse(null);
         Client receiver = clientService.findOne(receiverId);
@@ -98,11 +99,13 @@ public class FriendController {
         model.addAttribute("searchQuery", username);
         List<Client> friends = friendshipService.getFriends(currentUser);
         model.addAttribute("friends", friends);
-
+        Client client = clientService.findByUsername(authentication.getName()).orElse(null);
+        model.addAttribute("client", client);
         return "friendsList";
     }
 
     @PostMapping("/acceptRequest/{requestId}")
+
     public String acceptFriendRequest(@PathVariable("requestId") Integer requestId, Authentication authentication, Model model) {
         Client currentUser = clientService.findByUsername(authentication.getName()).orElse(null);
 
@@ -214,7 +217,8 @@ public class FriendController {
         model.addAttribute("friend", friend);
         model.addAttribute("projects", friendsProjects);
         model.addAttribute("projectsWithRoles", projectsWithRoles);
-
+        Client client = clientService.findByUsername(authentication.getName()).orElse(null);
+        model.addAttribute("client", client);
         return "friendProfile";
     }
 
