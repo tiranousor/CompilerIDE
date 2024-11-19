@@ -1,5 +1,6 @@
 package com.example.CompilerIDE.providers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -25,7 +26,7 @@ public class ProjectStruct {
     private String type;
 
     private String hash;
-
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;

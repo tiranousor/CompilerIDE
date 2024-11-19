@@ -18,7 +18,8 @@
 		<module>oc-manager</module>
 		<module>oc-agent-javac</module>
 		<module>Dispatcher</module>
-	</modules>
+        <module>oc-agent-python</module>
+    </modules>
 
 	<properties>
 		<java.version>21</java.version>

@@ -1,5 +1,7 @@
 package com.example.dispatcher.controller;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,26 +24,36 @@ public class DispatcherController {
     private RestTemplate restTemplate;
 
     @Value("${WORKER_URLS}")
-    private String workerUrlsString;
+    private String javaWorkerUrlsString;
 
-    // Карта для отслеживания состояния Worker'ов
-    private final Map<String, Boolean> workerStatus = new ConcurrentHashMap<>();
+    @Value("${PYTHON_WORKER_URLS}")
+    private String pythonWorkerUrlsString;
+
+    // Карты для отслеживания состояния Worker'ов
+    private final Map<String, Boolean> javaWorkerStatus = new ConcurrentHashMap<>();
+    private final Map<String, Boolean> pythonWorkerStatus = new ConcurrentHashMap<>();
 
     // Очередь задач
     private final BlockingQueue<Task> taskQueue = new LinkedBlockingQueue<>();
 
     // Пул потоков для обработки задач
-    private final ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private final ExecutorService executorService = Executors.newFixedThreadPool(20); // Увеличен для обработки обеих типов Workers
 
     @PostConstruct
     public void init() {
-        List<String> workerUrls = Arrays.asList(workerUrlsString.split(","));
-        logger.info("Dispatcher инициализирован с Worker URL: {}", workerUrls);
+        List<String> javaWorkerUrls = Arrays.asList(javaWorkerUrlsString.split(","));
+        List<String> pythonWorkerUrls = Arrays.asList(pythonWorkerUrlsString.split(","));
+        logger.info("Dispatcher инициализирован с Java Workers: {}", javaWorkerUrls);
+        logger.info("Dispatcher инициализирован с Python Workers: {}", pythonWorkerUrls);
 
         restTemplate = createRestTemplateWithTimeouts();
 
-        for (String workerUrl : workerUrls) {
-            workerStatus.put(workerUrl, true);
+        for (String workerUrl : javaWorkerUrls) {
+            javaWorkerStatus.put(workerUrl.trim(), true);
+        }
+
+        for (String workerUrl : pythonWorkerUrls) {
+            pythonWorkerStatus.put(workerUrl.trim(), true);
         }
 
         new Thread(this::dispatchTasks).start();
@@ -54,7 +66,8 @@ public class DispatcherController {
 
         deferredResult.onTimeout(() -> {
             logger.error("Время ожидания результата задачи истекло");
-            deferredResult.setErrorResult(ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT).body("Время ожидания результата задачи истекло"));
+            deferredResult.setErrorResult(ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT)
+                    .body("Время ожидания результата задачи истекло"));
         });
 
         String taskId = UUID.randomUUID().toString();
@@ -65,7 +78,8 @@ public class DispatcherController {
             deferredResult.setResult(ResponseEntity.ok(result));
         }).exceptionally(ex -> {
             logger.error("Ошибка при обработке задачи: {}", ex.getMessage(), ex);
-            deferredResult.setErrorResult(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при обработке задачи"));
+            deferredResult.setErrorResult(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Ошибка при обработке задачи"));
             return null;
         });
 
@@ -77,19 +91,42 @@ public class DispatcherController {
         return deferredResult;
     }
 
-
     private void dispatchTasks() {
         while (true) {
             try {
                 // Получаем следующую задачу из очереди
                 Task task = taskQueue.take();
 
+                String language = task.getPayload().get("language");
+                if (language == null) {
+                    logger.error("Отсутствует поле 'language' в задаче с taskId: {}", task.getTaskId());
+                    task.getFutureResult().completeExceptionally(
+                            new IllegalArgumentException("Отсутствует поле 'language' в задаче"));
+                    continue;
+                }
+
+                Map<String, Boolean> targetWorkerStatus;
+                List<String> targetWorkerUrls;
+
+                if (language.equalsIgnoreCase("java")) {
+                    targetWorkerStatus = javaWorkerStatus;
+                    targetWorkerUrls = new ArrayList<>(javaWorkerStatus.keySet());
+                } else if (language.equalsIgnoreCase("python")) {
+                    targetWorkerStatus = pythonWorkerStatus;
+                    targetWorkerUrls = new ArrayList<>(pythonWorkerStatus.keySet());
+                } else {
+                    logger.error("Неизвестный язык программирования: {}", language);
+                    task.getFutureResult().completeExceptionally(
+                            new IllegalArgumentException("Неизвестный язык программирования: " + language));
+                    continue;
+                }
+
                 // Ищем свободный Worker
                 String freeWorkerUrl = null;
                 while (freeWorkerUrl == null) {
-                    for (Map.Entry<String, Boolean> entry : workerStatus.entrySet()) {
-                        if (entry.getValue()) {
-                            freeWorkerUrl = entry.getKey();
+                    for (String workerUrl : targetWorkerUrls) {
+                        if (targetWorkerStatus.get(workerUrl)) {
+                            freeWorkerUrl = workerUrl;
                             break;
                         }
                     }
@@ -99,7 +136,7 @@ public class DispatcherController {
                 }
 
                 // Отмечаем Worker как занятый
-                workerStatus.put(freeWorkerUrl, false);
+                targetWorkerStatus.put(freeWorkerUrl, false);
                 String workerCompileUrl = freeWorkerUrl + "/compile";
 
                 logger.info("Отправка задачи с taskId: {} на Worker: {}", task.getTaskId(), freeWorkerUrl);
@@ -125,7 +162,7 @@ public class DispatcherController {
                         logger.error("Ошибка при отправке задачи на Worker '{}': {}", workerUrlForLambda, e.getMessage(), e);
                         task.getFutureResult().completeExceptionally(e);
                     } finally {
-                        workerStatus.put(workerUrlForLambda, true);
+                        targetWorkerStatus.put(workerUrlForLambda, true);
                         logger.info("Worker освободился: {}", workerUrlForLambda);
                     }
                 }, executorService);
@@ -137,7 +174,6 @@ public class DispatcherController {
         }
     }
 
-
     private RestTemplate createRestTemplateWithTimeouts() {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(5000);
@@ -147,31 +183,18 @@ public class DispatcherController {
 
     @GetMapping("/admin/status")
     public ResponseEntity<?> getStatus() {
-        return ResponseEntity.ok(workerStatus);
+        Map<String, Boolean> combinedStatus = new HashMap<>();
+        combinedStatus.putAll(javaWorkerStatus);
+        combinedStatus.putAll(pythonWorkerStatus);
+        return ResponseEntity.ok(combinedStatus);
     }
 
+    @Data
+    @AllArgsConstructor
     private static class Task {
         private final String taskId;
         private final Map<String, String> payload;
         private final CompletableFuture<Map<String, Object>> futureResult;
-
-        public Task(String taskId, Map<String, String> payload, CompletableFuture<Map<String, Object>> futureResult) {
-            this.taskId = taskId;
-            this.payload = payload;
-            this.futureResult = futureResult;
-        }
-
-        public String getTaskId() {
-            return taskId;
-        }
-
-        public Map<String, String> getPayload() {
-            return payload;
-        }
-
-        public CompletableFuture<Map<String, Object>> getFutureResult() {
-            return futureResult;
-        }
     }
 
 }
