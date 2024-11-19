@@ -34,6 +34,7 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/projects")
@@ -282,6 +283,36 @@ public String editProjectForm(@PathVariable("id") int projectId, Model model, Au
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при сохранении проекта");
         }
     }
+
+    @GetMapping("/{projectId}/classes-with-main")
+    @ResponseBody
+    public ResponseEntity<?> getClassesWithMain(@PathVariable Integer projectId, Authentication authentication) {
+        Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
+        if (clientOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Пользователь не авторизован");
+        }
+
+        Client client = clientOpt.get();
+
+        Optional<Project> projectOpt = projectService.findById(projectId);
+        if (projectOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Проект не найден");
+        }
+
+        Project project = projectOpt.get();
+        if (!project.getClient().getId().equals(client.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("У вас нет доступа к этому проекту");
+        }
+
+        // Получаем все .java файлы из project_struct
+        List<ProjectStruct> javaFiles = projectStructRepository.findByProjectIdAndType(projectId, "file")
+                .stream()
+                .filter(ps -> ps.getPath().endsWith(".java"))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(javaFiles);
+    }
+
     public boolean canEditProject(Project project, Client client) {
         Optional<ProjectTeam> team = projectTeamService.findByProjectAndClient(project, client);
         return team.isPresent() && (team.get().getRole() == ProjectTeam.Role.CREATOR || team.get().getRole() == ProjectTeam.Role.COLLABORATOR);

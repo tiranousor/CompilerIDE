@@ -5,6 +5,7 @@ import com.example.CompilerIDE.providers.ProjectStruct;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,4 +17,6 @@ public interface ProjectStructRepository extends JpaRepository<ProjectStruct, Lo
     Optional<ProjectStruct> findByProjectAndPath(Project project, String path);
 
     List<ProjectStruct> findByProjectAndType(Project project, String type);
+
+    List<ProjectStruct> findByProjectIdAndType(Integer projectId, String file);
 }

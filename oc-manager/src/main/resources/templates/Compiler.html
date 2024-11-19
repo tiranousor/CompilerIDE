@@ -144,6 +144,43 @@
             padding: 2px 5px;
             border-radius: 3px;
         }
+        #selectMainClassModal {
+            display: none; /* Скрыто по умолчанию */
+            position: fixed; /* Оставаться на месте */
+            z-index: 1001; /* На вершине */
+            left: 0;
+            top: 0;
+            width: 100%; /* Полная ширина */
+            height: 100%; /* Полная высота */
+            overflow: auto; /* Включить прокрутку, если необходимо */
+            background-color: rgba(0,0,0,0.5); /* Черный с прозрачностью */
+        }
+
+        #selectMainClassModalContent {
+            background-color: #fefefe;
+            margin: 10% auto; /* 10% от верхней границы и по центру */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%; /* Ширина модального окна */
+            border-radius: 5px;
+        }
+
+        #selectMainClassModalContent h2 {
+            margin-top: 0;
+        }
+
+        #classesList {
+            list-style: none;
+            padding: 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        #classesList li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+        }
 
 
         .btn-group {
@@ -184,6 +221,9 @@
         <button id="compile-button" title="Compile Code">
             <i class="fas fa-play"></i>
         </button>
+        <button id="select-main-class-button" title="Выберите исполняемый файл">
+            <i class="fas fa-file-code"></i>
+        </button>
 
     </div>
     <div id="sidebar">
@@ -205,6 +245,15 @@
     </div>
 </div>
 <div id="message"></div>
+<div id="selectMainClassModal">
+    <div id="selectMainClassModalContent">
+        <span id="closeModal">&times;</span>
+        <h2>Выберите исполняемый класс</h2>
+        <ul id="classesList">
+            <!-- Список классов будет динамически заполняться -->
+        </ul>
+    </div>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
@@ -229,17 +278,74 @@
         let isSidebarOpen = false; // Инициализация состояния боковой панели
         let isSaving = false;
 
-    const saveMainClass = () => {
-        console.log("saveMainClass вызвана");
-        const mainClassInput = document.getElementById('main-class-input');
-        let mainClassName = mainClassInput.value.trim();
+    const initializeSelectMainClassModal = () => {
+        const modal = $('#selectMainClassModal');
+        const closeModalBtn = $('#closeModal');
 
-        // Удаляем .java, если оно есть, добавим его позже
-        if (mainClassName.endsWith('.java')) {
-            mainClassName = mainClassName.slice(0, -5);
+        // Когда пользователь нажимает на кнопку (x), закрываем модальное окно
+        closeModalBtn.on('click', function() {
+            modal.hide();
+        });
+
+        // Когда пользователь кликает вне модального окна, закрываем его
+        $(window).on('click', function(event) {
+            if ($(event.target).is(modal)) {
+                modal.hide();
+            }
+        });
+
+        // Обработчик кнопки "Выберите исполняемый файл"
+        $('#select-main-class-button').on('click', function(event) {
+            event.stopPropagation(); // Предотвращаем закрытие выпадающего меню при клике
+            fetchClassesWithMain();
+        });
+    };
+    const fetchClassesWithMain = () => {
+        $.ajax({
+            url: `/projects/${projectId}/classes-with-main`,
+            type: 'GET',
+            headers: {
+                [csrfHeader]: csrfToken
+            },
+            success: function(mainClasses) {
+                populateClassesList(mainClasses);
+                $('#selectMainClassModal').show();
+            },
+            error: function(xhr, status, error) {
+                console.error("Ошибка при получении списка классов с main методом:", error);
+                showMessage("Не удалось загрузить список классов.", "error");
+            }
+        });
+    };
+
+    const populateClassesList = (mainClasses) => {
+        const classesList = $('#classesList');
+        classesList.empty(); // Очистить текущий список
+
+        if (mainClasses.length === 0) {
+            classesList.append('<li>Классы с main методом не найдены</li>');
+        } else {
+            mainClasses.forEach(function(classItem) {
+                const path = classItem.path; // Например, "space/Space1.java"
+                // Преобразуем путь в полностью квалифицированное имя класса
+                const mainClassName = path.replace(/\//g, '.').replace(/\.java$/, '');
+                classesList.append(`<li data-class-name="${mainClassName}">${path}</li>`);
+            });
         }
-        console.log("Сохранение Main Class. projectId:", projectId);
-        // Отправляем на сервер для сохранения
+
+        // Добавить обработчики клика по элементам списка
+        $('#classesList li').on('click', function() {
+            const selectedClass = $(this).data('class-name');
+            if (selectedClass) {
+                setMainClass(selectedClass);
+                $('#selectMainClassModal').hide();
+            }
+        });
+    };
+
+
+    const setMainClass = (mainClassName) => {
+        console.log("Установка mainClassName:", mainClassName);
         $.ajax({
             url: `/projects/${projectId}/mainClass`,
             type: 'POST',
@@ -249,18 +355,15 @@
             },
             data: JSON.stringify({ mainClass: mainClassName }),
             success: function(response) {
-                console.log("Имя главного класса успешно сохранено");
-                showMessage("Имя главного класса сохранено", "success");
+                console.log("mainClassName успешно установлен:", response);
+                showMessage("Главный класс успешно установлен.", "success");
+                // Обновить поле ввода main-class-input
+                $('#main-class-input').val(mainClassName);
             },
-    error: function(xhr, status, error) {
-            console.error("Ошибка при сохранении имени главного класса:", error);
-            // Получаем сообщение об ошибке из ответа сервера, если есть
-            let errorMessage = "Ошибка при сохранении имени главного класса";
-            if (xhr.responseJSON && xhr.responseJSON.message) {
-                errorMessage = xhr.responseJSON.message;
+            error: function(xhr, status, error) {
+                console.error("Ошибка при установке mainClassName:", error);
+                showMessage("Ошибка при установке главного класса.", "error");
             }
-            showMessage(errorMessage, "error");
-        }
         });
     };
 
@@ -331,10 +434,6 @@
                         compileButton.css('opacity', '1');
                         return;
                     }
-                    // Добавляем .java, если отсутствует
-                    if (!mainClassName.endsWith('.java')) {
-                        mainClassName += '.java';
-                    }
 
                     const compileRequest = {
                         project_id: Number(projectId), // Преобразуем в число, если требуется
@@ -378,41 +477,16 @@
         };
 
 
-const displayCompileResult = (result) => {
-    $('#compile-output').show();
-    let output = '';
 
-    if (result.stdout) {
-        output += `<h3>Вывод:</h3><pre>${escapeHtml(result.stdout)}</pre>`;
-    }
+        // Функция для отображения результата компиляции
+        const displayCompileResult = (result) => {
+            $('#compile-output').show();
+            const output = `
+                stdout:
+                ${result.stdout || 'Нет вывода'}
 
-    if (result.stderr && result.stderr.length > 0) {
-        output += `<h3>Ошибки компиляции:</h3><ul id="error-list">`;
-        result.stderr.forEach((error, index) => {
-            const file = escapeHtml(error.file || 'Неизвестный файл');
-            const line = error.line || 0;
-            const column = error.column || 0;
-            const message = escapeHtml(error.message || 'Неизвестная ошибка');
-            output += `
-                <li class="compile-error" data-file="${file}" data-line="${line}" data-column="${column}">
-                    ${file}:${line}:${column} - ${message}
-                </li>`;
-        });
-        output += `</ul>`;
-    }
-
-    output += `<p>Return Code: ${result.returnCode}</p>`;
-    $('#compile-result').html(output);
-
-    // Добавляем обработчики кликов по ошибкам
-    $('.compile-error').on('click', function() {
-        const file = $(this).data('file');
-        const line = $(this).data('line');
-        const column = $(this).data('column');
-        navigateToCode(file, line, column);
-    });
-};
-
+                stderr:
+                ${result.stderr || 'Нет ошибок'}
 
 // Функция для безопасного отображения HTML
 const escapeHtml = (unsafe) => {

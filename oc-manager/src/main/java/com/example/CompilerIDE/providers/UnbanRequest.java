@@ -33,6 +33,5 @@ public class UnbanRequest {
     @JoinColumn(name = "client_id")
     private Client client;
 
-    // Getters and Setters
-    // ...
+
 }
