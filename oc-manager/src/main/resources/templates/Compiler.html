@@ -182,6 +182,21 @@
             cursor: pointer;
         }
 
+        #classesList li:hover {
+            background-color: #f1f1f1;
+        }
+
+        #closeModal {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Добавим стили для новой кнопки */
+        .icon-panel button#select-main-class-button {
+            /* Если необходимо, добавьте индивидуальные стили */
+        }
 
         .btn-group {
             display: flex;
@@ -190,20 +205,7 @@
             background: #282c34;
             box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
         }
-    #compile-output ul {
-        list-style-type: none;
-        padding: 0;
-    }
 
-    .compile-error {
-        cursor: pointer;
-        color: #ff5555;
-        margin-bottom: 5px;
-    }
-
-    .compile-error:hover {
-        text-decoration: underline;
-    }
     </style>
 </head>
 <body>
@@ -228,7 +230,7 @@
     </div>
     <div id="sidebar">
         <!--        <div id="jstree"></div>-->
-        <div id="jstree" data-file-structure="${fileStructure}" data-project-name="\${projectName}"></div>
+        <div id="jstree" data-file-structure="${fileStructure}" data-project-name="${projectName}"></div>
 
         <!--        <button id="save-button">Сохранить проект</button>-->
     </div>
@@ -488,46 +490,10 @@
                 stderr:
                 ${result.stderr || 'Нет ошибок'}
 
-// Функция для безопасного отображения HTML
-const escapeHtml = (unsafe) => {
-    return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-};
-const navigateToCode = (fileName, line, column) => {
-    // Найдите узел файла в jsTree
-    const tree = $('#jstree').jstree(true);
-    const allNodes = tree.get_json('#', { flat: true });
-    const targetNode = allNodes.find(node => node.text === fileName && node.type === 'file');
-
-    if (targetNode) {
-        // Выберите узел в jsTree
-        tree.deselect_all();
-        tree.select_node(targetNode);
-
-        // Загрузите файл в редактор, если он не открыт
-        loadFile(targetNode);
-
-        // Перейдите к указанной строке и столбцу в Monaco
-        if (editor && line && column) {
-            editor.revealLineInCenter(line);
-            const model = editor.getModel();
-            if (model) {
-                const position = { lineNumber: line, column: column };
-                editor.setPosition(position);
-                editor.focus();
-                editor.setSelection(new monaco.Selection(line, column, line, column));
-            }
-        }
-    } else {
-        showMessage(`Файл "${fileName}" не найден в проекте.`, "error");
-    }
-};
-
-
+                returncode: ${result.returncode}
+            `;
+            $('#compile-result').text(output);
+        };
 
         const showMessage = (msg, type = 'error') => {
             const messageDiv = $('#message');
@@ -1102,6 +1068,7 @@ const navigateToCode = (fileName, line, column) => {
                 });
             });
         };
+        initializeSelectMainClassModal();
         initializeJsTree();
         setInterval(function() {
             console.log("Автосохранение проекта...");

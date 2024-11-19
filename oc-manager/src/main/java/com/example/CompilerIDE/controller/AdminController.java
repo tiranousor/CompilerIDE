@@ -11,6 +11,7 @@ import com.example.CompilerIDE.repositories.UnbanRequestRepository;
 import com.example.CompilerIDE.services.ClientService;
 import com.example.CompilerIDE.services.LoginTimestampService;
 import com.example.CompilerIDE.services.MinioService;
+import com.example.CompilerIDE.services.WorkerStatusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
@@ -19,11 +20,12 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
-
+    private final WorkerStatusService workerStatusService;
     private final ClientRepository clientRepository;
     private final ProjectRepository projectRepository;
     private final MinioService minioService;
@@ -31,13 +33,20 @@ public class AdminController {
     private final UnbanRequestRepository unbanRequestRepository;
     private final ClientService clientService;
     @Autowired
-    public AdminController(ClientRepository clientRepository, ProjectRepository projectRepository, MinioService minioService, LoginTimestampService loginTimestampService, UnbanRequestRepository unbanRequestRepository, ClientService clientService) {
+    public AdminController(WorkerStatusService workerStatusService, ClientRepository clientRepository, ProjectRepository projectRepository, MinioService minioService, LoginTimestampService loginTimestampService, UnbanRequestRepository unbanRequestRepository, ClientService clientService) {
+        this.workerStatusService = workerStatusService;
         this.clientRepository = clientRepository;
         this.projectRepository = projectRepository;
         this.minioService = minioService;
         this.loginTimestampService = loginTimestampService;
         this.unbanRequestRepository = unbanRequestRepository;
         this.clientService = clientService;
+    }
+    @GetMapping("/status")
+    public String getStatus(Model model) {
+        Map<String, Boolean> workerStatus = workerStatusService.getWorkerStatus();
+        model.addAttribute("workerStatus", workerStatus);
+        return "admin/status";
     }
 //    @Secured("ADMIN")
     @GetMapping("/users")

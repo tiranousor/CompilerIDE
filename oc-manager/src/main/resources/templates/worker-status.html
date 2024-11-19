@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Worker Status Monitor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+    <h1 class="my-4">Worker Status Monitor</h1>
+    <ul id="worker-status-list" class="list-group">
+    </ul>
+</div>
+
+<script>
+    var stompClient = null;
+
+    function connect() {
+        var socket = new SockJS('http://localhost:8080/worker-status');
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function (frame) {
+            console.log('Connected: ' + frame);
+            stompClient.subscribe('/topic/workerStatus', function (message) {
+                var workerStatus = JSON.parse(message.body);
+                updateWorkerStatus(workerStatus);
+            });
+        });
+    }
+
+    function updateWorkerStatus(workerStatus) {
+        var workerStatusList = document.getElementById('worker-status-list');
+        workerStatusList.innerHTML = '';
+
+        for (var worker in workerStatus) {
+            if (workerStatus.hasOwnProperty(worker)) {
+                var listItem = document.createElement('li');
+                listItem.className = 'list-group-item';
+                listItem.innerText = worker + ': ' + (workerStatus[worker] ? 'Online' : 'Offline');
+                listItem.style.color = workerStatus[worker] ? 'green' : 'red';
+                workerStatusList.appendChild(listItem);
+            }
+        }
+    }
+
+    connect();
+</script>
+</body>
+</html>
