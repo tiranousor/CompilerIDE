@@ -18,7 +18,6 @@ public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    // Обработка пользовательских исключений компиляции
     @ExceptionHandler(CompilationException.class)
     public ResponseEntity<CompilationResult> handleCompilationException(CompilationException ex) {
         logger.error("CompilationException: ", ex);
@@ -37,7 +36,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResult);
     }
 
-    // Обработка общих исключений
     @ExceptionHandler(Exception.class)
     public ResponseEntity<CompilationResult> handleGeneralException(Exception ex) {
         logger.error("Unhandled Exception: ", ex);

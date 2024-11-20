@@ -22,7 +22,6 @@ public class CompilationException extends RuntimeException {
         this.columnNumber = errorDetails.getOrDefault("column", 0) instanceof Integer ? (Integer) errorDetails.getOrDefault("column", 0) : 0;
     }
 
-    // Геттеры
     public String getFileName() {
         return fileName;
     }

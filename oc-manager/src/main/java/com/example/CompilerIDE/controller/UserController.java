@@ -152,7 +152,6 @@ public class UserController {
         project.setLanguage("Java");
         project.setClient(client);
 
-        // Сохраняем проект
         projectService.save(project);
 
         return "redirect:/login?registration";
@@ -170,7 +169,6 @@ public class UserController {
         }
         Client client = clientOpt.get();
 
-        // Запись времени входа
         LoginTimestamp loginTimestamp = new LoginTimestamp();
         loginTimestamp.setClient(client);
         loginTimestamp.setLoginTime(new Timestamp(System.currentTimeMillis()));
@@ -231,7 +229,6 @@ public class UserController {
             }
         }
 
-        // Обновляем данные пользователя
         existingClient.setUsername(clientForm.getUsername());
         existingClient.setEmail(clientForm.getEmail());
         existingClient.setGithubProfile(clientForm.getGithubProfile());
@@ -241,7 +238,6 @@ public class UserController {
 
         clientService.update(id, existingClient);
 
-        // Если имя пользователя изменилось, обновляем объект аутентификации
         if (!authentication.getName().equals(existingClient.getUsername())) {
             Authentication newAuth = new UsernamePasswordAuthenticationToken(
                     existingClient.getUsername(),

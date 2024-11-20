@@ -29,7 +29,7 @@ public class DispatcherController {
     @Value("${PYTHON_WORKER_URLS}")
     private String pythonWorkerUrlsString;
 
-    // Карты для отслеживания состояния Worker'ов
+    // мапы для отслеживания состояния воркеров
     private final Map<String, Boolean> javaWorkerStatus = new ConcurrentHashMap<>();
     private final Map<String, Boolean> pythonWorkerStatus = new ConcurrentHashMap<>();
 
@@ -37,7 +37,7 @@ public class DispatcherController {
     private final BlockingQueue<Task> taskQueue = new LinkedBlockingQueue<>();
 
     // Пул потоков для обработки задач
-    private final ExecutorService executorService = Executors.newFixedThreadPool(20); // Увеличен для обработки обеих типов Workers
+    private final ExecutorService executorService = Executors.newFixedThreadPool(20);
 
     @PostConstruct
     public void init() {
@@ -94,7 +94,6 @@ public class DispatcherController {
     private void dispatchTasks() {
         while (true) {
             try {
-                // Получаем следующую задачу из очереди
                 Task task = taskQueue.take();
 
                 String language = task.getPayload().get("language");
@@ -120,8 +119,6 @@ public class DispatcherController {
                             new IllegalArgumentException("Неизвестный язык программирования: " + language));
                     continue;
                 }
-
-                // Ищем свободный Worker
                 String freeWorkerUrl = null;
                 while (freeWorkerUrl == null) {
                     for (String workerUrl : targetWorkerUrls) {
@@ -135,7 +132,6 @@ public class DispatcherController {
                     }
                 }
 
-                // Отмечаем Worker как занятый
                 targetWorkerStatus.put(freeWorkerUrl, false);
                 String workerCompileUrl = freeWorkerUrl + "/compile";
 
@@ -147,7 +143,7 @@ public class DispatcherController {
 
                 final String workerUrlForLambda = freeWorkerUrl;
 
-                // Отправляем задачу на Worker и получаем результат асинхронно
+                // Отправляем задачу на воркер и получаем результат асинхронно
                 CompletableFuture.runAsync(() -> {
                     try {
                         ResponseEntity<Map<String, Object>> response = restTemplate.exchange(

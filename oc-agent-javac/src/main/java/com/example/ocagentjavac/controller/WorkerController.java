@@ -127,7 +127,6 @@ public class WorkerController {
 
             String objectName = item.objectName();
             if (objectName.endsWith("/")) {
-                // Это директория, пропускаем её
                 logger.info("Пропуск директории: {}", objectName);
                 continue;
             }
@@ -178,7 +177,6 @@ public class WorkerController {
             return buildErrorResponse(classpathResult.getStdout(), classpathResult.getStderr(), classpathResult.getReturnCode());
         }
 
-        // Чтение classpath из файла
         Path classpathFile = projectDir.resolve("classpath.txt");
         if (!Files.exists(classpathFile)) {
             return buildErrorResponse("", "Не удалось получить classpath", 1);
@@ -200,7 +198,6 @@ public class WorkerController {
     }
 
     private ResponseEntity<?> handleNonMavenProject(Path projectDir, String mainClassName) throws IOException, InterruptedException {
-        // Компиляция Java-файлов
         List<Path> javaFiles = collectJavaFiles(projectDir);
 
         List<String> javacCommand = new ArrayList<>();

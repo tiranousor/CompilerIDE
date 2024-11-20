@@ -59,7 +59,6 @@ public class AdminController {
         return "admin/user_list";
     }
 
-    // Просмотр профиля пользователя по ID
     @GetMapping("/users/{id}")
     public String viewUserProfile(@PathVariable("id") Integer id, Model model, Authentication authentication) {
         Client user = clientRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
@@ -73,7 +72,6 @@ public class AdminController {
         return "admin/user_profile";
     }
 
-    // Бан пользователя
     @PostMapping("/users/{id}/ban")
     public String banUser(@PathVariable("id") Integer id) {
         Client user = clientRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
@@ -101,7 +99,7 @@ public class AdminController {
     public String searchUsers(@RequestParam("username") String username, Model model) {
         List<Client> users = clientRepository.findByUsernameContainingIgnoreCase(username);
         model.addAttribute("users", users);
-        model.addAttribute("username", username); // Передаем обратно, чтобы сохранить значение в поле поиска
+        model.addAttribute("username", username);
         return "admin/user_list";
     }
     @GetMapping("/unbanRequests")
@@ -125,7 +123,6 @@ public class AdminController {
         user.setRole("ROLE_USER");
         clientRepository.save(user);
 
-        // Удаляем запрос на разблокировку
         unbanRequestRepository.delete(unbanRequest);
 
         return "redirect:/admin/unbanRequests";
@@ -136,7 +133,6 @@ public class AdminController {
     public String declineUnbanRequest(@PathVariable("id") Long id) {
         UnbanRequest unbanRequest = unbanRequestRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid unban request Id:" + id));
-        // Удаляем запрос без разблокировки пользователя
         unbanRequestRepository.delete(unbanRequest);
 
         return "redirect:/admin/unbanRequests";

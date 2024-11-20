@@ -33,7 +33,6 @@ public class FriendshipService {
         if (friendshipOpt.isPresent()) {
             return true;
         }
-        // Также проверяем обратную связь
         friendshipOpt = friendshipRepository.findByClient1AndClient2(client2, client1);
         return friendshipOpt.isPresent();
     }

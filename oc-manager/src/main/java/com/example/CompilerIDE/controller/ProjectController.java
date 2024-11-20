@@ -21,7 +21,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.AntPathMatcher;
-import org.springframework.web.bind.annotation.*; // Изменено
+import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
@@ -138,7 +138,7 @@ public class ProjectController  {
         Optional<Project> projectToDelete = projectService.findById(projectId);
 
         if (projectToDelete.isPresent() && projectToDelete.get().getClient().getId() == client.getId()) {
-            projectService.delete(projectToDelete.get()); // Delete the project from DB
+            projectService.delete(projectToDelete.get());
         }
 
         return "redirect:/userProfile";
@@ -204,12 +204,11 @@ public String editProjectForm(@PathVariable("id") int projectId, Model model, Au
                 existingProject.setAccessLevel(projectForm.getAccessLevel());
                 projectService.save(existingProject);
 
-                // Записываем информацию об изменении проекта
                 ProjectAccessLog accessLog = new ProjectAccessLog();
                 accessLog.setClient(client);
                 accessLog.setProject(existingProject);
-                accessLog.setAccessTime(new Timestamp(System.currentTimeMillis()));  // Текущее время
-                accessLog.setActionType("edit");  // Действие "edit"
+                accessLog.setAccessTime(new Timestamp(System.currentTimeMillis()));
+                accessLog.setActionType("edit");
                 projectAccessLogRepository.save(accessLog);
             }
         }
@@ -304,7 +303,6 @@ public String editProjectForm(@PathVariable("id") int projectId, Model model, Au
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("У вас нет доступа к этому проекту");
         }
 
-        // Получаем все .java файлы из project_struct
         List<ProjectStruct> javaFiles = projectStructRepository.findByProjectIdAndType(projectId, "file")
                 .stream()
                 .filter(ps -> ps.getPath().endsWith(".java"))

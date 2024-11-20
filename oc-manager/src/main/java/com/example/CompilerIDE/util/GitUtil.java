@@ -5,16 +5,10 @@ public class GitUtil {
         if (gitUrl == null || gitUrl.isEmpty()) {
             throw new IllegalArgumentException("Git URL не может быть пустым");
         }
-
-        // Удаляем возможные параметры запроса
         String cleanUrl = gitUrl.split("\\?")[0];
-
-        // Проверяем, что URL заканчивается на .git
         if (!cleanUrl.endsWith(".git")) {
             throw new IllegalArgumentException("Некорректный формат Git URL. Ожидался URL, заканчивающийся на .git");
         }
-
-        // Извлекаем часть между последним '/' и '.git'
         int lastSlashIndex = cleanUrl.lastIndexOf('/');
         int gitIndex = cleanUrl.lastIndexOf(".git");
 

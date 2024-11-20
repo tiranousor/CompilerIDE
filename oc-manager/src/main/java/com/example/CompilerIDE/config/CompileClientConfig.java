@@ -39,12 +39,9 @@ public class CompileClientConfig {
                     logger.error("Feign Error Response Body: {}", body);
 
                     try {
-                        // Попытка распарсить ответ как JSON
                         Map<String, Object> errorMap = objectMapper.readValue(body, Map.class);
 
-                        // Проверяем наличие stderr
                         if (errorMap.containsKey("stderr")) {
-                            // Извлечение первой ошибки
                             Object stderrObj = errorMap.get("stderr");
                             if (stderrObj instanceof Iterable) {
                                 Iterable<?> stderrList = (Iterable<?>) stderrObj;
@@ -61,10 +58,8 @@ public class CompileClientConfig {
                             }
                         }
 
-                        // Если stderr отсутствует или имеет неправильный формат
                         return new CompilationException("Компиляция завершилась с ошибками.");
                     } catch (IOException jsonEx) {
-                        // Если ответ не JSON, предполагаем, что это простое текстовое сообщение об ошибке
                         Map<String, Object> errorMap = Map.of("message", body);
                         return new CompilationException("Компиляция завершилась с ошибками.", errorMap);
                     }
@@ -73,7 +68,6 @@ public class CompileClientConfig {
                     return new Exception("Ошибка при компиляции кода.");
                 }
             }
-            // Если статус < 400, используем дефолтный декодер
             return defaultErrorDecoder.decode(methodKey, response);
         }
     }

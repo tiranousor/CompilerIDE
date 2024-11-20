@@ -32,7 +32,6 @@ public class ProjectInvitationService {
             throw new Exception("Нельзя отправить приглашение самому себе.");
         }
 
-        // Проверка на дублирующееся приглашение
         Optional<ProjectInvitation> existingInvitation = projectInvitationRepository.findByProjectAndReceiverAndStatus(
                 project, receiver, ProjectInvitation.Status.PENDING
         );
@@ -44,7 +43,6 @@ public class ProjectInvitationService {
         if (projectTeam.isEmpty() || projectTeam.get().getRole() != ProjectTeam.Role.CREATOR) {
             throw new Exception("Только создатель проекта может отправлять приглашения.");
         }
-        // Создание нового приглашения
         ProjectInvitation invitation = new ProjectInvitation();
         invitation.setProject(project);
         invitation.setSender(sender);
@@ -52,7 +50,7 @@ public class ProjectInvitationService {
         invitation.setStatus(ProjectInvitation.Status.PENDING);
         invitation.setTimestamp(new Timestamp(System.currentTimeMillis()));
 
-        projectInvitationRepository.save(invitation); // Сохранение приглашения в базе данных
+        projectInvitationRepository.save(invitation);
     }
 
     public void acceptInvitation(Integer invitationId, Client receiver) throws Exception {
@@ -67,10 +65,8 @@ public class ProjectInvitationService {
             throw new Exception("Приглашение уже обработано.");
         }
 
-        // Добавление пользователя в проект
         projectTeamService.addCollaborator(invitation.getProject(), receiver);
 
-        // Обновление статуса приглашения
         invitation.setStatus(ProjectInvitation.Status.ACCEPTED);
         projectInvitationRepository.save(invitation);
     }
@@ -86,8 +82,6 @@ public class ProjectInvitationService {
         if (invitation.getStatus() != ProjectInvitation.Status.PENDING) {
             throw new Exception("Приглашение уже обработано.");
         }
-
-        // Обновление статуса приглашения
         invitation.setStatus(ProjectInvitation.Status.REJECTED);
         projectInvitationRepository.save(invitation);
     }

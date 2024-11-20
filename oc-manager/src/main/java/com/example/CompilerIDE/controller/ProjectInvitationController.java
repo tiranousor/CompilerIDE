@@ -65,7 +65,7 @@ public class ProjectInvitationController {
                 .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден."));
         List<ProjectInvitation> invitations = projectInvitationService.getPendingInvitations(receiver);
         model.addAttribute("invitations", invitations);
-        return "receivedInvitations"; // Создайте соответствующий шаблон Thymeleaf
+        return "receivedInvitations";
     }
 
     @PostMapping("/accept/{id}")

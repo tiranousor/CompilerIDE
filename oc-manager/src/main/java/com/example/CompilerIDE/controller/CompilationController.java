@@ -26,7 +26,6 @@ public class CompilationController {
     public ResponseEntity<CompilationResult> compileCode(@RequestBody CompileRequest request) {
         CompilationResult result = codeCompilationService.compileCode(request);
         if (result.getReturnCode() != 0) {
-            // Если компиляция завершилась с ошибками
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
         }
         return ResponseEntity.ok(result);

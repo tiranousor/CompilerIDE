@@ -1,4 +1,3 @@
-// BannedController.java
 package com.example.CompilerIDE.controller;
 
 import com.example.CompilerIDE.providers.Client;

@@ -29,7 +29,6 @@ public class CodeCompilationService {
     private CompilationResult mapToCompilationResult(Map<String, Object> responseBody) {
         CompilationResult result = new CompilationResult();
 
-        // Обработка stdout
         Object stdoutObj = responseBody.getOrDefault("stdout", "");
         if (stdoutObj instanceof String) {
             result.setStdout((String) stdoutObj);

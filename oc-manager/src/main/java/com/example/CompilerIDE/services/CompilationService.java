@@ -21,7 +21,7 @@ public class CompilationService {
         Map<String, Object> response = new HashMap<>();
         List<Map<String, Object>> errors = new ArrayList<>();
         String[] lines = stderr.split("\n");
-        Pattern pattern = Pattern.compile("(.+\\.java):(\\d+): error: (.+)"); // Регулярное выражение для ошибок компилятора Java
+        Pattern pattern = Pattern.compile("(.+\\.java):(\\d+): error: (.+)");
 
         for (String line : lines) {
             Matcher matcher = pattern.matcher(line);
@@ -30,7 +30,7 @@ public class CompilationService {
                 error.put("file", matcher.group(1));
                 error.put("line", Integer.parseInt(matcher.group(2)));
                 error.put("message", matcher.group(3));
-                error.put("column", 0); // Можно доработать, если информация о колонке доступна
+                error.put("column", 0);
                 errors.add(error);
             }
         }

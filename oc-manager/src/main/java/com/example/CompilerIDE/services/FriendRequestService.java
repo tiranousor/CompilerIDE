@@ -29,13 +29,11 @@ public class FriendRequestService {
             throw new Exception("You cannot send a friend request to yourself.");
         }
 
-        // Check if a request already exists
         Optional<FriendRequest> existingRequest = friendRequestRepository.findBySenderAndReceiver(sender, receiver);
         if (existingRequest.isPresent()) {
             throw new Exception("Friend request already sent.");
         }
 
-        // Check if they are already friends
         Optional<Friendship> existingFriendship = friendshipRepository.findByClient1AndClient2(sender, receiver);
         if (existingFriendship.isPresent()) {
             throw new Exception("You are already friends.");
@@ -60,12 +58,10 @@ public class FriendRequestService {
         friendRequest.setStatus(FriendRequest.RequestStatus.ACCEPTED);
         friendRequestRepository.save(friendRequest);
 
-        // Create Friendship
         Client sender = friendRequest.getSender();
         Client receiverClient = friendRequest.getReceiver();
 
         Friendship friendship = new Friendship();
-        // Ensure client1_id < client2_id to avoid duplicates
         if (sender.getId() < receiverClient.getId()) {
             friendship.setClient1(sender);
             friendship.setClient2(receiverClient);

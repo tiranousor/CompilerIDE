@@ -7,13 +7,6 @@ import java.security.MessageDigest;
 
 public class HashUtil {
 
-    /**
-     * Вычисляет SHA-256 хеш для данных из InputStream.
-     *
-     * @param inputStream входной поток данных
-     * @return строковое представление хеша в шестнадцатеричном формате
-     * @throws Exception если произошла ошибка при вычислении хеша
-     */
     public static String computeSHA256Hash(InputStream inputStream) throws Exception {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         byte[] block = new byte[4096];
@@ -30,13 +23,7 @@ public class HashUtil {
         return sb.toString();
     }
 
-    /**
-     * Вычисляет SHA-256 хеш для указанного файла.
-     *
-     * @param file файл для вычисления хеша
-     * @return строковое представление хеша в шестнадцатеричном формате
-     * @throws Exception если произошла ошибка при чтении файла или вычислении хеша
-     */
+
     public static String computeSHA256Hash(File file) throws Exception {
         try (InputStream fis = new FileInputStream(file)) {
             return computeSHA256Hash(fis);
