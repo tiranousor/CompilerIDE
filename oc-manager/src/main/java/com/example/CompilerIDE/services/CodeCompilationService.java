@@ -30,40 +30,31 @@ public class CodeCompilationService {
         CompilationResult result = new CompilationResult();
 
         Object stdoutObj = responseBody.getOrDefault("stdout", "");
-        if (stdoutObj instanceof String) {
-            result.setStdout((String) stdoutObj);
-        } else {
-            result.setStdout("");
-        }
+        result.setStdout(stdoutObj != null ? stdoutObj.toString() : "");
 
-        // Обработка stderr
-        Object stderrObj = responseBody.getOrDefault("stderr", Collections.emptyList());
+        Object stderrObj = responseBody.get("stderr");
         if (stderrObj instanceof List) {
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> stderrList = (List<Map<String, Object>>) stderrObj;
             result.setStderr(stderrList);
-        } else if (stderrObj instanceof String) {
-            result.setStderr(Collections.singletonList(
-                    Map.of("message", stderrObj)
-            ));
+        } else if (stderrObj instanceof String stderrString) {
+            Map<String, Object> errorMap = Map.of("message", stderrString);
+            result.setStderr(Collections.singletonList(errorMap));
         } else {
             result.setStderr(Collections.emptyList());
         }
 
-        // Обработка returnCode
-        Object returnCodeObj = responseBody.getOrDefault("returnCode", 0);
+        Object returnCodeObj = responseBody.getOrDefault("returncode", 0);
         if (returnCodeObj instanceof Integer) {
             result.setReturnCode((Integer) returnCodeObj);
-        } else if (returnCodeObj instanceof String) {
-            try {
-                result.setReturnCode(Integer.parseInt((String) returnCodeObj));
-            } catch (NumberFormatException e) {
-                result.setReturnCode(0);
-            }
         } else {
             result.setReturnCode(0);
         }
 
         return result;
     }
+
+
+
+
 }

@@ -458,11 +458,16 @@
                     .done(function(response) {
                         console.log("Результат компиляции:", response);
                         displayCompileResult(response);
-                        showMessage("Компиляция завершена успешно.", "success");
+
+                        if (response.returnCode === 0) {
+                            showMessage("Компиляция завершена успешно.", "success");
+                        } else {
+                            showMessage("Произошла ошибка при компиляции.", "error");
+                        }
                     })
                     .fail(function(xhr, status, error) {
-                        console.error("Ошибка при компиляции:", error);
-                        showMessage("Ошибка при компиляции.", "error");
+                        console.error("Ошибка при отправке запроса на компиляцию:", error);
+                        showMessage("Ошибка при отправке запроса на компиляцию.", "error");
                     })
                     .always(function() {
                         // Включаем кнопку обратно после завершения запроса
@@ -478,22 +483,44 @@
                 });
         };
 
-
-
-        // Функция для отображения результата компиляции
         const displayCompileResult = (result) => {
+            console.log("Display compile result:", result);
             $('#compile-output').show();
-            const output = `
-                stdout:
-                ${result.stdout || 'Нет вывода'}
 
-                stderr:
-                ${result.stderr || 'Нет ошибок'}
+            let output = "";
 
-                returncode: ${result.returncode}
-            `;
+            if (result.stderr && result.stderr.length > 0) {
+                result.stderr.forEach(error => {
+                    output += `${error.message}\n`;
+                    if (error.file) {
+                        output += `File: ${error.file}\n`;
+                    }
+                    if (error.line && error.line > 0) {
+                        output += `Line: ${error.line}\n`;
+                    }
+                    if (error.column && error.column > 0) {
+                        output += `Column: ${error.column}\n`;
+                    }
+                    output += "\n";
+                });
+            }
+
+            if (result.stdout && result.stdout.trim() !== "") {
+                output += result.stdout;
+            }
+
+            if (output.trim() === "") {
+                output = "Нет вывода.";
+            }
+
+            output += `\nПрограмма завершилась с кодом ${result.returnCode}.`;
+
             $('#compile-result').text(output);
         };
+
+
+
+
 
         const showMessage = (msg, type = 'error') => {
             const messageDiv = $('#message');

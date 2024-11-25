@@ -42,17 +42,17 @@ public class GlobalExceptionHandler {
 
         CompilationResult errorResult = new CompilationResult();
         errorResult.setStdout("");
-        errorResult.setStderr(Collections.singletonList(
-                Map.of(
-                        "message", "Внутренняя ошибка сервера: " + ex.getMessage(),
-                        "file", "",
-                        "line", 0,
-                        "column", 0
-                )
-        ));
+        Map<String, Object> errorDetails = Map.of(
+                "message", "Внутренняя ошибка сервера: " + ex.getMessage(),
+                "file", "",
+                "line", 0,
+                "column", 0
+        );
+        errorResult.setStderr(Collections.singletonList(errorDetails));
         errorResult.setReturnCode(1);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResult);
     }
+
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<CompilationResult> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
         logger.error("Method Not Supported Exception: ", ex);

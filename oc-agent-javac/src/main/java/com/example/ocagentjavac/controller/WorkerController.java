@@ -23,6 +23,8 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestController
 public class WorkerController {
@@ -166,11 +168,11 @@ public class WorkerController {
 
     private ResponseEntity<?> handleMavenProject(Path projectDir, String mainClassName) throws IOException, InterruptedException {
         // Компиляция Maven-проекта
-        CommandResult compileResult = executeCommand(Arrays.asList("mvn", "clean", "compile"), projectDir, 60);
+        CommandResult compileResult = executeCommand(Arrays.asList("mvn", "-e", "clean", "compile"), projectDir, 60);
         if (compileResult.getReturnCode() != 0) {
-            return buildErrorResponse(compileResult.getStdout(), compileResult.getStderr(), compileResult.getReturnCode());
+            List<Map<String, Object>> errors = parseJavacErrors(compileResult.getStderr(), projectDir);
+            return buildErrorResponse(compileResult.getStdout(), errors, compileResult.getReturnCode());
         }
-
         // Сбор classpath
         CommandResult classpathResult = executeCommand(Arrays.asList("mvn", "dependency:build-classpath", "-Dmdep.outputFile=classpath.txt"), projectDir, 30);
         if (classpathResult.getReturnCode() != 0) {
@@ -208,8 +210,10 @@ public class WorkerController {
 
         CommandResult compileResult = executeCommand(javacCommand, projectDir, 60);
         if (compileResult.getReturnCode() != 0) {
-            return buildErrorResponse(compileResult.getStdout(), compileResult.getStderr(), compileResult.getReturnCode());
+            List<Map<String, Object>> errors = parseJavacErrors(compileResult.getStderr(), projectDir);
+            return buildErrorResponse(compileResult.getStdout(), errors, compileResult.getReturnCode());
         }
+
 
         List<String> javaRunCommand = Arrays.asList("java", "-cp", ".", mainClassName);
         CommandResult runResult = executeCommand(javaRunCommand, projectDir, 30);
@@ -219,6 +223,7 @@ public class WorkerController {
 
         return buildSuccessResponse(runResult.getStdout(), runResult.getStderr());
     }
+
 
     private List<Path> collectJavaFiles(Path projectDir) throws IOException {
         List<Path> javaFiles = new ArrayList<>();
@@ -237,35 +242,94 @@ public class WorkerController {
         StringBuilder stdout = new StringBuilder();
         StringBuilder stderr = new StringBuilder();
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                stdout.append(line).append("\n");
+        Thread stdoutThread = new Thread(() -> {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    stdout.append(line).append("\n");
+                }
+            } catch (IOException e) {
+                logger.error("Ошибка при чтении stdout: {}", e.getMessage());
             }
-        }
+        });
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                stderr.append(line).append("\n");
+        Thread stderrThread = new Thread(() -> {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    stderr.append(line).append("\n");
+                }
+            } catch (IOException e) {
+                logger.error("Ошибка при чтении stderr: {}", e.getMessage());
             }
-        }
+        });
+
+        stdoutThread.start();
+        stderrThread.start();
 
         boolean finished = process.waitFor(timeoutSeconds, TimeUnit.SECONDS);
+
+        stdoutThread.join(1000);
+        stderrThread.join(1000);
+
         if (!finished) {
             process.destroyForcibly();
             logger.error("Команда '{}' превысила время выполнения и была принудительно завершена.", String.join(" ", command));
-            return new CommandResult(null, "Compilation timed out or failed", 1);
+            return new CommandResult(null, "Время выполнения команды истекло.", 1);
         }
 
         int exitCode = process.exitValue();
-        if (exitCode != 0) {
-            logger.error("Команда '{}' завершилась с ошибкой: {}", String.join(" ", command), exitCode);
-            return new CommandResult(stdout.toString(), stderr.toString(), exitCode);
-        }
 
         return new CommandResult(stdout.toString(), stderr.toString(), exitCode);
     }
+
+    private List<Map<String, Object>> parseJavacErrors(String stderrOutput, Path projectDir) {
+        List<Map<String, Object>> errorList = new ArrayList<>();
+
+        if (stderrOutput == null || stderrOutput.isEmpty()) {
+            return errorList;
+        }
+
+        String[] lines = stderrOutput.split("\n");
+        Pattern errorPattern = Pattern.compile("^(.*\\.java):(\\d+): error: (.*)$");
+
+        String projectDirPath = projectDir.toString();
+
+        for (int i = 0; i < lines.length; i++) {
+            Matcher matcher = errorPattern.matcher(lines[i]);
+            if (matcher.matches()) {
+                String filePath = matcher.group(1).trim();
+                int lineNumber = Integer.parseInt(matcher.group(2).trim());
+                String message = matcher.group(3).trim();
+
+                // Удаляем префикс временной директории из пути файла
+                if (filePath.startsWith(projectDirPath)) {
+                    filePath = filePath.substring(projectDirPath.length());
+                }
+
+                Map<String, Object> errorMap = new HashMap<>();
+                errorMap.put("message", message);
+                errorMap.put("file", filePath);
+                errorMap.put("line", lineNumber);
+                errorMap.put("column", 0); // `javac` обычно не указывает столбец
+
+                // Попробуем извлечь информацию о столбце
+                if (i + 2 < lines.length) {
+                    String codeLine = lines[i + 1]; // строка кода с ошибкой
+                    String pointerLine = lines[i + 2]; // строка с указателем '^'
+                    int columnNumber = pointerLine.indexOf('^') + 1;
+                    if (columnNumber > 0) {
+                        errorMap.put("column", columnNumber);
+                    }
+                }
+
+                errorList.add(errorMap);
+            }
+        }
+
+        return errorList;
+    }
+
 
     private ResponseEntity<?> buildSuccessResponse(String stdout, String stderr) {
         Map<String, Object> response = new HashMap<>();
@@ -275,13 +339,15 @@ public class WorkerController {
         return ResponseEntity.ok(response);
     }
 
-    private ResponseEntity<?> buildErrorResponse(String stdout, String stderr, int returnCode) {
+    private ResponseEntity<?> buildErrorResponse(String stdout, Object stderr, int returnCode) {
         Map<String, Object> response = new HashMap<>();
         response.put("stdout", stdout != null ? stdout : "");
         response.put("stderr", stderr != null ? stderr : "");
         response.put("returncode", returnCode);
-        return ResponseEntity.status(500).body(response);
+        return ResponseEntity.ok(response);
     }
+
+
 
     @Data
     @AllArgsConstructor
