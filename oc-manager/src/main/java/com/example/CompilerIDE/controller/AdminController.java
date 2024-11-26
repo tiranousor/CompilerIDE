@@ -1,26 +1,23 @@
 package com.example.CompilerIDE.controller;
 
-import com.example.CompilerIDE.providers.Client;
-import com.example.CompilerIDE.providers.LoginTimestamp;
-import com.example.CompilerIDE.providers.Project;
-import com.example.CompilerIDE.providers.UnbanRequest;
+import com.example.CompilerIDE.providers.*;
 import com.example.CompilerIDE.repositories.ClientRepository;
 import com.example.CompilerIDE.repositories.LoginTimestampRepository;
 import com.example.CompilerIDE.repositories.ProjectRepository;
 import com.example.CompilerIDE.repositories.UnbanRequestRepository;
-import com.example.CompilerIDE.services.ClientService;
-import com.example.CompilerIDE.services.LoginTimestampService;
-import com.example.CompilerIDE.services.MinioService;
-import com.example.CompilerIDE.services.WorkerStatusService;
+import com.example.CompilerIDE.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin")
@@ -29,38 +26,58 @@ public class AdminController {
     private final ClientRepository clientRepository;
     private final ProjectRepository projectRepository;
     private final MinioService minioService;
+    private final ProjectService projectService;
     private final LoginTimestampService loginTimestampService;
     private final UnbanRequestRepository unbanRequestRepository;
     private final ClientService clientService;
+    private final UserActivityService userActivityService;
+    private final LoginTimestampRepository loginTimestampRepository;
+
     @Autowired
-    public AdminController(WorkerStatusService workerStatusService, ClientRepository clientRepository, ProjectRepository projectRepository, MinioService minioService, LoginTimestampService loginTimestampService, UnbanRequestRepository unbanRequestRepository, ClientService clientService) {
+    public AdminController(WorkerStatusService workerStatusService, ClientRepository clientRepository,
+                           ProjectRepository projectRepository, MinioService minioService,
+                           ProjectService projectService, LoginTimestampService loginTimestampService,
+                           UnbanRequestRepository unbanRequestRepository, ClientService clientService,
+                           UserActivityService userActivityService, LoginTimestampRepository loginTimestampRepository) {
         this.workerStatusService = workerStatusService;
         this.clientRepository = clientRepository;
         this.projectRepository = projectRepository;
         this.minioService = minioService;
+        this.projectService = projectService;
         this.loginTimestampService = loginTimestampService;
         this.unbanRequestRepository = unbanRequestRepository;
         this.clientService = clientService;
+        this.userActivityService = userActivityService;
+        this.loginTimestampRepository = loginTimestampRepository;
     }
-    @GetMapping("/status")
-    public String getStatus(Model model) {
-        Map<String, Boolean> workerStatus = workerStatusService.getWorkerStatus();
-        model.addAttribute("workerStatus", workerStatus);
-        return "admin/status";
-    }
-//    @Secured("ADMIN")
+
     @GetMapping("/users")
-    public String listUsers(Model model, Authentication authentication) {
-        List<Client> users = clientRepository.findAll();
+    public String listUsers(@RequestParam(name = "sort", required = false, defaultValue = "registrationDateDesc") String sort,
+                            Model model, Authentication authentication) {
+        List<Client> users = userActivityService.getUsersSorted(sort);
         model.addAttribute("users", users);
         Client client = clientService.findByUsername(authentication.getName()).orElse(null);
         model.addAttribute("client", client);
+        model.addAttribute("newUsersLastDay", userActivityService.countNewUsersInLastDays(1));
+        model.addAttribute("newUsersLastWeek", userActivityService.countNewUsersInLastDays(7));
+        model.addAttribute("newUsersLastMonth", userActivityService.countNewUsersInLastDays(30));
+        model.addAttribute("bannedUsers", userActivityService.countBannedUsers());
+        model.addAttribute("activeUsersLastDay", userActivityService.countActiveUsersInLastDays(1));
+        model.addAttribute("activeUsersLastWeek", userActivityService.countActiveUsersInLastDays(7));
+        model.addAttribute("activeUsersLastMonth", userActivityService.countActiveUsersInLastDays(30));
+        model.addAttribute("topUsers", userActivityService.getTopUsersByOnlineTime(10));
 
-        return "admin/user_list";
+        return "admin/user_list"; // Полный шаблон
+    }
+    @GetMapping("/users/list")
+    public String getUsersList(@RequestParam(name = "sort", required = false, defaultValue = "registrationDateDesc") String sort, Model model) {
+        List<Client> users = userActivityService.getUsersSorted(sort);
+        model.addAttribute("users", users);
+        return "admin/user_list :: userList";
     }
 
     @GetMapping("/users/{id}")
-    public String viewUserProfile(@PathVariable("id") Integer id, Model model, Authentication authentication) {
+    public String viewUserProfile(@PathVariable("id") Long id, Model model, Authentication authentication) {
         Client user = clientRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
         List<Project> projects = projectRepository.findByClient(user);
         model.addAttribute("user", user);
@@ -73,7 +90,7 @@ public class AdminController {
     }
 
     @PostMapping("/users/{id}/ban")
-    public String banUser(@PathVariable("id") Integer id) {
+    public String banUser(@PathVariable("id") Long id) {
         Client user = clientRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
         user.setRole("ROLE_BANNED");
         clientRepository.save(user);
@@ -81,20 +98,13 @@ public class AdminController {
     }
 
     @PostMapping("/users/{id}/unban")
-    public String unbanUser(@PathVariable("id") Integer id) {
+    public String unbanUser(@PathVariable("id") Long id) {
         Client user = clientRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
         user.setRole("ROLE_USER");
         clientRepository.save(user);
         return "redirect:/admin/users";
     }
 
-    // Просмотр использования памяти в MinIO
-//    @GetMapping("/storage-usage")
-//    public String getStorageUsage(Model model) {
-//        long totalUsedSpace = minioService.getTotalUsedSpace(); // Получаем общую информацию о занятой памяти
-//        model.addAttribute("usedSpace", totalUsedSpace);
-//        return "admin/storage_usage";
-//    }
     @GetMapping("/users/search")
     public String searchUsers(@RequestParam("username") String username, Model model) {
         List<Client> users = clientRepository.findByUsernameContainingIgnoreCase(username);
@@ -102,6 +112,7 @@ public class AdminController {
         model.addAttribute("username", username);
         return "admin/user_list";
     }
+
     @GetMapping("/unbanRequests")
     public String listUnbanRequests(Model model, Authentication authentication) {
         List<UnbanRequest> unbanRequests = unbanRequestRepository.findAll();
@@ -110,13 +121,11 @@ public class AdminController {
         Client client = clientService.findByUsername(authentication.getName()).orElse(null);
         model.addAttribute("client", client);
         return "admin/unban_requests";
-
-
     }
 
     @Secured("ROLE_ADMIN")
     @PostMapping("/unbanUser/{id}")
-    public String unbanUser(@PathVariable("id") Long id) {
+    public String unbanUserRequest(@PathVariable("id") Long id) {
         UnbanRequest unbanRequest = unbanRequestRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid unban request Id:" + id));
         Client user = unbanRequest.getClient();
@@ -128,13 +137,90 @@ public class AdminController {
         return "redirect:/admin/unbanRequests";
     }
 
-    @Secured("ROLE_ADMIN")
-    @PostMapping("/declineUnbanRequest/{id}")
-    public String declineUnbanRequest(@PathVariable("id") Long id) {
-        UnbanRequest unbanRequest = unbanRequestRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid unban request Id:" + id));
-        unbanRequestRepository.delete(unbanRequest);
+    @PostMapping("/users/addAdmins")
+    @ResponseBody
+    public ResponseEntity<?> addAdmins(@RequestBody Map<String, List<Long>> payload) {
+        List<Long> userIds = payload.get("userIds");
+        System.out.println("Received userIds for adding admins: " + userIds);
+        try {
+            userActivityService.addAdmins(userIds);
+            System.out.println("Successfully added admins for userIds: " + userIds);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            System.err.println("Error in addAdmins: " + e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Unexpected error in addAdmins: " + e.getMessage());
+            return ResponseEntity.status(500).body("Unexpected error: " + e.getMessage());
+        }
+    }
 
-        return "redirect:/admin/unbanRequests";
+
+
+    @Secured("ROLE_ADMIN")
+    @GetMapping("/dashboard")
+    public String getDashboard(Model model) {
+        List<Client> allClients = clientRepository.findAll();
+        List<LoginTimestamp> allTimestamps = loginTimestampRepository.findAll();
+        userActivityService.updateDailyStats();
+
+        long totalUsers = userActivityService.countRegisteredUsers();
+        long totalProjects = userActivityService.countTotalProjects();
+        long totalOnlineTime = userActivityService.calculateTotalOnlineTime();
+
+        List<DailyStats> last7DaysStats = userActivityService.getLast7DaysStats();
+        List<String> activityLabels = last7DaysStats.stream()
+                .map(stats -> stats.getDate().toString())
+                .collect(Collectors.toList());
+        List<Long> activityUserCounts = last7DaysStats.stream()
+                .map(DailyStats::getUserCount)
+                .collect(Collectors.toList());
+        List<Long> activityProjectCounts = last7DaysStats.stream()
+                .map(DailyStats::getProjectCount)
+                .collect(Collectors.toList());
+
+        model.addAttribute("newUsersLastDay", userActivityService.countNewUsersInLastDays(1));
+        model.addAttribute("newUsersLastWeek", userActivityService.countNewUsersInLastDays(7));
+        model.addAttribute("newUsersLastMonth", userActivityService.countNewUsersInLastDays(30));
+        model.addAttribute("bannedUsers", userActivityService.countBannedUsers());
+
+        model.addAttribute("activeUsersLastDay", userActivityService.countActiveUsersInLastDays(1));
+        model.addAttribute("activeUsersLastWeek", userActivityService.countActiveUsersInLastDays(7));
+        model.addAttribute("activeUsersLastMonth", userActivityService.countActiveUsersInLastDays(30));
+        model.addAttribute("topUsers", userActivityService.getTopUsersByOnlineTime(10));
+
+        String formattedTime = formatDuration(totalOnlineTime);
+        model.addAttribute("totalOnlineTime", formattedTime);
+        model.addAttribute("totalUsers", totalUsers);
+        model.addAttribute("totalProjects", totalProjects);
+        model.addAttribute("activityLabels", activityLabels);
+        model.addAttribute("activityUserCounts", activityUserCounts);
+        model.addAttribute("activityProjectCounts", activityProjectCounts);
+
+        // Projects
+        model.addAttribute("totalProjects", projectService.countTotalProjects());
+        model.addAttribute("newProjectsToday", projectService.countNewProjectsInLastDays(1));
+        model.addAttribute("newProjectsThisWeek", projectService.countNewProjectsInLastDays(7));
+        model.addAttribute("newProjectsThisMonth", projectService.countNewProjectsInLastDays(30));
+        model.addAttribute("activeProjects", projectService.countActiveProjects(7));
+        model.addAttribute("projectLanguageStats", projectService.getProjectLanguageDistribution());
+        model.addAttribute("popularProjects", projectService.getMostPopularProjects(5));
+
+        return "admin/dashboard";
+    }
+
+    @GetMapping("/totalOnlineTime")
+    @ResponseBody
+    public String getTotalOnlineTime() {
+        long totalOnlineSeconds = userActivityService.calculateTotalOnlineTime();
+        return formatDuration(totalOnlineSeconds); // Возвращаем форматированное время
+    }
+
+    // Вспомогательный метод для форматирования времени (секунды в часы, минуты, секунды)
+    private String formatDuration(long totalSeconds) {
+        long hours = totalSeconds / 3600;
+        long minutes = (totalSeconds % 3600) / 60;
+        long seconds = totalSeconds % 60;
+        return String.format("%02dh:%02dm:%02ds", hours, minutes, seconds);
     }
 }

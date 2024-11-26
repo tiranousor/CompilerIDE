@@ -13,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -21,11 +22,12 @@ public class SecurityConfiguration {
     private static final String[] AUTH_WHITELIST = {
             "/", "/*", "/login", "/registration" ,"/forgot_password", "/reset_password", "/unbanRequest", "/sendUnbanRequest"
     };
-
+    private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
     private final UserDetailsService clientDetailsService;
 
     @Autowired
-    public SecurityConfiguration(ClientDetailsService clientDetailsService) {
+    public SecurityConfiguration(CustomLogoutSuccessHandler customLogoutSuccessHandler, ClientDetailsService clientDetailsService) {
+        this.customLogoutSuccessHandler = customLogoutSuccessHandler;
         this.clientDetailsService = clientDetailsService;
     }
 
@@ -42,7 +44,7 @@ public class SecurityConfiguration {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/banned", "/sendUnbanRequest").hasAuthority("ROLE_BANNED")
-                        .requestMatchers("/admin/users/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
 
                         .requestMatchers("/userProfile").hasRole("USER")
                         .requestMatchers(AUTH_WHITELIST).permitAll()
@@ -57,11 +59,12 @@ public class SecurityConfiguration {
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/login?logout")
+                        .logoutSuccessHandler(customLogoutSuccessHandler) // Укажите бин напрямую
                         .permitAll());
 
         return http.build();
     }
+
 
     @Bean
     public AuthenticationSuccessHandler customSuccessHandler() {

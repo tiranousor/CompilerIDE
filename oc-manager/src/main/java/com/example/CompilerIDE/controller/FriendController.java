@@ -62,10 +62,11 @@ public class FriendController {
 
     @PostMapping("/sendRequest/{receiverId}")
     @ResponseBody
-    public String sendFriendRequest(@PathVariable("receiverId") Integer receiverId, Authentication authentication) {
+    public String sendFriendRequest(@PathVariable("receiverId") Integer receiverId,Model model, Authentication authentication) {
         Client sender = clientService.findByUsername(authentication.getName()).orElse(null);
         Client receiver = clientService.findOne(receiverId);
-
+        Client client = clientService.findByUsername(authentication.getName()).orElse(null);
+        model.addAttribute("client", client);
         if (sender == null || receiver == null) {
             return "User not found.";
         }

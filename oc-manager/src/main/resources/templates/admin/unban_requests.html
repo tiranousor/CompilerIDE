@@ -1,238 +1,293 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="UTF-8">
-    <title>Запросы на разблокировку</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User List</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
+
     <style>
-        * {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            background-color: #ffffff;
             color: #24292e;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 20px;
-            min-height: 100vh;
         }
 
-        .header {
+        #wrapper {
+            display: flex;
+        }
+
+        /* Sidebar */
+        #sidebar-wrapper {
+            width: 60px;
+            height: 100vh;
+            background-color: #fff;
+            border-right: 1px solid #e3e6f0;
+            transition: width 0.3s ease;
+            position: fixed;
+        }
+
+        #sidebar-wrapper.expanded {
+            width: 200px;
+        }
+
+        .sidebar-heading {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #e3e6f0;
+        }
+
+        .sidebar-heading i {
+            font-size: 24px;
+            color: #6c757d;
+        }
+
+        .list-group-item {
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #e3e6f0;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .list-group-item:hover {
+            background-color: #f8f9fa;
+            color: #6f42c1;
+        }
+
+        .list-group-item i {
+            margin-right: 10px;
+        }
+
+        .sidebar-text {
+            display: none;
+        }
+
+        #sidebar-wrapper.expanded .sidebar-text {
+            display: inline;
+        }
+
+        #page-content-wrapper {
+            margin-left: 60px;
+            flex-grow: 1;
+            transition: margin-left 0.3s;
+        }
+
+        #sidebar-wrapper.expanded + #page-content-wrapper {
+            margin-left: 200px;
+        }
+
+        .navbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 10px 20px;
-            background-color: #f6f8fa;
-            border-bottom: 1px solid #d1d5da;
-            width: 100%;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 900;
-            box-sizing: border-box;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e3e6f0;
         }
 
-        .header .user-info {
+        .search-bar {
             display: flex;
-            align-items: center;
+            flex-grow: 1;
         }
 
-        .header .user-info span {
-            font-size: 24px;
-            font-weight: 700;
-            color: #24292e;
-        }
-
-        .header .actions {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .header .actions a {
-            display: flex;
-            align-items: center;
-            color: #24292e;
-            text-decoration: none;
-            font-size: 24px;
-            transition: color 0.3s ease;
-        }
-.header .user-info img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-        .header .actions a:hover {
-            color: #d73a49;
+        .search-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #d1d5da;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .main-container {
-            margin-top: 80px;
+            margin-top: 20px;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
-            padding: 20px;
             width: 100%;
         }
 
-        .requests-container {
-            width: 90%;
-            max-width: 1000px;
+        .container {
+            width: 95%;
+            max-width: 1200px;
             padding: 20px;
-            border: 1px solid #d1d5da;
-            border-radius: 10px;
         }
 
         h1 {
-            font-size: 28px;
+            font-size: 24px;
             color: #24292e;
             text-align: center;
             margin-bottom: 20px;
         }
 
-        table {
+        .user-list {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            color: #24292e;
+            list-style: none;
+            padding: 0;
+            margin: 0;
         }
 
-        th, td {
-            padding: 12px 15px;
-            text-align: center;
-            border-bottom: 1px solid #d1d5da;
-            font-size: 16px;
-        }
-
-        th {
-            font-size: 18px;
-        }
-
-        .action-icons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-        }
-
-        .action-icons i {
-            font-size: 20px;
-            cursor: pointer;
-            transition: color 0.3s;
-        }
-
-        .action-icons .approve-icon {
-            color: #28a745;
-        }
-
-        .action-icons .approve-icon:hover {
-            color: #218838;
-        }
-
-        .action-icons .decline-icon {
-            color: #d73a49;
-        }
-
-        .action-icons .decline-icon:hover {
-            color: #b31d28;
-        }
-                .header .notification-container {
+        .user-item {
             display: flex;
             align-items: center;
-            gap: 15px;
+            justify-content: space-between;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
         }
 
-        .notification-container {
-            position: relative;
-        }
-
-        .notification-icon {
-            font-size: 24px;
-            position: relative;
-            cursor: pointer;
-            color: #0366d6;
-        }
-
-        .notification-icon:hover {
-            color: #0056b3;
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background-color: #FF4D4F;
-            color: #FFF;
+        .user-avatar {
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            font-size: 12px;
-            padding: 3px 6px;
+            margin-right: 15px;
+            background-color: #d1d5da;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
             font-weight: bold;
-            display: none;
+            color: #fff;
+            text-transform: uppercase;
         }
 
-        .notification-badge.visible {
-            display: inline-block;
+        .user-info {
+            flex-grow: 1;
         }
 
+        .user-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .user-email {
+            font-size: 14px;
+            color: #6c757d;
+            margin: 0;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-button {
+            padding: 5px 10px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .ban-button {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .ban-button:hover {
+            background-color: #c82333;
+        }
+
+        .unban-button {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .unban-button:hover {
+            background-color: #218838;
+        }
+
+       .message-button {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 400px;
+        font-size: 14px;
+        color: #555;
+        cursor: pointer;
+        transition: color 0.3s;
+        text-align: center;
+    }
+
+    .message-button:hover {
+        color: #007bff;
+    }
+
+    .expanded-message {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+    }
     </style>
 </head>
-
 <body>
-<div class="header">
-    <div class="user-info">
-        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar">
-        <span class="username" th:text="${client.username}"></span>
-    </div>,
-    <div class="actions">
-            <form th:action="@{/logout}" th:method="POST" style="margin: 0;">
-                <button type="submit" class="logout-icon" title="Logout" style="border: none; background: none;"><i class='bx bx-log-out'></i></button>
+<div id="wrapper">
+    <!-- Sidebar -->
+    <div id="sidebar-wrapper">
+        <div class="sidebar-heading">
+            <i class="fas fa-chart-line"></i> <span class="sidebar-text">Admin Panel</span>
+        </div>
+        <a href="/admin/dashboard" class="list-group-item"><i class="fas fa-home"></i> <span class="sidebar-text">Dashboard</span></a>
+        <a href="/admin/users" class="list-group-item"><i class="fas fa-users"></i> <span class="sidebar-text">Users</span></a>
+        <a href="/admin/projects" class="list-group-item"><i class="fas fa-folder-open"></i> <span class="sidebar-text">Projects</span></a>
+        <a href="/admin/unbanRequests" class="list-group-item"><i class="fas fa-ban"></i> <span class="sidebar-text">Unban Requests</span></a>
+    </div>
+
+    <!-- Page content -->
+    <div id="page-content-wrapper">
+        <!-- Navbar -->
+        <div class="navbar">
+            <form class="search-bar">
+                <input type="text" id="search-input" class="search-input" placeholder="Search by username or email">
             </form>
-    </div>
-</div>
+        </div>
+        <!-- Main Content -->
+        <div class="main-container">
+            <div class="container">
+                <ul class="user-list">
+                    <li th:each="request : ${unbanRequests}" class="user-item">
+                        <div class="user-avatar" th:text="${request.client.username.substring(0, 1).toUpperCase()}"></div>
+                        <div class="user-info">
+                            <p class="user-name" th:text="${request.client.username}"></p>
+                            <p class="user-email" th:text="${request.client.email}"></p>
+                            <p class="user-email" th:text="${#temporals.format(request.requestTime, 'yyyy-MM-dd HH:mm:ss')}"></p>
+                            <p class="message-button" onclick="toggleMessage(this)" th:text="${request.message}"></p>
+                        </div>
 
-<div class="main-container">
-    <div class="requests-container">
-        <h1>Запросы на разблокировку</h1>
-        <table>
-            <thead>
-            <tr>
-                <th>Пользователь</th>
-                <th class="message-column">Сообщение</th>
-                <th>Время запроса</th>
-                <th>Действия</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="request : ${unbanRequests}">
-                <td th:text="${request.client.username}"></td>
-                <td th:text="${request.message}" class="message-column"></td>
-                <td th:text="${#temporals.format(request.requestTime, 'yyyy-MM-dd HH:mm:ss')}"></td>
-                <td>
-                    <div class="action-icons">
-                        <form th:action="@{/admin/unbanUser/{id}(id=${request.id})}" method="post" style="display:inline;">
-                            <button type="submit" style="background: none; border: none; cursor: pointer;">
-                                <i class='bx bx-check approve-icon' title="Одобрить"></i>
-                            </button>
-                        </form>
-                        <form th:action="@{/admin/declineUnbanRequest/{id}(id=${request.id})}" method="post" style="display:inline;">
-                            <button type="submit" style="background: none; border: none; cursor: pointer;">
-                                <i class='bx bx-x decline-icon' title="Отклонить"></i>
-                            </button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+                        <div class="user-actions">
+                            <form th:action="@{/admin/unbanUser/{id}(id=${request.id})}" method="post" style="display:inline;">
+                                <button type="submit" style="background: none; border: none; cursor: pointer;">
+                                    <i class='bx bx-check approve-icon' title="Одобрить"></i>
+                                </button>
+                            </form>
+                            <form th:action="@{/admin/declineUnbanRequest/{id}(id=${request.id})}" method="post" style="display:inline;">
+                                <button type="submit" style="background: none; border: none; cursor: pointer;">
+                                    <i class='bx bx-x decline-icon' title="Отклонить"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
+<script>
+    const sidebarWrapper = document.getElementById('sidebar-wrapper');
+  sidebarWrapper.addEventListener('mouseover', () => sidebarWrapper.classList.add('expanded'));
+  sidebarWrapper.addEventListener('mouseleave', () => sidebarWrapper.classList.remove('expanded'));
+
+</script>
 </body>
-
 </html>

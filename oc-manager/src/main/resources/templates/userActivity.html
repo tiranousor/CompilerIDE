@@ -2305,3 +2305,1188 @@
 </body>
 </html>
 
+
+
+
+<!DOCTYPE html>
+<html lang="en" xmlns:sec="http://www.w3.org/1999/xhtml" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="projectId" th:content="${projectId}">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <meta name="fileStructure" th:content="${fileStructure}">
+    <link rel="icon" href="/favicon.png" type="image/png">
+    <title>jsTree и Monaco Editor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        #container {
+            display: flex;
+            height: 100%;
+            background-color: #282c34;
+            position: relative; /* Для правильного позиционирования разделителя */
+        }
+
+        #sidebar {
+            width: 300px; /* Начальная ширина */
+            background: #21252b;
+            color: #ffffff;
+            overflow: hidden;
+            transition: width 0.3s ease;
+            min-width: 200px; /* Минимальная ширина */
+            max-width: 600px; /* Максимальная ширина */
+        }
+
+        #jstree {
+            overflow: auto;
+            height: calc(100% - 60px);
+            padding: 20px;
+            border-right: 1px solid #333;
+        }
+
+        #resizer {
+            width: 5px;
+            cursor: ew-resize;
+            background-color: #444;
+        }
+
+        #resizer:hover {
+            background-color: #666;
+        }
+
+        #editor-container {
+            position: relative;
+            height: 100%;
+            flex-grow: 1;
+            transition: width 0.3s ease;
+            overflow: hidden;
+        }
+
+        #editor {
+            width: 100%;
+            height: 100%;
+        }
+
+        .icon-panel {
+            width: 60px;
+            background: #1f1f1f;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 15px;
+            border-right: 1px solid #333;
+        }
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .icon-panel button {
+            background: none;
+            border: none;
+            color: #fff;
+            margin: 10px 0;
+            cursor: pointer;
+            font-size: 24px;
+            transition: transform 0.2s, color 0.3s;
+        }
+
+        .icon-panel button:hover {
+            transform: scale(1.1);
+            color: #61dafb;
+        }
+
+        .btn-primary-custom {
+            color: #fff;
+            background-color: #007bff;
+            border-color: #007bff;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .btn-primary-custom:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        #compile-output {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #2a2d3e;
+            padding: 15px;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            max-height: 200px;
+            overflow-y: auto;
+            border-top: 1px solid #333;
+        }
+
+        #compile-output h3 {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .code-explorer-heading {
+            text-align: center;
+            background: #333;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.1em;
+            border-bottom: 1px solid #444;
+        }
+        #main-class-container {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 5px;
+            border-radius: 5px;
+            color: white;
+            display: flex;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #main-class-container label {
+            margin-right: 5px;
+        }
+
+        #main-class-input {
+            background: #444;
+            border: 1px solid #555;
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        #selectMainClassModal {
+            display: none; /* Скрыто по умолчанию */
+            position: fixed; /* Оставаться на месте */
+            z-index: 1001; /* На вершине */
+            left: 0;
+            top: 0;
+            width: 100%; /* Полная ширина */
+            height: 100%; /* Полная высота */
+            overflow: auto; /* Включить прокрутку, если необходимо */
+            background-color: rgba(0,0,0,0.5); /* Черный с прозрачностью */
+        }
+
+        #selectMainClassModalContent {
+            background-color: #fefefe;
+            margin: 10% auto; /* 10% от верхней границы и по центру */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%; /* Ширина модального окна */
+            border-radius: 5px;
+        }
+
+        #selectMainClassModalContent h2 {
+            margin-top: 0;
+        }
+
+        #classesList {
+            list-style: none;
+            padding: 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        #classesList li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+        }
+
+        #classesList li:hover {
+            background-color: #f1f1f1;
+        }
+
+        #closeModal {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Добавим стили для новой кнопки */
+        .icon-panel button#select-main-class-button {
+            /* Если необходимо, добавьте индивидуальные стили */
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+            background: #282c34;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Стили для сообщений */
+        #message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1002;
+        }
+        .message-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .message-error {
+            background-color: #dc3545;
+            color: white;
+        }
+
+    </style>
+</head>
+<body>
+<div id="container">
+    <div class="icon-panel">
+        <button id="profile-button" title="Profile" data-url="/userProfile">
+            <i class="fas fa-user-circle"></i>
+        </button>
+        <button id="project-button" title="Project Tree">
+            <i class="fas fa-project-diagram"></i>
+        </button>
+        <button id="save-button" title="Save Project">
+            <i class="fas fa-save"></i>
+        </button>
+        <button id="compile-button" title="Compile Code">
+            <i class="fas fa-play"></i>
+        </button>
+        <button id="select-main-class-button" title="Выберите исполняемый файл">
+            <i class="fas fa-file-code"></i>
+        </button>
+
+    </div>
+    <div id="sidebar">
+        <div id="jstree" data-file-structure="${fileStructure}" data-project-name="${projectName}"></div>
+    </div>
+    <!-- Разделитель для ресайзера -->
+    <div id="resizer"></div>
+    <div id="editor-container">
+        <div id="main-class-container">
+            <label for="main-class-input">Main Class:</label>
+            <input type="text" id="main-class-input" name="mainClass" th:value="${mainClass}" />
+        </div>
+        <div id="editor"></div>
+        <div id="compile-output" style="display: none;">
+            <h3>Результат компиляции:</h3>
+            <pre id="compile-result"></pre>
+        </div>
+    </div>
+</div>
+<div id="message"></div>
+<div id="selectMainClassModal">
+    <div id="selectMainClassModalContent">
+        <span id="closeModal">&times;</span>
+        <h2>Выберите исполняемый класс</h2>
+        <ul id="classesList">
+            <!-- Список классов будет динамически заполняться -->
+        </ul>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#profile-button').on('click', function() {
+            const profileUrl = $(this).data('url');
+            window.location.href = profileUrl;
+        });
+
+        $(function() {
+            let editor;
+            let currentFile = null;
+            const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+            const projectId = document.querySelector('meta[name="projectId"]').content;
+            let isUndoing = false;
+            const undoStack = [];
+            let pendingCreations = 0;
+            let duplicateNameError = false;
+            let isSidebarOpen = true; // Инициализация состояния боковой панели
+            let isSaving = false;
+
+            const initializeSelectMainClassModal = () => {
+                const modal = $('#selectMainClassModal');
+                const closeModalBtn = $('#closeModal');
+
+                // Когда пользователь нажимает на кнопку (x), закрываем модальное окно
+                closeModalBtn.on('click', function() {
+                    modal.hide();
+                });
+
+                // Когда пользователь кликает вне модального окна, закрываем его
+                $(window).on('click', function(event) {
+                    if ($(event.target).is(modal)) {
+                        modal.hide();
+                    }
+                });
+
+                // Обработчик кнопки "Выберите исполняемый файл"
+                $('#select-main-class-button').on('click', function(event) {
+                    event.stopPropagation(); // Предотвращаем закрытие выпадающего меню при клике
+                    fetchClassesWithMain();
+                });
+            };
+            const fetchClassesWithMain = () => {
+                $.ajax({
+                    url: `/projects/${projectId}/classes-with-main`,
+                    type: 'GET',
+                    headers: {
+                        [csrfHeader]: csrfToken
+                    },
+                    success: function(mainClasses) {
+                        populateClassesList(mainClasses);
+                        $('#selectMainClassModal').show();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Ошибка при получении списка классов с main методом:", error);
+                        showMessage("Не удалось загрузить список классов.", "error");
+                    }
+                });
+            };
+
+            const populateClassesList = (mainClasses) => {
+                const classesList = $('#classesList');
+                classesList.empty(); // Очистить текущий список
+
+                if (mainClasses.length === 0) {
+                    classesList.append('<li>Классы с main методом не найдены</li>');
+                } else {
+                    mainClasses.forEach(function(classItem) {
+                        const path = classItem.path; // Например, "space/Space1.java"
+                        // Преобразуем путь в полностью квалифицированное имя класса
+                        const mainClassName = path.replace(/\//g, '.').replace(/\.java$/, '');
+                        classesList.append(`<li data-class-name="${mainClassName}">${path}</li>`);
+                    });
+                }
+
+                // Добавить обработчики клика по элементам списка
+                $('#classesList li').on('click', function() {
+                    const selectedClass = $(this).data('class-name');
+                    if (selectedClass) {
+                        setMainClass(selectedClass);
+                        $('#selectMainClassModal').hide();
+                    }
+                });
+            };
+
+
+            const setMainClass = (mainClassName) => {
+                console.log("Установка mainClassName:", mainClassName);
+                $.ajax({
+                    url: `/projects/${projectId}/mainClass`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    headers: {
+                        [csrfHeader]: csrfToken
+                    },
+                    data: JSON.stringify({ mainClass: mainClassName }),
+                    success: function(response) {
+                        console.log("mainClassName успешно установлен:", response);
+                        showMessage("Главный класс успешно установлен.", "success");
+                        // Обновить поле ввода main-class-input
+                        $('#main-class-input').val(mainClassName);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Ошибка при установке mainClassName:", error);
+                        showMessage("Ошибка при установке главного класса.", "error");
+                    }
+                });
+            };
+
+            // Обработчик изменения поля ввода имени главного класса
+            $('#main-class-input').on('change', function() {
+                saveMainClass();
+            });
+
+            $('#project-button').on('click', function() {
+                if (isSidebarOpen) {
+                    $('#sidebar').css('width', '0');
+                    $('#resizer').hide();
+                    $('#editor-container').css('flex-grow', '1');
+                    $(this).removeClass('active');
+                } else {
+                    $('#sidebar').css('width', '300px'); // Устанавливаем ширину боковой панели
+                    $('#resizer').show();
+                    $('#editor-container').css('flex-grow', '1');
+                    $(this).addClass('active');
+                }
+                isSidebarOpen = !isSidebarOpen;
+            });
+            $('#compile-button').on('click', function() {
+                compileCode();
+            });
+            const getLanguageFromFilename = (filename) => {
+                const extension = filename.split('.').pop().toLowerCase();
+                const languageMap = {
+                    'js': 'javascript',
+                    'html': 'html',
+                    'css': 'css',
+                    'json': 'json',
+                    'md': 'markdown',
+                    'py': 'python',
+                    'java': 'java',
+                    'c': 'c',
+                    'cpp': 'cpp',
+                    'ts': 'typescript',
+                };
+                return languageMap[extension] || 'plaintext';
+            };
+            const compileCode = () => {
+                // Получаем кнопку компиляции
+                const compileButton = $('#compile-button');
+
+                // Отключаем кнопку
+                compileButton.prop('disabled', true);
+                compileButton.css('opacity', '0.6'); // Визуальное обозначение отключения
+
+                // Начинаем процесс сохранения проекта
+                saveProject(false)
+                    .then(function() {
+                        // Проверяем, был ли проект успешно сохранён
+                        if (!currentFile) {
+                            showMessage("Нет открытого файла для компиляции.", "error");
+                            // Включаем кнопку обратно
+                            compileButton.prop('disabled', false);
+                            compileButton.css('opacity', '1');
+                            return;
+                        }
+
+                        const language = getLanguageFromFilename(currentFile.text);
+
+                        const mainClassInput = document.getElementById('main-class-input');
+                        let mainClassName = mainClassInput.value.trim();
+                        if (!mainClassName) {
+                            showMessage("Введите название класса для компиляции.", "error");
+                            // Включаем кнопку обратно
+                            compileButton.prop('disabled', false);
+                            compileButton.css('opacity', '1');
+                            return;
+                        }
+
+                        const compileRequest = {
+                            project_id: Number(projectId), // Преобразуем в число, если требуется
+                            language: language,
+                            mainClassName: mainClassName
+                        };
+
+                        console.log("Отправка compileRequest:", compileRequest);
+
+                        // Отправляем запрос на компиляцию
+                        $.ajax({
+                            url: '/compile',
+                            type: 'POST',
+                            contentType: 'application/json',
+                            headers: {
+                                [csrfHeader]: csrfToken
+                            },
+                            data: JSON.stringify(compileRequest),
+                        })
+                        .done(function(response) {
+                            console.log("Результат компиляции:", response);
+                            displayCompileResult(response);
+                            showMessage("Компиляция завершена успешно.", "success");
+                        })
+                        .fail(function(xhr, status, error) {
+                            console.error("Ошибка при компиляции:", error);
+                            showMessage("Ошибка при компиляции.", "error");
+                        })
+                        .always(function() {
+                            // Включаем кнопку обратно после завершения запроса
+                            compileButton.prop('disabled', false);
+                            compileButton.css('opacity', '1');
+                        });
+                    })
+                    .fail(function() {
+                        // Если сохранение проекта не удалось, включаем кнопку обратно
+                        compileButton.prop('disabled', false);
+                        compileButton.css('opacity', '1');
+                        showMessage("Не удалось сохранить проект перед компиляцией.", "error");
+                    });
+            };
+
+            // Функция для отображения результата компиляции
+            const displayCompileResult = (result) => {
+                $('#compile-output').show();
+                const output = `
+stdout:
+${result.stdout || 'Нет вывода'}
+
+stderr:
+${result.stderr || 'Нет ошибок'}
+
+returncode: ${result.returncode}
+                `;
+                $('#compile-result').text(output);
+            };
+
+            const showMessage = (msg, type = 'error') => {
+                const messageDiv = $('#message');
+                messageDiv.text(msg);
+                messageDiv.removeClass('message-success message-error');
+                if (type === 'success') {
+                    messageDiv.addClass('message-success');
+                } else {
+                    messageDiv.addClass('message-error');
+                }
+                messageDiv.fadeIn(500).delay(2000).fadeOut(500);
+            };
+            const isValidName = (name) => {
+                if (!name || typeof name !== 'string') {
+                    return false;
+                }
+                const trimmedName = name.trim();
+                if (trimmedName.length === 0) {
+                    return false;
+                }
+                const invalidPatterns = ['/', '\\', '..'];
+                for (const pattern of invalidPatterns) {
+                    if (trimmedName.startsWith(pattern) || trimmedName.includes(pattern)) {
+                        return false;
+                    }
+                }
+                const prohibitedChars = ['<', '>', ':', '"', '|', '?', '*', '\0'];
+                for (const char of prohibitedChars) {
+                    if (trimmedName.includes(char)) {
+                        return false;
+                    }
+                }
+                return true;
+            };
+            const saveCurrentFile = () => {
+                if (currentFile && editor) {
+                    const newContent = editor.getValue();
+                    if (currentFile.data.content !== newContent) {
+                        currentFile.data.content = newContent;
+                        console.log(`Содержимое файла "${currentFile.text}" сохранено.`);
+                    }
+                }
+            };
+            const clearEditorIfDeleted = (node) => {
+                if (currentFile && node.id === currentFile.id) {
+                    editor.setValue('');
+                    currentFile = null;
+                    console.log(`Файл "${node.text}" удалён. Редактор очищен.`);
+                    return;
+                }
+                if (node.type === 'folder' && node.children && node.children.length > 0) {
+                    const tree = $('#jstree').jstree(true);
+                    node.children.forEach(childId => {
+                        const child = tree.get_node(childId);
+                        clearEditorIfDeleted(child);
+                    });
+                }
+            };
+            const checkUniqueName = (node, name, type, excludeId = null) => {
+                const tree = $('#jstree').jstree(true);
+                const childIds = tree.get_node(node.id).children;
+                let isUnique = true;
+                childIds.forEach(function(childId) {
+                    const childNode = tree.get_node(childId);
+                    const childText = childNode.text.trim();
+                    const childType = childNode.type;
+                    if (childText.toLowerCase() === name.trim().toLowerCase() && childType === type) {
+                        if (excludeId && childId === excludeId) {
+                            return;
+                        }
+                        isUnique = false;
+                        return false;
+                    }
+                });
+                return isUnique;
+            };
+            const getFullPath = (node) => {
+                const tree = $('#jstree').jstree(true);
+                const path = [];
+                let current = node;
+                while (current && current.id !== "#") {
+                    path.unshift(current.text);
+                    current = tree.get_node(current.parent);
+                }
+                path.shift();
+                return path.join('/');
+            };
+            const gatherFiles = (node) => {
+                const tree = $('#jstree').jstree(true);
+                const files = [];
+                node.children.forEach(childId => {
+                    const child = tree.get_node(childId);
+                    const fileObj = {
+                        id: child.id,
+                        text: child.text,
+                        path: getFullPath(child),
+                        type: child.type,
+                        data: child.type === 'file' ? { content: child.data.content || "" } : undefined,
+                        state: child.state,
+                        files: child.type === 'folder' ? gatherFiles(child) : undefined
+                    };
+                    files.push(fileObj);
+                });
+                return files;
+            };
+            const mapToBackendFormat = (gatheredFiles) => {
+                return gatheredFiles.map(fileObj => {
+                    const mappedObj = {
+                        path: fileObj.path,
+                        content: fileObj.type === 'file' ? fileObj.data.content : null,
+                        type: fileObj.type === 'folder' ? 'folder' : null
+                    };
+                    if (fileObj.type === 'folder') {
+                        mappedObj.files = fileObj.files && fileObj.files.length > 0 ? mapToBackendFormat(fileObj.files) : [];
+                    }
+                    return mappedObj;
+                });
+            };
+            const getProjectJSON = () => {
+                const tree = $('#jstree').jstree(true);
+                const root = tree.get_node("root");
+                const gatheredFiles = gatherFiles(root);
+                const mappedFiles = mapToBackendFormat(gatheredFiles);
+                const project = {
+                    files: mappedFiles
+                };
+                return project;
+            };
+            const saveProject = (showSuccessMessage = true) => {
+                if (isSaving) {
+                    console.log("Сохранение уже выполняется, пропуск текущего цикла автосохранения.");
+                    return $.Deferred().resolve().promise(); // Возвращаем уже выполненный промис
+                }
+                isSaving = true;
+                saveCurrentFile();
+                const projectJSON = getProjectJSON();
+                console.log("Сформированный JSON проекта:", JSON.stringify(projectJSON, null, 2));
+                if (!projectJSON.files || projectJSON.files.length === 0) {
+                    console.log("Проект пустой, сохранение не требуется.");
+                    isSaving = false;
+                    return $.Deferred().resolve().promise();
+                }
+                return $.ajax({
+                    url: `/projects/${projectId}/save`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    headers: {
+                        [csrfHeader]: csrfToken
+                    },
+                    data: JSON.stringify(projectJSON),
+                })
+                .done(function(response) {
+                    console.log("Проект успешно сохранён!");
+                    if (showSuccessMessage) {
+                        showMessage("Проект успешно сохранён!", "success");
+                    }
+                })
+                .fail(function(xhr, status, error) {
+                    console.error("Ошибка при сохранении проекта:", error);
+                    showMessage("Ошибка при сохранении проекта.", "error");
+                })
+                .always(function() {
+                    isSaving = false;
+                });
+            };
+
+            const createNodeRecursively = (parent, nodeData, position) => {
+                const tree = $('#jstree').jstree(true);
+                position = (typeof position === 'number' && position < 0) ? 'last' : position;
+                pendingCreations++;
+                console.log(`Восстанавливаем узел: ${nodeData.text}, Тип: ${nodeData.type}, ID: ${nodeData.id}`);
+                tree.create_node(parent, {
+                    id: nodeData.id,
+                    text: nodeData.text,
+                    type: nodeData.type,
+                    data: nodeData.type === 'file' ? { content: nodeData.data.content || "" } : {},
+                    state: nodeData.state
+                }, position, function(new_node) {
+                    console.log(`Узел "${new_node.text}" восстановлен.`);
+                    if (nodeData.files && nodeData.files.length > 0) {
+                        nodeData.files.forEach(child => {
+                            createNodeRecursively(new_node.id, child, 'last');
+                        });
+                    }
+                    pendingCreations--;
+                    if (pendingCreations === 0) {
+                        isUndoing = false;
+                        console.log("Восстановление всех узлов завершено.");
+                    }
+                });
+            };
+            const loadFile = (node) => {
+                if (node.type === 'file') {
+                    const content = node.data && node.data.content ? node.data.content : "";
+                    const language = getLanguageFromFilename(node.text);
+                    if (editor) {
+                        isUndoing = true;
+                        const currentModel = editor.getModel();
+                        if (currentModel) {
+                            monaco.editor.setModelLanguage(currentModel, language);
+                            editor.setValue(content);
+                        }
+                        isUndoing = false;
+                        console.log(`Файл "${node.text}" загружен в редактор с языком "${language}".`);
+                    }
+                    currentFile = node;
+                }
+            };
+            const undo = () => {
+                if (undoStack.length === 0) {
+                    console.log("Undo Stack пуст.");
+                    return;
+                }
+                const lastAction = undoStack.pop();
+                console.log("Undoing Action:", lastAction);
+                isUndoing = true;
+                const tree = $('#jstree').jstree(true);
+                switch(lastAction.action) {
+                    case 'delete':
+                        tree.delete_node(lastAction.node);
+                        break;
+                    case 'create':
+                        createNodeRecursively(lastAction.parent, lastAction.node, lastAction.position);
+                        break;
+                    case 'rename':
+                        tree.rename_node(lastAction.node, lastAction.old_text);
+                        break;
+                    case 'move':
+                        tree.move_node(lastAction.node, lastAction.old_parent, lastAction.old_position);
+                        break;
+                    default:
+                        console.warn('Неизвестное действие для отмены:', lastAction.action);
+                }
+            };
+            const handleRename = (data) => {
+                console.log(`handleRename вызван для узла: ${data.node.id}, Тип: ${data.node.type}, Старое имя: ${data.old}, Новое имя: ${data.text}`);
+                if (!isUndoing) {
+                    if (data.node.id === "root") {
+                        showMessage("Нельзя переименовывать корневую папку!");
+                        const tree = $('#jstree').jstree(true);
+                        tree.rename_node(data.node, data.old);
+                        return;
+                    }
+                    if (!isValidName(data.text)) {
+                        showMessage("Недопустимое имя.");
+                        const tree = $('#jstree').jstree(true);
+                        tree.rename_node(data.node, data.old);
+                        return;
+                    }
+                    const parent = data.node.parent;
+                    const tree = $('#jstree').jstree(true);
+                    const siblings = tree.get_node(parent).children;
+                    let isUnique = true;
+                    siblings.forEach(function(childId) {
+                        const childNode = tree.get_node(childId);
+                        const childText = childNode.text.trim();
+                        const childType = childNode.type;
+                        if (childText.toLowerCase() === data.text.trim().toLowerCase() && childType === data.node.type && childId !== data.node.id) {
+                            isUnique = false;
+                            return false;
+                        }
+                    });
+                    if (!isUnique) {
+                        showMessage("Узел с таким именем уже существует в этой папке.");
+                        tree.rename_node(data.node, data.old);
+                        return;
+                    }
+                    undoStack.push({
+                        action: 'rename',
+                        node: data.node.id,
+                        old_text: data.old,
+                        new_text: data.text
+                    });
+                    console.log("Action Recorded to Undo Stack:", { action: 'rename', node: data.node.id, old_text: data.old, new_text: data.text });
+                }
+                if (currentFile && data.node.id === currentFile.id && currentFile.type === 'file') {
+                    const newLanguage = getLanguageFromFilename(data.text);
+                    monaco.editor.setModelLanguage(editor.getModel(), newLanguage);
+                    console.log(`Язык синтаксиса обновлён на "${newLanguage}" для файла "${data.text}".`);
+                }
+            };
+            const isMoveNameUnique = (targetNode, node) => {
+                const tree = $('#jstree').jstree(true);
+                const childIds = tree.get_node(targetNode.id).children;
+                let isUnique = true;
+                childIds.forEach(function(childId) {
+                    const childNode = tree.get_node(childId);
+                    const childText = childNode.text.trim();
+                    const childType = childNode.type;
+                    if (childText.toLowerCase() === node.text.trim().toLowerCase() && childType === node.type) {
+                        if (childId === node.id) {
+                            return;
+                        }
+                        isUnique = false;
+                        return false;
+                    }
+                });
+                return isUnique;
+            };
+            const initializeJsTree = () => {
+                const fileStructureJson = document.querySelector('meta[name="fileStructure"]').getAttribute('content');
+                const projectName = $('#jstree').data('project-name');
+                let fileTreeData = [];
+                if (fileStructureJson) {
+                    try {
+                        fileTreeData = JSON.parse(fileStructureJson);
+                    } catch (e) {
+                        console.error("Ошибка при парсинге JSON для fileStructure:", e);
+                    }
+                }
+                if (!fileTreeData || fileTreeData.length === 0) {
+                    fileTreeData = [{
+                        id: "root",
+                        text: projectName || "Проект",
+                        type: "folder",
+                        children: [],
+                        state: { opened: true }
+                    }];
+                }
+                $('#jstree').jstree({
+                    core: {
+                        check_callback: function (operation, node, parent, position, more) {
+                            const tree = $('#jstree').jstree(true);
+                            if (operation === "move_node") {
+                                const movingNode = node;
+                                const targetParentNode = tree.get_node(parent);
+                                if (movingNode.id === "root") {
+                                    return false;
+                                }
+                                if (targetParentNode.type !== "folder") {
+                                    return false;
+                                }
+                                if (parent === "#") {
+                                    return false;
+                                }
+                                if (!isMoveNameUnique(targetParentNode, movingNode)) {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        },
+                        data: fileTreeData
+                    },
+                    plugins: ['contextmenu', 'dnd', 'types'],
+                    types: {
+                        folder: { icon: 'jstree-folder' },
+                        file: { icon: 'jstree-file' }
+                    },
+                    contextmenu: {
+                        items: function(node) {
+                            const tree = $("#jstree").jstree(true);
+                            const menuItems = {};
+                            if (node.type !== 'folder') {
+                                menuItems.Rename = {
+                                    separator_before: false,
+                                    separator_after: false,
+                                    label: "Переименовать",
+                                    action: function () { tree.edit(node); }
+                                };
+                                menuItems.Remove = {
+                                    separator_before: false,
+                                    separator_after: false,
+                                    label: "Удалить",
+                                    action: function () {
+                                        if (node.id === "root") {
+                                            return;
+                                        }
+                                        const parent = node.parent;
+                                        const parentNode = tree.get_node(parent);
+                                        const position = parentNode.children.indexOf(node.id) !== -1 ? parentNode.children.indexOf(node.id) : 'last';
+                                        if (!isUndoing) {
+                                            const fullNodeData = {
+                                                id: node.id,
+                                                text: node.text,
+                                                type: node.type,
+                                                data: node.type === 'file' ? { content: node.data.content || "" } : undefined,
+                                                state: node.state,
+                                                files: node.type === 'folder' ? gatherFiles(node) : undefined
+                                            };
+                                            undoStack.push({
+                                                action: 'create',
+                                                node: fullNodeData,
+                                                parent: parent,
+                                                position: position
+                                            });
+                                            console.log("Action Recorded to Undo Stack:", { action: 'create', node: fullNodeData, parent: parent, position: position });
+                                        }
+                                        clearEditorIfDeleted(node);
+                                        tree.delete_node(node);
+                                    }
+                                };
+                            } else {
+                                menuItems.Create = {
+                                    separator_before: false,
+                                    separator_after: false,
+                                    label: "Создать",
+                                    action: false,
+                                    submenu: {
+                                        CreateFile: {
+                                            label: "Файл",
+                                            action: function () {
+                                                const newFileName = prompt("Введите имя нового файла:", "Новый файл.js");
+                                                if (!newFileName) {
+                                                    return;
+                                                }
+                                                if (!isValidName(newFileName)) {
+                                                    showMessage("Недопустимое имя файла.");
+                                                    return;
+                                                }
+                                                if (!checkUniqueName(node, newFileName, 'file')) {
+                                                    showMessage("Файл с таким именем уже существует в этой папке.");
+                                                    return;
+                                                }
+                                                const newId = 'file_' + Date.now();
+                                                tree.create_node(node, {
+                                                    id: newId,
+                                                    text: newFileName,
+                                                    type: "file",
+                                                    data: { content: "" },
+                                                    state: { opened: true }
+                                                }, "last", function(new_node) {
+                                                    setTimeout(function() {
+                                                        tree.select_node(new_node);
+                                                    }, 0);
+                                                });
+                                            }
+                                        },
+                                        CreateFolder: {
+                                            label: "Папка",
+                                            action: function () {
+                                                const newFolderName = prompt("Введите имя новой папки:", "Новая папка");
+                                                if (!newFolderName) {
+                                                    return;
+                                                }
+                                                if (!isValidName(newFolderName)) {
+                                                    showMessage("Недопустимое имя папки.");
+                                                    return;
+                                                }
+                                                if (!checkUniqueName(node, newFolderName, 'folder')) {
+                                                    showMessage("Папка с таким именем уже существует в этой папке.");
+                                                    return;
+                                                }
+                                                const newId = 'folder_' + Date.now();
+                                                tree.create_node(node, {
+                                                    id: newId,
+                                                    text: newFolderName,
+                                                    type: "folder",
+                                                    state: { opened: true }
+                                                }, "last", function(new_node) {
+                                                    setTimeout(function() {
+                                                        tree.select_node(new_node);
+                                                    }, 0);
+                                                });
+                                            }
+                                        }
+                                    }
+                                };
+                                if (node.id !== "root") {
+                                    menuItems.Rename = {
+                                        separator_before: false,
+                                        separator_after: false,
+                                        label: "Переименовать",
+                                        action: function () {
+                                            tree.edit(node);
+                                        }
+                                    };
+                                    menuItems.Remove = {
+                                        separator_before: false,
+                                        separator_after: false,
+                                        label: "Удалить",
+                                        action: function () {
+                                            if (node.id === "root") {
+                                                return;
+                                            }
+                                            const parent = node.parent;
+                                            const parentNode = tree.get_node(parent);
+                                            const position = parentNode.children.indexOf(node.id) !== -1 ? parentNode.children.indexOf(node.id) : 'last';
+                                            if (!isUndoing) {
+                                                const fullNodeData = {
+                                                    id: node.id,
+                                                    text: node.text,
+                                                    type: node.type,
+                                                    data: node.type === 'file' ? { content: node.data.content || "" } : undefined,
+                                                    state: node.state,
+                                                    files: node.type === 'folder' ? gatherFiles(node) : undefined
+                                                };
+                                                undoStack.push({
+                                                    action: 'create',
+                                                    node: fullNodeData,
+                                                    parent: parent,
+                                                    position: position
+                                                });
+                                                console.log("Action Recorded to Undo Stack:", { action: 'create', node: fullNodeData, parent: parent, position: position });
+                                            }
+                                            clearEditorIfDeleted(node);
+                                            tree.delete_node(node);
+                                        }
+                                    };
+                                }
+                            }
+                            return menuItems;
+                        }
+                    }
+                })
+                .on('create_node.jstree', function (e, data) {
+                    if (data.node.type === 'file' && !isUndoing) {
+                        data.node.data = { "content": "" };
+                    }
+                    if (!isUndoing) {
+                        undoStack.push({
+                            action: 'delete',
+                            node: data.node.id
+                        });
+                        console.log("Action Recorded to Undo Stack:", { action: 'delete', node: data.node.id });
+                    }
+                })
+                .on('rename_node.jstree', function (e, data) {
+                    handleRename(data);
+                })
+                .on('delete_node.jstree', function (e, data) {
+                    clearEditorIfDeleted(data.node);
+                })
+                .on('move_node.jstree', function (e, data) {
+                    if (!isUndoing) {
+                        undoStack.push({
+                            action: 'move',
+                            node: data.node.id,
+                            old_parent: data.old_parent,
+                            old_position: data.old_position
+                        });
+                        console.log("Action Recorded to Undo Stack:", { action: 'move', node: data.node.id, old_parent: data.old_parent, old_position: data.old_position });
+                    }
+                })
+                .on('dnd_stop.vakata', function (e, data) {
+                    if (duplicateNameError) {
+                        showMessage("В целевой папке уже существует узел с таким именем.");
+                        duplicateNameError = false;
+                    }
+                })
+                .on('select_node.jstree', function (e, data) {
+                    saveCurrentFile();
+                    if (data.node.type === 'file') {
+                        loadFile(data.node);
+                    }
+                });
+                $(document).on('keydown', function(e) {
+                    if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+                        e.preventDefault();
+                        console.log("Ctrl+Z нажато");
+                        undo();
+                    }
+                });
+                $('#save-button').on('click', function() {
+                    saveProject();
+                });
+                require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs' }});
+                require(['vs/editor/editor.main'], function() {
+                    editor = monaco.editor.create(document.getElementById('editor'), {
+                        value: '',
+                        language: 'plaintext',
+                        theme: 'vs-dark',
+                        automaticLayout: true
+                    });
+                    editor.onDidChangeModelContent(function() {
+                        if (isUndoing) {
+                            return;
+                        }
+                        if (currentFile) {
+                            currentFile.data.content = editor.getValue();
+                            console.log(`Содержимое файла "${currentFile.text}" обновлено.`);
+                        }
+                    });
+                });
+            };
+            initializeSelectMainClassModal();
+            initializeJsTree();
+            setInterval(function() {
+                console.log("Автосохранение проекта...");
+                saveProject(false);
+            }, 15000);
+        });
+
+        // Добавляем логику для ресайзера
+        const resizer = document.getElementById('resizer');
+        const sidebar = document.getElementById('sidebar');
+        const editorContainer = document.getElementById('editor-container');
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', function(e) {
+            isResizing = true;
+            document.body.style.cursor = 'ew-resize';
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!isResizing) return;
+
+            // Вычисляем новую ширину боковой панели
+            let newWidth = e.clientX - sidebar.getBoundingClientRect().left;
+
+            // Устанавливаем минимальную и максимальную ширину
+            const minWidth = 200; // Минимальная ширина боковой панели
+            const maxWidth = 600; // Максимальная ширина боковой панели
+
+            if (newWidth < minWidth) {
+                newWidth = minWidth;
+            } else if (newWidth > maxWidth) {
+                newWidth = maxWidth;
+            }
+
+            sidebar.style.width = newWidth + 'px';
+        });
+
+        document.addEventListener('mouseup', function(e) {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = 'default';
+            }
+        });
+
+        // Опционально: Обработка касания для мобильных устройств
+        resizer.addEventListener('touchstart', function(e) {
+            isResizing = true;
+            document.body.style.cursor = 'ew-resize';
+        });
+
+        document.addEventListener('touchmove', function(e) {
+            if (!isResizing) return;
+            const touch = e.touches[0];
+            let newWidth = touch.clientX - sidebar.getBoundingClientRect().left;
+
+            const minWidth = 200;
+            const maxWidth = 600;
+
+            if (newWidth < minWidth) {
+                newWidth = minWidth;
+            } else if (newWidth > maxWidth) {
+                newWidth = maxWidth;
+            }
+
+            sidebar.style.width = newWidth + 'px';
+        });
+
+        document.addEventListener('touchend', function(e) {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = 'default';
+            }
+        });
+
+</script>
+</body>
+</html>
+
+
+

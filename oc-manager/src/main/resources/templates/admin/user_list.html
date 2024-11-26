@@ -1,296 +1,762 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>User List</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель Управления</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
+
+    <!-- CSRF Tokens -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
     <style>
-        *{
+        /* Общие стили */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
             margin: 0;
-            padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-            font-size: inherit !important;
-        }
-
-     body {
+            background-color: #f0f2f5; /* Светло-серый фон */
             color: #24292e;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 20px;
-            min-height: 100vh;
         }
 
-.header .user-info img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+        #wrapper {
+            display: flex;
+        }
+
+        /* Sidebar */
+        #sidebar-wrapper {
+            width: 60px;
+            height: 100vh;
+            background-color: #ffffff; /* Белый фон меню */
+            border-right: none; /* Убираем разделительную линию */
+            transition: width 0.3s ease;
+            position: fixed;
+        }
+
+        #sidebar-wrapper.expanded {
+            width: 200px;
+        }
+
+        .sidebar-heading {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .sidebar-heading i {
+            font-size: 24px;
+            color: #6c757d;
+        }
+
+        .list-group-item {
+            padding: 15px 20px;
+            text-decoration: none;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .list-group-item:hover {
+            background-color: #f8f9fa;
+            color: #6f42c1;
+        }
+
+        .list-group-item i {
             margin-right: 10px;
         }
-        .header {
+
+        .sidebar-text {
+            display: none;
+        }
+
+        #sidebar-wrapper.expanded .sidebar-text {
+            display: inline;
+        }
+
+        /* Page Content */
+        #page-content-wrapper {
+            margin-left: 60px;
+            flex-grow: 1;
+            transition: margin-left 0.3s;
+        }
+
+        #sidebar-wrapper.expanded + #page-content-wrapper {
+            margin-left: 200px;
+        }
+
+        /* Navbar */
+        .navbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 10px 20px;
-            background-color: #f6f8fa;
-            border-bottom: 1px solid #d1d5da;
-            width: 100%;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 900;
-            box-sizing: border-box;
+            background-color: #d3d3d3; /* Светло-серый фон для хедера */
+            box-shadow: none; /* Убираем тень */
         }
 
-        .header .user-info {
+        /* Поисковая панель и кнопки */
+        .controls-row {
             display: flex;
-            align-items: center;
-        }
-
-        .header .user-info span {
-            font-size: 24px;
-            font-weight: 700;
-            color: #24292e;
-        }
-
-        .header .notification-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .notification-container {
-            position: relative;
-        }
-
-        .notification-icon {
-            font-size: 24px;
-            position: relative;
-            cursor: pointer;
-            color: #0366d6;
-        }
-
-        .notification-icon:hover {
-            color: #0056b3;
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background-color: #FF4D4F;
-            color: #FFF;
-            border-radius: 50%;
-            font-size: 12px;
-            padding: 3px 6px;
-            font-weight: bold;
-            display: none;
-        }
-
-        .notification-badge.visible {
-            display: inline-block;
-        }
-
-        .logout-icon {
-            font-size: 24px;
-            color: #24292e;
-            cursor: pointer;
-            transition: color 0.3s;
-        }
-
-        .logout-icon:hover {
-            color: #d73a49;
-        }
-
-        .main-container {
-            margin-top: 80px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            width: 100%;
-            gap: 20px;
-        }
-
-        .container {
-            width: 90%;
-            max-width: 1000px;
-            padding: 20px;
-            border: 1px solid #d1d5da;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 28px;
-            color: #24292e;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .input-group {
-            display: flex;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            gap: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
-        .form-control {
-            background-color: #f6f8fa;
-            border: 1px solid #d1d5da;
-            color: #24292e;
-            border-radius: 30px;
-            padding: 10px;
-            outline: none;
-            font-size: 16px;
+        .search-bar {
+            display: flex;
             flex-grow: 1;
         }
 
-        .form-control::placeholder {
-            color: #888;
+        .search-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #d1d5da;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
-        .btn {
-            border-radius: 30px;
-            padding: 10px 20px;
-            font-size: 16px;
-            transition: all 0.3s;
+        .controls-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .controls-buttons button {
+            padding: 10px 15px;
             border: none;
-            background-color: #28a745;
-            color: #ffffff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #fff;
+            transition: background-color 0.3s;
         }
 
-        .btn:hover {
+        .controls-buttons .add-admin-btn {
+            background-color: #28a745;
+        }
+
+        .controls-buttons .add-admin-btn:hover {
             background-color: #218838;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+        .controls-buttons .ban-users-btn {
+            background-color: #dc3545;
         }
 
-        th, td {
-            padding: 12px 15px;
+        .controls-buttons .ban-users-btn:hover {
+            background-color: #c82333;
+        }
+
+        /* Основной контейнер */
+        .main-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            padding: 10px; /* Уменьшенный padding */
+        }
+
+        /* Карточки статистики */
+        .stats-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px; /* Уменьшенный gap */
+            justify-content: flex-start;
+            margin-bottom: 20px; /* Добавляем отступ снизу */
+        }
+
+        .stat-card {
+            background-color: #ffffff;
+            border: 1px solid #e3e6f0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: calc(25% - 10px); /* 4 карточки в ряд с gap 10px */
+            aspect-ratio: 1 / 1; /* Квадратные карточки */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             text-align: center;
-            border-bottom: 1px solid #d1d5da;
+        }
+
+        .stat-card h5 {
+            margin: 0 0 10px;
+            font-size: 18px;
+            color: #6c757d;
+        }
+
+        .stat-card h3 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
             color: #24292e;
         }
 
-        th {
-            font-size: 18px;
+        /* Адаптивность для меньших экранов */
+        @media (max-width: 1200px) {
+            .stat-card {
+                width: calc(25% - 10px); /* Оставляем ширину, возможно перенос на новые строки */
+            }
         }
 
-        td {
-            font-size: 16px;
+        @media (max-width: 768px) {
+            .stat-card {
+                width: calc(50% - 10px); /* 2 карточки в ряд */
+            }
         }
 
-        .action-icons {
+        @media (max-width: 480px) {
+            .stat-card {
+                width: 100%; /* 1 карточка в ряд */
+            }
+        }
+
+        /* Таблица топ пользователей */
+        .top-users-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .top-users-list li {
             display: flex;
-            gap: 10px;
-            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
-        .action-icons i {
+        .top-users-list li .medal-icon {
+            font-size: 24px;
+            margin-right: 15px;
+        }
+
+        /* Медали */
+        .gold-icon {
+            color: gold;
+        }
+
+        .silver-icon {
+            color: silver;
+        }
+
+        .bronze-icon {
+            color: #cd7f32;
+        }
+
+        /* Пользовательский список */
+        .user-list {
+            width: 100%;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
+        }
+
+        .user-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .user-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 15px;
+            cursor: pointer;
+            position: relative;
+        }
+
+    .user-checkbox input {
+        opacity: 1; /* Сделать чекбокс видимым */
+        position: relative; /* Убедиться, что он не перекрыт */
+        z-index: 1;
+        width: 20px;
+        height: 20px;
+    }
+
+        .user-checkbox.checked::after {
+            content: "";
+            position: absolute;
+            top: 3px;
+            left: 7px;
+            width: 5px;
+            height: 10px;
+            border: solid #000;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 15px;
+            background-color: #d1d5da;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        .user-info {
+            flex-grow: 1;
+        }
+
+        .user-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .user-email {
+            font-size: 14px;
+            color: #6c757d;
+            margin: 0;
+        }
+
+        .user-role {
+            margin-right: 20px;
+            font-size: 14px;
+            color: #24292e;
+            font-weight: 500;
+        }
+
+        /* Таблицы */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th, table td {
+            padding: 12px;
+            border: none; /* Убираем линии */
+        }
+
+        table th {
+            display: none; /* Скрываем заголовки */
+        }
+
+        table td {
+            background-color: #ffffff;
+            color: #24292e;
+            border-bottom: 1px solid #e3e6f0; /* Линия под строкой */
+        }
+
+        /* Удаление нижней линии у header */
+        .navbar {
+            border-bottom: none;
+        }
+
+        /* Удаление разделительных линий в меню */
+        .list-group-item {
+            border-bottom: none;
+        }
+
+        /* Улучшение внешнего вида контейнеров */
+        .card {
+            margin: 10px 0;
+            padding: 15px;
+            border: none; /* Убираем стандартные границы */
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+            height: 100%; /* Для равной высоты */
+        }
+    .custom-checkbox {
+    position: relative;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-right: 15px;
+    cursor: pointer;
+    }
+
+    .custom-checkbox input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+    cursor: pointer;
+    }
+
+    .checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 20px;
+    width: 20px;
+    background-color: #eee;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    }
+
+    .custom-checkbox input:checked ~ .checkmark {
+    background-color: #6f42c1;
+    border-color: #6f42c1;
+    }
+
+    .checkmark::after {
+    content: "";
+    position: absolute;
+    display: none;
+    }
+
+    .custom-checkbox input:checked ~ .checkmark::after {
+    display: block;
+    }
+
+    .custom-checkbox .checkmark::after {
+    left: 7px;
+    top: 3px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    }
+        .btn-icon {
             font-size: 20px;
+            border: none;
+            background: none;
             cursor: pointer;
             transition: color 0.3s;
+            padding: 5px;
         }
 
-        .action-icons .profile-icon {
-            color: #0366d6;
-        }
-
-        .action-icons .profile-icon:hover {
+        .btn-icon:hover {
             color: #0056b3;
         }
 
-        .action-icons .ban-icon {
+        .icon-profile {
+            color: #0366d6;
+        }
+
+        .icon-ban {
             color: #d73a49;
         }
 
-        .action-icons .ban-icon:hover {
-            color: #b31d28;
-        }
-
-        .action-icons .unban-icon {
+        .icon-unban {
             color: #28a745;
         }
-
-        .action-icons .unban-icon:hover {
-            color: #218838;
-        }
-
     </style>
 </head>
 <body>
-<div class="header">
-    <div class="user-info">
-        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar">
-        <span class="username" th:text="${client.username}"></span>
+<div id="wrapper">
+    <!-- Sidebar -->
+    <div id="sidebar-wrapper">
+        <div class="sidebar-heading">
+            <i class="fas fa-chart-line"></i> <span class="sidebar-text">Admin Panel</span>
+        </div>
+        <a href="/admin/dashboard" class="list-group-item"><i class="fas fa-home"></i> <span class="sidebar-text">Dashboard</span></a>
+        <a href="/admin/users" class="list-group-item"><i class="fas fa-users"></i> <span class="sidebar-text">Users</span></a>
+        <a href="/admin/projects" class="list-group-item"><i class="fas fa-folder-open"></i> <span class="sidebar-text">Projects</span></a>
+        <a href="/admin/unbanRequests" class="list-group-item"><i class="fas fa-ban"></i> <span class="sidebar-text">Unban Requests</span></a>
     </div>
-    <div class="notification-container">
-        <a href="/admin/unbanRequests" class="notification-icon">
-            &#128276; <!-- Unicode bell icon -->
-            <span class="notification-badge" th:classappend="${notificationCount > 0} ? 'visible' : ''" th:text="${notificationCount}"></span>
-        </a>
-            <form th:action="@{/logout}" th:method="POST" style="margin: 0;">
-                <button type="submit" class="logout-icon" title="Logout" style="border: none; background: none;"><i class='bx bx-log-out'></i></button>
+
+    <!-- Page content -->
+    <div id="page-content-wrapper">
+        <!-- Navbar -->
+        <div class="navbar">
+            <form class="search-bar">
+                <input type="text" id="search-input" class="search-input" placeholder="Введите имя пользователя или email">
             </form>
-    </div>
-</div>
-
-<div class="main-container clearfix gutter-lg">
-    <div class="container">
-        <h1>Все пользователи</h1>
-
-        <!-- Search Form -->
-        <form th:action="@{/admin/users/search}" method="get">
-            <div class="input-group">
-                <input type="text" name="username" class="form-control" placeholder="Введите имя пользователя" th:value="${username}">
-                <button class="btn" type="submit">Поиск</button>
+            <div class="navbar-icons">
+                <a href="/admin/notifications" style="margin-right: 10px; color: #FFC107;"><i class="fas fa-bell"></i></a>
+                <form th:action="@{/logout}" th:method="POST" style="display: inline;">
+                    <button type="submit" style="background: none; border: none; color: #dc3545; cursor: pointer;">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </form>
             </div>
-        </form>
+        </div>
+        <!-- Main Content -->
+        <div class="main-container">
+            <div class="container">
+                <!-- Сортировка и кнопки массовых действий -->
 
-        <table class="table">
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Имя пользователя</th>
-                <th>Email</th>
-                <th>Роль</th>
-                <th>Заблокирован</th>
-                <th>Действия</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="user : ${users}">
-                <td th:text="${user.id}">1</td>
-                <td th:text="${user.username}">John</td>
-                <td th:text="${user.email}">john@example.com</td>
-                <td th:text="${user.role}">ROLE_USER</td>
-                <td th:text="${user.role == 'ROLE_BANNED' ? 'Да' : 'Нет'}">Нет</td>
-                <td>
-                    <div class="action-icons">
-                        <a th:href="@{/admin/users/{id}(id=${user.id})}">
-                            <i class='bx bx-user profile-icon' title="Посмотреть профиль"></i>
-                        </a>
-                        <form th:action="@{/admin/users/{id}/ban(id=${user.id})}" method="post" style="display: inline;" th:if="${user.role != 'ROLE_BANNED'}">
-                            <button type="submit" style="background: none; border: none; cursor: pointer;">
-                                <i class='bx bx-lock ban-icon' title="Заблокировать"></i>
-                            </button>
-                        </form>
-                        <form th:action="@{/admin/users/{id}/unban(id=${user.id})}" method="post" style="display: inline;" th:if="${user.role == 'ROLE_BANNED'}">
-                            <button type="submit" style="background: none; border: none; cursor: pointer;">
-                                <i class='bx bx-lock-open unban-icon' title="Разблокировать"></i>
-                            </button>
-                        </form>
+
+                <!-- Статистические карточки - первая строка -->
+                <div class="stats-row">
+                    <!-- Заблокированные пользователи -->
+                    <div class="stat-card">
+                        <h5>Заблокированные пользователи</h5>
+                        <h3 th:text="${bannedUsers}">0</h3>
                     </div>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+                    <!-- Новые пользователи за неделю -->
+                    <div class="stat-card">
+                        <h5>Новые пользователи за неделю</h5>
+                        <h3 th:text="${newUsersLastWeek}">0</h3>
+                    </div>
+                    <!-- Новые пользователи за сутки -->
+                    <div class="stat-card">
+                        <h5>Новые пользователи за сутки</h5>
+                        <h3 th:text="${newUsersLastDay}">0</h3>
+                    </div>
+                    <!-- Общее время онлайн -->
+                    <div class="stat-card">
+                        <h5>Общее время онлайн</h5>
+                        <h3 id="onlineTime" th:text="${totalOnlineTime}">00:00:00</h3>
+                    </div>
+                </div>
+
+                <!-- Статистические карточки - вторая строка -->
+                <div class="stats-row">
+                    <!-- Активные пользователи за сутки -->
+                    <div class="stat-card">
+                        <h5>Активные пользователи за сутки</h5>
+                        <h3 th:text="${activeUsersLastDay}">0</h3>
+                    </div>
+                    <!-- Топ пользователей -->
+                    <div class="stat-card" style="width: calc(75% - 10px);">
+                        <h5>Топ пользователей по времени онлайн</h5>
+                        <ul class="top-users-list">
+                            <li th:each="entry, iterStat : ${topUsers}" th:if="${iterStat.index < 3}">
+                                <i th:class="${iterStat.index == 0} ? 'fas fa-medal gold-icon' : (${iterStat.index == 1} ? 'fas fa-medal silver-icon' : 'fas fa-medal bronze-icon')"
+                                   class="medal-icon"></i>
+                                <span th:text="${entry.key.username}"></span>
+                                <span th:text="${#numbers.formatDecimal(entry.value / 3600, 0, 'POINT')} + 'h ' + (${#numbers.formatDecimal((entry.value % 3600) / 60, 0, 'POINT')} + 'm')"></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="controls-row">
+                    <!-- Выпадающее меню сортировки -->
+                    <div>
+                        <label for="sort-select" style="margin-right: 10px;">Сортировать по:</label>
+                        <select id="sort-select" class="form-select" onchange="sortUsers()">
+                            <option value="registrationDateDesc">Когда зарегистрировались (новые сначала)</option>
+                            <option value="alphabetical">По алфавиту</option>
+                            <option value="role">По ролям (админы, затем пользователи)</option>
+                            <!-- <option value="lastLoginDesc">По последнему заходу</option> -->
+                        </select>
+                    </div>
+                    <!-- Кнопки -->
+                    <div class="controls-buttons">
+                        <button type="button" class="add-admin-btn" onclick="addAdmins()">Добавить админа</button>
+                        <button type="button" class="ban-users-btn" onclick="banSelectedUsers()">Забанить</button>
+                    </div>
+                </div>
+                <!-- admin/user_list.html -->
+                <div th:fragment="userList">
+                    <div class="user-list">
+                        <div th:each="user : ${users}" class="user-item" data-username="${user.username}">
+                            <!-- Чекбокс для выбора пользователя -->
+                            <label class="custom-checkbox">
+                                <input type="checkbox" class="user-select-checkbox" data-user-id="${user.id}">
+                                <span class="checkmark"></span>
+                            </label>
+                            <div class="user-avatar" th:text="${user.username.substring(0, 1).toUpperCase()}"></div>
+                            <div class="user-info">
+                                <p class="user-name" th:text="${user.username}"></p>
+                                <p class="user-email" th:text="${user.email}"></p>
+                            </div>
+                            <span class="user-role" th:text="${user.role}"></span>
+                            <div class="action-icons">
+                                <a th:href="@{/admin/users/{id}(id=${user.id})}">
+                                    <i class='bx bx-user profile-icon' style=" font-size: 20px; color: #0366d6;" title="Посмотреть профиль"></i>
+                                </a>
+                                <form th:action="@{/admin/users/{id}/ban(id=${user.id})}" method="post" style="display: inline;" th:if="${user.role != 'ROLE_BANNED'}">
+                                    <button type="submit" style="background: none; border: none; cursor: pointer;  font-size: 20px;  color: #d73a49;">
+                                        <i class='bx bx-lock ban-icon' title="Заблокировать"></i>
+                                    </button>
+                                </form>
+                                <form th:action="@{/admin/users/{id}/unban(id=${user.id})}" method="post" style="display: inline;" th:if="${user.role == 'ROLE_BANNED'}">
+                                    <button type="submit" style="background: none; border: none; cursor: pointer;  font-size: 20px; color: #28a745;">
+                                        <i class='bx bx-lock-open unban-icon' title="Разблокировать"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Дополнительные статистики и графики можно добавить здесь -->
+
+            </div>
+        </div>
     </div>
 </div>
+
+<!-- Скрипты -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Получение CSRF-токена из мета-тегов
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+    // Боковое меню
+    const sidebarWrapper = document.getElementById('sidebar-wrapper');
+    sidebarWrapper.addEventListener('mouseover', () => sidebarWrapper.classList.add('expanded'));
+    sidebarWrapper.addEventListener('mouseleave', () => sidebarWrapper.classList.remove('expanded'));
+
+   document.getElementById('search-input').addEventListener('input', function () {
+        const query = this.value.toLowerCase().trim();
+        const userItems = document.querySelectorAll('.user-item');
+
+        userItems.forEach(user => {
+            const username = user.getAttribute('data-username').toLowerCase();
+            const email = user.querySelector('.user-email').textContent.toLowerCase();
+
+            if (username.includes(query) || email.includes(query)) {
+                user.style.display = 'flex';
+            } else {
+                user.style.display = 'none';
+            }
+        });
+    });
+
+    // Обновление общего времени онлайн
+    function updateOnlineTime() {
+        fetch('/admin/totalOnlineTime')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.text();
+            })
+            .then(data => {
+                document.getElementById('onlineTime').innerText = data;
+            })
+            .catch(error => console.error('Error fetching online time:', error));
+    }
+
+    // Обновлять время каждые 10 секунд
+    setInterval(updateOnlineTime, 10000);
+
+    // Первый вызов при загрузке страницы
+    updateOnlineTime();
+
+    function toggleCheckbox(element) {
+        console.log("toggleCheckbox called"); // Добавлено для отладки
+        const checkbox = element.querySelector('input[type="checkbox"]');
+        if (checkbox.checked) {
+            checkbox.checked = false;
+            element.classList.remove('checked');
+        } else {
+            checkbox.checked = true;
+            element.classList.add('checked');
+        }
+    }
+// Функция для добавления админов
+function addAdmins() {
+    const selectedCheckboxes = document.querySelectorAll('.user-select-checkbox:checked');
+    if (selectedCheckboxes.length === 0) {
+        alert('Выберите хотя бы одного пользователя для добавления админом.');
+        return;
+    }
+
+    const userIds = Array.from(selectedCheckboxes).map(checkbox => Number(checkbox.getAttribute('data-user-id')));
+
+    console.log("Selected userIds for adding admins:", userIds); // Для отладки
+
+    // Отправка данных на сервер
+    fetch('/admin/users/addAdmins', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            [csrfHeader]: csrfToken // Добавляем CSRF-заголовок
+        },
+        body: JSON.stringify({ userIds: userIds })
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('Выбранные пользователи успешно добавлены в админы.');
+            location.reload();
+        } else {
+            return response.text().then(text => { throw new Error(text) });
+        }
+    })
+    .catch(error => {
+        console.error('Error adding admins:', error);
+        alert('Произошла ошибка: ' + error.message);
+    });
+}
+
+  // Функция для бана выбранных пользователей
+  function banSelectedUsers() {
+    const selectedCheckboxes = document.querySelectorAll('.user-select-checkbox:checked');
+    if (selectedCheckboxes.length === 0) {
+        alert('Выберите хотя бы одного пользователя для бана.');
+        return;
+    }
+
+    const userIds = Array.from(selectedCheckboxes).map(checkbox => Number(checkbox.getAttribute('data-user-id')));
+
+    // Отправка данных на сервер
+    fetch('/admin/users/ban', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            [csrfHeader]: csrfToken // Добавляем CSRF-заголовок
+        },
+        body: JSON.stringify({ userIds: userIds })
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('Выбранные пользователи успешно заблокированы.');
+            location.reload();
+        } else {
+            throw new Error('Ошибка при блокировке пользователей.');
+        }
+    })
+    .catch(error => {
+        console.error(error);
+        alert('Произошла ошибка. Попробуйте снова.');
+    });
+  }
+
+  function sortUsers() {
+      const sortValue = document.getElementById('sort-select').value;
+
+      // Отправка запроса на сервер для получения отсортированных данных
+      fetch(`/admin/users/list?sort=${sortValue}`)
+          .then(response => {
+              if (!response.ok) {
+                  throw new Error('Network response was not ok ' + response.statusText);
+              }
+              return response.text();
+          })
+          .then(html => {
+              // Замена содержимого списка пользователей новым HTML
+              document.querySelector('.user-list').innerHTML = html;
+          })
+          .catch(error => {
+              console.error('Error sorting users:', error);
+              alert('Произошла ошибка при сортировке пользователей.');
+          });
+  }
+
+</script>
 </body>
 </html>
