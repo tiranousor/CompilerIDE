@@ -486,7 +486,7 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     function updateStats() {
-        fetch('/admin/statistics') // Эндпоинт для получения свежих данных
+        fetch('/admin/users') // Эндпоинт для получения свежих данных
             .then(response => response.json())
             .then(data => {
                 document.querySelector('h3[th\\:text="${totalProjects}"]').innerText = data.totalProjects;

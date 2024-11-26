@@ -56,6 +56,8 @@ public class AdminController {
                             Model model, Authentication authentication) {
         List<Client> users = userActivityService.getUsersSorted(sort);
         model.addAttribute("users", users);
+        long totalOnlineTime = userActivityService.calculateTotalOnlineTime();
+
         Client client = clientService.findByUsername(authentication.getName()).orElse(null);
         model.addAttribute("client", client);
         model.addAttribute("newUsersLastDay", userActivityService.countNewUsersInLastDays(1));

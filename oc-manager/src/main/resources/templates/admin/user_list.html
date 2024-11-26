@@ -50,7 +50,7 @@
 
         .sidebar-heading i {
             font-size: 24px;
-            color: #6c757d;
+            color: #6f42c1; /* Фиолетовый цвет */
         }
 
         .list-group-item {
@@ -60,15 +60,25 @@
             display: flex;
             align-items: center;
             transition: background 0.3s, color 0.3s;
+            border: none; /* Убираем разделительную линию */
+            border-radius: 8px;
+            margin: 5px 10px;
         }
 
         .list-group-item:hover {
-            background-color: #f8f9fa;
+            background-color: #e6e6e6;
             color: #6f42c1;
+        }
+
+        .list-group-item.active {
+            background-color: #6f42c1;
+            color: #ffffff;
+            border: 1px solid #6f42c1;
         }
 
         .list-group-item i {
             margin-right: 10px;
+            font-size: 18px;
         }
 
         .sidebar-text {
@@ -141,19 +151,19 @@
         }
 
         .controls-buttons .add-admin-btn {
-            background-color: #28a745;
+            background-color: #6f42c1;
         }
 
         .controls-buttons .add-admin-btn:hover {
-            background-color: #218838;
+            background-color: #5a32a3;
         }
 
         .controls-buttons .ban-users-btn {
-            background-color: #dc3545;
+            background-color: #d73a49;
         }
 
         .controls-buttons .ban-users-btn:hover {
-            background-color: #c82333;
+            background-color: #c8293a;
         }
 
         /* Основной контейнер */
@@ -174,7 +184,7 @@
         .stats-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px; /* Уменьшенный gap */
+            gap: 20px; /* Увеличенный gap для лучшего разделения */
             justify-content: flex-start;
             margin-bottom: 20px; /* Добавляем отступ снизу */
         }
@@ -185,8 +195,8 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             padding: 20px;
-            width: calc(25% - 10px); /* 4 карточки в ряд с gap 10px */
-            aspect-ratio: 1 / 1; /* Квадратные карточки */
+            width: calc(25% - 20px);
+            aspect-ratio: 1 / 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -210,23 +220,41 @@
         /* Адаптивность для меньших экранов */
         @media (max-width: 1200px) {
             .stat-card {
-                width: calc(25% - 10px); /* Оставляем ширину, возможно перенос на новые строки */
+                width: calc(33.333% - 20px);
             }
         }
 
         @media (max-width: 768px) {
             .stat-card {
-                width: calc(50% - 10px); /* 2 карточки в ряд */
+                width: calc(50% - 20px);
             }
         }
 
         @media (max-width: 480px) {
             .stat-card {
-                width: 100%; /* 1 карточка в ряд */
+                width: 100%;
             }
         }
 
-        /* Таблица топ пользователей */
+        /* Топ пользователей */
+        .top-users-container {
+            background-color: #ffffff;
+            border: 1px solid #e3e6f0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-users-container h5 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #6f42c1;
+            text-align: center;
+        }
+
         .top-users-list {
             list-style: none;
             padding: 0;
@@ -241,6 +269,10 @@
             border-radius: 8px;
             margin-bottom: 10px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .top-users-list li:last-child {
+            margin-bottom: 0;
         }
 
         .top-users-list li .medal-icon {
@@ -259,6 +291,34 @@
 
         .bronze-icon {
             color: #cd7f32;
+        }
+
+        /* Таблицы */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th, table td {
+            padding: 12px;
+            border: none; /* Убираем линии */
+        }
+
+        table th {
+            display: none; /* Скрываем заголовки */
+        }
+
+        table td {
+            background-color: #ffffff;
+            color: #24292e;
+            border-bottom: 1px solid #e3e6f0; /* Линия под строкой */
+        }
+
+        /* Графики */
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
         }
 
         /* Пользовательский список */
@@ -284,32 +344,55 @@
             background-color: #f8f9fa;
         }
 
-        .user-checkbox {
+        .custom-checkbox {
+            position: relative;
+            display: inline-block;
             width: 20px;
             height: 20px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
             margin-right: 15px;
             cursor: pointer;
-            position: relative;
         }
 
-    .user-checkbox input {
-        opacity: 1; /* Сделать чекбокс видимым */
-        position: relative; /* Убедиться, что он не перекрыт */
-        z-index: 1;
-        width: 20px;
-        height: 20px;
-    }
+        .custom-checkbox input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+            cursor: pointer;
+        }
 
-        .user-checkbox.checked::after {
+        .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 20px;
+            width: 20px;
+            background-color: #eee;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .custom-checkbox input:checked ~ .checkmark {
+            background-color: #6f42c1;
+            border-color: #6f42c1;
+        }
+
+        .checkmark::after {
             content: "";
             position: absolute;
-            top: 3px;
+            display: none;
+        }
+
+        .custom-checkbox input:checked ~ .checkmark::after {
+            display: block;
+        }
+
+        .custom-checkbox .checkmark::after {
             left: 7px;
+            top: 3px;
             width: 5px;
             height: 10px;
-            border: solid #000;
+            border: solid white;
             border-width: 0 2px 2px 0;
             transform: rotate(45deg);
         }
@@ -319,7 +402,7 @@
             height: 50px;
             border-radius: 50%;
             margin-right: 15px;
-            background-color: #d1d5da;
+            background-color: #6f42c1;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -352,122 +435,17 @@
             font-weight: 500;
         }
 
-        /* Таблицы */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        table th, table td {
-            padding: 12px;
-            border: none; /* Убираем линии */
-        }
-
-        table th {
-            display: none; /* Скрываем заголовки */
-        }
-
-        table td {
-            background-color: #ffffff;
-            color: #24292e;
-            border-bottom: 1px solid #e3e6f0; /* Линия под строкой */
-        }
-
-        /* Удаление нижней линии у header */
-        .navbar {
-            border-bottom: none;
-        }
-
-        /* Удаление разделительных линий в меню */
-        .list-group-item {
-            border-bottom: none;
-        }
-
-        /* Улучшение внешнего вида контейнеров */
-        .card {
-            margin: 10px 0;
-            padding: 15px;
-            border: none; /* Убираем стандартные границы */
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            background-color: #ffffff;
-            height: 100%; /* Для равной высоты */
-        }
-    .custom-checkbox {
-    position: relative;
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    margin-right: 15px;
-    cursor: pointer;
-    }
-
-    .custom-checkbox input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-    position: absolute;
-    cursor: pointer;
-    }
-
-    .checkmark {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 20px;
-    width: 20px;
-    background-color: #eee;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    }
-
-    .custom-checkbox input:checked ~ .checkmark {
-    background-color: #6f42c1;
-    border-color: #6f42c1;
-    }
-
-    .checkmark::after {
-    content: "";
-    position: absolute;
-    display: none;
-    }
-
-    .custom-checkbox input:checked ~ .checkmark::after {
-    display: block;
-    }
-
-    .custom-checkbox .checkmark::after {
-    left: 7px;
-    top: 3px;
-    width: 5px;
-    height: 10px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-    }
-        .btn-icon {
+        .action-icons a, .action-icons form button {
+            margin-right: 10px;
             font-size: 20px;
             border: none;
             background: none;
             cursor: pointer;
-            transition: color 0.3s;
-            padding: 5px;
+            color: inherit;
         }
 
-        .btn-icon:hover {
-            color: #0056b3;
-        }
-
-        .icon-profile {
-            color: #0366d6;
-        }
-
-        .icon-ban {
-            color: #d73a49;
-        }
-
-        .icon-unban {
-            color: #28a745;
+        .action-icons a:hover, .action-icons form button:hover {
+            color: #6f42c1;
         }
     </style>
 </head>
@@ -478,87 +456,92 @@
         <div class="sidebar-heading">
             <i class="fas fa-chart-line"></i> <span class="sidebar-text">Admin Panel</span>
         </div>
-        <a href="/admin/dashboard" class="list-group-item"><i class="fas fa-home"></i> <span class="sidebar-text">Dashboard</span></a>
-        <a href="/admin/users" class="list-group-item"><i class="fas fa-users"></i> <span class="sidebar-text">Users</span></a>
-        <a href="/admin/projects" class="list-group-item"><i class="fas fa-folder-open"></i> <span class="sidebar-text">Projects</span></a>
-        <a href="/admin/unbanRequests" class="list-group-item"><i class="fas fa-ban"></i> <span class="sidebar-text">Unban Requests</span></a>
+        <a href="/admin/dashboard" class="list-group-item">
+            <i class="fas fa-home"></i> <span class="sidebar-text">Dashboard</span>
+        </a>
+        <a href="/admin/users" class="list-group-item">
+            <i class="fas fa-users"></i> <span class="sidebar-text">Users</span>
+        </a>
+        <a href="/admin/projects" class="list-group-item">
+            <i class="fas fa-folder-open"></i> <span class="sidebar-text">Projects</span>
+        </a>
+        <a href="/admin/unbanRequests" class="list-group-item">
+            <i class="fas fa-ban"></i> <span class="sidebar-text">Unban Requests</span>
+        </a>
     </div>
 
     <!-- Page content -->
     <div id="page-content-wrapper">
         <!-- Navbar -->
         <div class="navbar">
-            <form class="search-bar">
-                <input type="text" id="search-input" class="search-input" placeholder="Введите имя пользователя или email">
+            <form class="search-bar" th:action="@{/admin/users}" method="get">
+                <input type="text" id="search-input" class="search-input" name="query" placeholder="Введите имя пользователя или email">
             </form>
             <div class="navbar-icons">
-                <a href="/admin/notifications" style="margin-right: 10px; color: #FFC107;"><i class="fas fa-bell"></i></a>
+                <a href="/admin/notifications">
+                    <i class="fas fa-bell" style="color: #FFC107;"></i>
+                </a>
                 <form th:action="@{/logout}" th:method="POST" style="display: inline;">
-                    <button type="submit" style="background: none; border: none; color: #dc3545; cursor: pointer;">
-                        <i class="fas fa-sign-out-alt"></i>
+                    <button type="submit" style="background: none; border: none; cursor: pointer;">
+                        <i class="fas fa-sign-out-alt" style="color: #dc3545;"></i>
                     </button>
                 </form>
             </div>
         </div>
+
         <!-- Main Content -->
         <div class="main-container">
             <div class="container">
-                <!-- Сортировка и кнопки массовых действий -->
-
-
-                <!-- Статистические карточки - первая строка -->
+                <!-- Статистические карточки -->
                 <div class="stats-row">
-                    <!-- Заблокированные пользователи -->
                     <div class="stat-card">
                         <h5>Заблокированные пользователи</h5>
                         <h3 th:text="${bannedUsers}">0</h3>
                     </div>
-                    <!-- Новые пользователи за неделю -->
                     <div class="stat-card">
                         <h5>Новые пользователи за неделю</h5>
                         <h3 th:text="${newUsersLastWeek}">0</h3>
                     </div>
-                    <!-- Новые пользователи за сутки -->
                     <div class="stat-card">
                         <h5>Новые пользователи за сутки</h5>
                         <h3 th:text="${newUsersLastDay}">0</h3>
                     </div>
-                    <!-- Общее время онлайн -->
                     <div class="stat-card">
                         <h5>Общее время онлайн</h5>
                         <h3 id="onlineTime" th:text="${totalOnlineTime}">00:00:00</h3>
                     </div>
                 </div>
 
-                <!-- Статистические карточки - вторая строка -->
                 <div class="stats-row">
-                    <!-- Активные пользователи за сутки -->
                     <div class="stat-card">
                         <h5>Активные пользователи за сутки</h5>
                         <h3 th:text="${activeUsersLastDay}">0</h3>
                     </div>
-                    <!-- Топ пользователей -->
-                    <div class="stat-card" style="width: calc(75% - 10px);">
-                        <h5>Топ пользователей по времени онлайн</h5>
-                        <ul class="top-users-list">
-                            <li th:each="entry, iterStat : ${topUsers}" th:if="${iterStat.index < 3}">
-                                <i th:class="${iterStat.index == 0} ? 'fas fa-medal gold-icon' : (${iterStat.index == 1} ? 'fas fa-medal silver-icon' : 'fas fa-medal bronze-icon')"
-                                   class="medal-icon"></i>
-                                <span th:text="${entry.key.username}"></span>
-                                <span th:text="${#numbers.formatDecimal(entry.value / 3600, 0, 'POINT')} + 'h ' + (${#numbers.formatDecimal((entry.value % 3600) / 60, 0, 'POINT')} + 'm')"></span>
-                            </li>
-                        </ul>
-                    </div>
+
+                    <<!-- Топ пользователей по времени онлайн -->
+<!--                    <div class="top-users-container">-->
+<!--                        <h5>Топ пользователей по времени онлайн</h5>-->
+<!--                        <ul class="top-users-list">-->
+<!--                            <li th:each="entry, iterStat : ${topUsers}">-->
+<!--                                <i th:class="${iterStat.index == 0} ? 'fas fa-medal gold-icon' :-->
+<!--                        (${iterStat.index == 1} ? 'fas fa-medal silver-icon' : 'fas fa-medal bronze-icon')">-->
+<!--                                </i>-->
+<!--                                <span th:text="${entry.key.username}"></span>-->
+<!--                                <span th:text="${#numbers.formatDecimal(entry.value / 3600, 0, '.') + 'ч ' + #numbers.formatDecimal((entry.value % 3600) / 60, 0, '.') + 'м'}"></span>-->
+<!--                            </li>-->
+<!--                        </ul>-->
+<!--                    </div>-->
+
                 </div>
+
+                <!-- Контролы: сортировка и кнопки -->
                 <div class="controls-row">
-                    <!-- Выпадающее меню сортировки -->
                     <div>
                         <label for="sort-select" style="margin-right: 10px;">Сортировать по:</label>
                         <select id="sort-select" class="form-select" onchange="sortUsers()">
                             <option value="registrationDateDesc">Когда зарегистрировались (новые сначала)</option>
                             <option value="alphabetical">По алфавиту</option>
                             <option value="role">По ролям (админы, затем пользователи)</option>
-                            <!-- <option value="lastLoginDesc">По последнему заходу</option> -->
                         </select>
                     </div>
                     <!-- Кнопки -->
@@ -567,7 +550,8 @@
                         <button type="button" class="ban-users-btn" onclick="banSelectedUsers()">Забанить</button>
                     </div>
                 </div>
-                <!-- admin/user_list.html -->
+
+                <!-- Список пользователей -->
                 <div th:fragment="userList">
                     <div class="user-list">
                         <div th:each="user : ${users}" class="user-item" data-username="${user.username}">
@@ -601,41 +585,173 @@
                     </div>
                 </div>
 
-                <!-- Дополнительные статистики и графики можно добавить здесь -->
+                <!-- Дополнительные графики -->
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card chart-container">
+                            <div class="card-body">
+                                <h5 class="card-title">Активные пользователи</h5>
+                                <canvas id="usersChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
 
+                    <div class="col-md-6 mb-4">
+                        <div class="card chart-container">
+                            <div class="card-body">
+                                <h5 class="card-title">Активные проекты</h5>
+                                <canvas id="projectsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- График распределения браузеров пользователей -->
+                <div class="row">
+                    <div class="col-md-12 mb-4">
+                        <div class="card chart-container">
+                            <div class="card-body">
+                                <h5 class="card-title">Распределение пользователей по браузерам</h5>
+                                <canvas id="browserChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+
     </div>
 </div>
 
 <!-- Скрипты -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // Получение CSRF-токена из мета-тегов
-    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    // Данные для графиков из модели
+    const userLabels = [[${activityLabels}]];
+    const userData = [[${activityUserCounts}]];
+    const projectLabels = [[${activityProjectCounts}]];
+    const projectData = [[${activityProjectCounts}]];
+    const browserLabels = [[${projectLanguageLabels}]];
+    const browserData = [[${projectLanguageCounts}]];
 
-    // Боковое меню
-    const sidebarWrapper = document.getElementById('sidebar-wrapper');
-    sidebarWrapper.addEventListener('mouseover', () => sidebarWrapper.classList.add('expanded'));
-    sidebarWrapper.addEventListener('mouseleave', () => sidebarWrapper.classList.remove('expanded'));
-
-   document.getElementById('search-input').addEventListener('input', function () {
-        const query = this.value.toLowerCase().trim();
-        const userItems = document.querySelectorAll('.user-item');
-
-        userItems.forEach(user => {
-            const username = user.getAttribute('data-username').toLowerCase();
-            const email = user.querySelector('.user-email').textContent.toLowerCase();
-
-            if (username.includes(query) || email.includes(query)) {
-                user.style.display = 'flex';
-            } else {
-                user.style.display = 'none';
+    // Настройка графика пользователей
+    const usersCtx = document.getElementById('usersChart').getContext('2d');
+    new Chart(usersCtx, {
+        type: 'line',
+        data: {
+            labels: userLabels,
+            datasets: [{
+                label: 'Пользователи',
+                data: userData,
+                fill: true,
+                borderColor: '#6f42c1',
+                backgroundColor: 'rgba(111, 66, 193, 0.2)',
+                tension: 0.4,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Пользователи: ${context.parsed.y}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { display: false },
+                y: { display: false }
             }
-        });
+        }
     });
 
+    // Настройка графика проектов
+    const projectsCtx = document.getElementById('projectsChart').getContext('2d');
+    new Chart(projectsCtx, {
+        type: 'line',
+        data: {
+            labels: projectLabels,
+            datasets: [{
+                label: 'Проекты',
+                data: projectData,
+                fill: true,
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                tension: 0.4,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Проекты: ${context.parsed.y}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { display: false },
+                y: { display: false }
+            }
+        }
+    });
+
+    // Настройка графика браузеров
+    const browserCtx = document.getElementById('browserChart').getContext('2d');
+    new Chart(browserCtx, {
+        type: 'pie',
+        data: {
+            labels: browserLabels,
+            datasets: [{
+                data: browserData,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                    'rgba(255, 159, 64, 0.6)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed;
+                            return `${label}: ${value}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    /*]]>*/
+</script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
     // Обновление общего времени онлайн
     function updateOnlineTime() {
         fetch('/admin/totalOnlineTime')
@@ -657,106 +773,100 @@
     // Первый вызов при загрузке страницы
     updateOnlineTime();
 
-    function toggleCheckbox(element) {
-        console.log("toggleCheckbox called"); // Добавлено для отладки
-        const checkbox = element.querySelector('input[type="checkbox"]');
-        if (checkbox.checked) {
-            checkbox.checked = false;
-            element.classList.remove('checked');
-        } else {
-            checkbox.checked = true;
-            element.classList.add('checked');
+    // Функция для добавления админов
+    function addAdmins() {
+        const selectedCheckboxes = document.querySelectorAll('.user-select-checkbox:checked');
+        if (selectedCheckboxes.length === 0) {
+            alert('Выберите хотя бы одного пользователя для добавления админом.');
+            return;
         }
-    }
-// Функция для добавления админов
-function addAdmins() {
-    const selectedCheckboxes = document.querySelectorAll('.user-select-checkbox:checked');
-    if (selectedCheckboxes.length === 0) {
-        alert('Выберите хотя бы одного пользователя для добавления админом.');
-        return;
-    }
 
-    const userIds = Array.from(selectedCheckboxes).map(checkbox => Number(checkbox.getAttribute('data-user-id')));
+        const userIds = Array.from(selectedCheckboxes).map(checkbox => Number(checkbox.getAttribute('data-user-id')));
 
-    console.log("Selected userIds for adding admins:", userIds); // Для отладки
+        console.log("Selected userIds for adding admins:", userIds); // Для отладки
 
-    // Отправка данных на сервер
-    fetch('/admin/users/addAdmins', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            [csrfHeader]: csrfToken // Добавляем CSRF-заголовок
-        },
-        body: JSON.stringify({ userIds: userIds })
-    })
-    .then(response => {
-        if (response.ok) {
-            alert('Выбранные пользователи успешно добавлены в админы.');
-            location.reload();
-        } else {
-            return response.text().then(text => { throw new Error(text) });
-        }
-    })
-    .catch(error => {
-        console.error('Error adding admins:', error);
-        alert('Произошла ошибка: ' + error.message);
-    });
-}
-
-  // Функция для бана выбранных пользователей
-  function banSelectedUsers() {
-    const selectedCheckboxes = document.querySelectorAll('.user-select-checkbox:checked');
-    if (selectedCheckboxes.length === 0) {
-        alert('Выберите хотя бы одного пользователя для бана.');
-        return;
+        // Отправка данных на сервер
+        fetch('/admin/users/addAdmins', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken // Добавляем CSRF-заголовок
+            },
+            body: JSON.stringify({ userIds: userIds })
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Выбранные пользователи успешно добавлены в админы.');
+                location.reload();
+            } else {
+                return response.text().then(text => { throw new Error(text) });
+            }
+        })
+        .catch(error => {
+            console.error('Error adding admins:', error);
+            alert('Произошла ошибка: ' + error.message);
+        });
     }
 
-    const userIds = Array.from(selectedCheckboxes).map(checkbox => Number(checkbox.getAttribute('data-user-id')));
-
-    // Отправка данных на сервер
-    fetch('/admin/users/ban', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            [csrfHeader]: csrfToken // Добавляем CSRF-заголовок
-        },
-        body: JSON.stringify({ userIds: userIds })
-    })
-    .then(response => {
-        if (response.ok) {
-            alert('Выбранные пользователи успешно заблокированы.');
-            location.reload();
-        } else {
-            throw new Error('Ошибка при блокировке пользователей.');
+    // Функция для бана выбранных пользователей
+    function banSelectedUsers() {
+        const selectedCheckboxes = document.querySelectorAll('.user-select-checkbox:checked');
+        if (selectedCheckboxes.length === 0) {
+            alert('Выберите хотя бы одного пользователя для бана.');
+            return;
         }
-    })
-    .catch(error => {
-        console.error(error);
-        alert('Произошла ошибка. Попробуйте снова.');
-    });
-  }
 
-  function sortUsers() {
-      const sortValue = document.getElementById('sort-select').value;
+        const userIds = Array.from(selectedCheckboxes).map(checkbox => Number(checkbox.getAttribute('data-user-id')));
 
-      // Отправка запроса на сервер для получения отсортированных данных
-      fetch(`/admin/users/list?sort=${sortValue}`)
-          .then(response => {
-              if (!response.ok) {
-                  throw new Error('Network response was not ok ' + response.statusText);
-              }
-              return response.text();
-          })
-          .then(html => {
-              // Замена содержимого списка пользователей новым HTML
-              document.querySelector('.user-list').innerHTML = html;
-          })
-          .catch(error => {
-              console.error('Error sorting users:', error);
-              alert('Произошла ошибка при сортировке пользователей.');
-          });
-  }
+        console.log("Selected userIds for banning:", userIds); // Для отладки
 
+        // Отправка данных на сервер
+        fetch('/admin/users/ban', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken // Добавляем CSRF-заголовок
+            },
+            body: JSON.stringify({ userIds: userIds })
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Выбранные пользователи успешно заблокированы.');
+                location.reload();
+            } else {
+                return response.text().then(text => { throw new Error(text) });
+            }
+        })
+        .catch(error => {
+            console.error('Error banning users:', error);
+            alert('Произошла ошибка: ' + error.message);
+        });
+    }
+
+    // Функция для сортировки пользователей
+    function sortUsers() {
+        const sortValue = document.getElementById('sort-select').value;
+
+        console.log("Sorting users by:", sortValue); // Для отладки
+
+        // Отправка запроса на сервер для получения отсортированных данных
+        fetch(`/admin/users/list?sort=${sortValue}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.text();
+            })
+            .then(html => {
+                // Замена содержимого списка пользователей новым HTML
+                document.querySelector('.user-list').innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error sorting users:', error);
+                alert('Произошла ошибка при сортировке пользователей.');
+            });
+    }
+    /*]]>*/
 </script>
 </body>
 </html>
