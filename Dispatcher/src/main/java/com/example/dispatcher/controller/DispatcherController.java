@@ -177,6 +177,11 @@ public class DispatcherController {
         return new RestTemplate(requestFactory);
     }
 
+    @GetMapping("/health")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("OK");
+    }
+
     @GetMapping("/admin/status")
     public ResponseEntity<?> getStatus() {
         Map<String, Boolean> combinedStatus = new HashMap<>();
