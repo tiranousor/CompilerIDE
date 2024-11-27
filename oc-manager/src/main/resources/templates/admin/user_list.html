@@ -7,13 +7,10 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
-
-    <!-- CSRF Tokens -->
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 
     <style>
-        /* Общие стили */
         * {
             box-sizing: border-box;
         }
@@ -37,20 +34,37 @@
             border-right: none; /* Убираем разделительную линию */
             transition: width 0.3s ease;
             position: fixed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
         }
 
         #sidebar-wrapper.expanded {
-            width: 200px;
+            width: 250px;
+            align-items: flex-start;
+            padding-left: 20px;
         }
 
         .sidebar-heading {
             text-align: center;
-            padding: 20px 0;
+            margin-bottom: 30px;
         }
 
         .sidebar-heading i {
             font-size: 24px;
             color: #6f42c1; /* Фиолетовый цвет */
+        }
+
+        .sidebar-heading .sidebar-text {
+            margin-left: 10px;
+            font-size: 18px;
+            color: #6f42c1;
+            display: none;
+        }
+
+        #sidebar-wrapper.expanded .sidebar-text {
+            display: inline;
         }
 
         .list-group-item {
@@ -63,6 +77,8 @@
             border: none; /* Убираем разделительную линию */
             border-radius: 8px;
             margin: 5px 10px;
+            width: 100%;
+            position: relative;
         }
 
         .list-group-item:hover {
@@ -79,14 +95,33 @@
         .list-group-item i {
             margin-right: 10px;
             font-size: 18px;
+            min-width: 20px;
+            text-align: center;
         }
 
-        .sidebar-text {
+        #sidebar-wrapper .list-group-item {
+            text-decoration: none;
+        }
+
+        /* Поиск в боковой панели */
+        .sidebar-search {
+            width: 100%;
+            padding: 0 20px;
+            margin-bottom: 20px;
             display: none;
         }
 
-        #sidebar-wrapper.expanded .sidebar-text {
-            display: inline;
+        #sidebar-wrapper.expanded .sidebar-search {
+            display: block;
+        }
+
+        .sidebar-search input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5da;
+            border-radius: 6px;
+            outline: none;
+            font-size: 14px;
         }
 
         /* Page Content */
@@ -97,21 +132,22 @@
         }
 
         #sidebar-wrapper.expanded + #page-content-wrapper {
-            margin-left: 200px;
+            margin-left: 250px;
         }
 
-        /* Navbar */
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            background-color: #d3d3d3; /* Светло-серый фон для хедера */
-            box-shadow: none; /* Убираем тень */
+
+        .navbar-icons a:hover {
+            color: #d39e00;
         }
 
-        /* Поисковая панель и кнопки */
-        .controls-row {
+        .navbar-icons form button .fas {
+            font-size: 24px;
+            color: #dc3545;
+            transition: color 0.3s;
+        }
+
+
+      .controls-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -119,20 +155,40 @@
             flex-wrap: wrap;
             gap: 10px;
         }
-
-        .search-bar {
+         .controls-left {
             display: flex;
-            flex-grow: 1;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
-        .search-input {
+        .controls-left label {
+            font-weight: 600;
+ margin-bottom: 0;        }
+
+.controls-left select {
+    padding: 8px 10px;
+    border: 1px solid #d1d5da;
+    border-radius: 6px;
+    outline: none;
+    font-size: 14px;
+    height: auto;
+    line-height: normal;
+}
+
+
+        .search-controls {
             flex-grow: 1;
-            padding: 10px;
+            max-width: 300px;
+        }
+
+        .search-controls input {
+            width: 100%;
+            padding: 8px 12px;
             border: 1px solid #d1d5da;
-            border-radius: 8px;
+            border-radius: 6px;
             outline: none;
             font-size: 14px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .controls-buttons {
@@ -141,14 +197,71 @@
         }
 
         .controls-buttons button {
-            padding: 10px 15px;
+            padding: 8px 12px;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
             color: #fff;
             transition: background-color 0.3s;
         }
+        .navbar {
+            display: flex;
+            justify-content: flex-end; /* Выравнивание контента вправо */
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #f0f2f5;
+            border-bottom: none;
+            box-shadow: none;
+        }
+
+        .navbar-icons {
+            display: flex;
+            align-items: center;
+            gap: 15px; /* Расстояние между элементами */
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-right: auto; /* Перемещает элементы вправо */
+        }
+
+        .admin-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #6f42c1;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .admin-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #24292e;
+        }
+
+        .navbar-icons a,
+        .navbar-icons form button {
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .navbar-icons a:hover,
+        .navbar-icons form button:hover {
+            color: #d39e00;
+        }
+         .navbar-icons form button .fas:hover {
+                    color: #bd2130;
+                }
 
         .controls-buttons .add-admin-btn {
             background-color: #6f42c1;
@@ -177,32 +290,36 @@
         .container {
             width: 100%;
             max-width: 1200px;
-            padding: 10px; /* Уменьшенный padding */
+            padding: 10px;
         }
 
-        /* Карточки статистики */
-        .stats-row {
+       .stats-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 20px; /* Увеличенный gap для лучшего разделения */
-            justify-content: flex-start;
-            margin-bottom: 20px; /* Добавляем отступ снизу */
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 20px;
         }
 
         .stat-card {
             background-color: #ffffff;
-            border: 1px solid #e3e6f0;
+            border: 1px solid #dcdcdc;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            width: calc(25% - 20px);
-            aspect-ratio: 1 / 1;
+            width: 220px;
+            height: 220px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
         }
+
+
+<!--        .stat-card:hover {-->
+<!--            transform: translateY(-5px);-->
+<!--            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);-->
+<!--        }-->
 
         .stat-card h5 {
             margin: 0 0 10px;
@@ -214,10 +331,8 @@
             margin: 0;
             font-size: 24px;
             font-weight: bold;
-            color: #24292e;
         }
 
-        /* Адаптивность для меньших экранов */
         @media (max-width: 1200px) {
             .stat-card {
                 width: calc(33.333% - 20px);
@@ -236,7 +351,6 @@
             }
         }
 
-        /* Топ пользователей */
         .top-users-container {
             background-color: #ffffff;
             border: 1px solid #e3e6f0;
@@ -269,10 +383,11 @@
             border-radius: 8px;
             margin-bottom: 10px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
         }
 
-        .top-users-list li:last-child {
-            margin-bottom: 0;
+        .top-users-list li:hover {
+            background-color: #f8f9fa;
         }
 
         .top-users-list li .medal-icon {
@@ -280,7 +395,6 @@
             margin-right: 15px;
         }
 
-        /* Медали */
         .gold-icon {
             color: gold;
         }
@@ -301,27 +415,24 @@
 
         table th, table td {
             padding: 12px;
-            border: none; /* Убираем линии */
+            border: none;
         }
 
         table th {
-            display: none; /* Скрываем заголовки */
+            display: none;
         }
 
         table td {
             background-color: #ffffff;
             color: #24292e;
-            border-bottom: 1px solid #e3e6f0; /* Линия под строкой */
+            border-bottom: 1px solid #e3e6f0;
         }
-
-        /* Графики */
         .chart-container {
             position: relative;
             height: 400px;
             width: 100%;
         }
 
-        /* Пользовательский список */
         .user-list {
             width: 100%;
             list-style: none;
@@ -447,6 +558,75 @@
         .action-icons a:hover, .action-icons form button:hover {
             color: #6f42c1;
         }
+
+        .stat-card i {
+            font-size: 36px;
+            margin-bottom: 10px;
+            color: #6f42c1;
+        }
+
+        .stat-card.success i {
+            color: #28a745;
+        }
+
+        .stat-card.warning i {
+            color: #ffc107;
+        }
+
+        .stat-card.info i {
+            color: #17a2b8;
+        }
+
+        .stat-card.danger i {
+            color: #dc3545;
+        }
+        .chart-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+.search-controls {
+    flex-grow: 1;
+    max-width: 300px;
+    position: relative;
+}
+
+.search-controls input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5da;
+    border-radius: 6px;
+    outline: none;
+    font-size: 14px;
+    background-color: #fff;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.search-controls input:focus {
+    border-color: #6f42c1;
+    box-shadow: 0 0 5px rgba(111, 66, 193, 0.5);
+}
+
+.search-controls input::placeholder {
+    color: #6c757d;
+}
+.search-controls {
+    position: relative;
+}
+
+.search-controls .search-icon {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    color: #6c757d;
+}
+
+.search-controls input {
+    padding-left: 35px; /* Отступ для иконки */
+}
+
     </style>
 </head>
 <body>
@@ -454,97 +634,89 @@
     <!-- Sidebar -->
     <div id="sidebar-wrapper">
         <div class="sidebar-heading">
-            <i class="fas fa-chart-line"></i> <span class="sidebar-text">Admin Panel</span>
+            <i class="fas fa-chart-line"></i> <span class="sidebar-text"></span>
         </div>
         <a href="/admin/dashboard" class="list-group-item">
-            <i class="fas fa-home"></i> <span class="sidebar-text">Dashboard</span>
+            <i class="fas fa-home"></i> <span class="sidebar-text"></span>
         </a>
-        <a href="/admin/users" class="list-group-item">
-            <i class="fas fa-users"></i> <span class="sidebar-text">Users</span>
+        <a href="/admin/users" class="list-group-item active">
+            <i class="fas fa-users"></i> <span class="sidebar-text"></span>
         </a>
         <a href="/admin/projects" class="list-group-item">
-            <i class="fas fa-folder-open"></i> <span class="sidebar-text">Projects</span>
+            <i class="fas fa-folder-open"></i> <span class="sidebar-text"></span>
         </a>
         <a href="/admin/unbanRequests" class="list-group-item">
-            <i class="fas fa-ban"></i> <span class="sidebar-text">Unban Requests</span>
+            <i class="fas fa-ban"></i> <span class="sidebar-text"></span>
         </a>
-    </div>
 
-    <!-- Page content -->
+    </div>
     <div id="page-content-wrapper">
-        <!-- Navbar -->
         <div class="navbar">
-            <form class="search-bar" th:action="@{/admin/users}" method="get">
-                <input type="text" id="search-input" class="search-input" name="query" placeholder="Введите имя пользователя или email">
-            </form>
+            <div class="admin-info">
+                <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar"class="admin-avatar">
+                <span class="admin-name" th:text="${client.username}"></span>
+            </div>
             <div class="navbar-icons">
-                <a href="/admin/notifications">
-                    <i class="fas fa-bell" style="color: #FFC107;"></i>
+                <a href="/admin/notifications" title="Уведомления">
+                    <i class="fas fa-bell"></i>
                 </a>
-                <form th:action="@{/logout}" th:method="POST" style="display: inline;">
-                    <button type="submit" style="background: none; border: none; cursor: pointer;">
-                        <i class="fas fa-sign-out-alt" style="color: #dc3545;"></i>
+                <form th:action="@{/logout}" th:method="POST">
+                    <button type="submit" title="Выход" style="background: none; border: none; padding: 0;">
+                        <i class="fas fa-sign-out-alt"></i>
                     </button>
                 </form>
             </div>
         </div>
 
-        <!-- Main Content -->
         <div class="main-container">
             <div class="container">
-                <!-- Статистические карточки -->
                 <div class="stats-row">
-                    <div class="stat-card">
+                    <div class="stat-card info">
+                        <i class="fas fa-user-lock"></i>
                         <h5>Заблокированные пользователи</h5>
                         <h3 th:text="${bannedUsers}">0</h3>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card success">
+                        <i class="fas fa-user-plus"></i>
                         <h5>Новые пользователи за неделю</h5>
                         <h3 th:text="${newUsersLastWeek}">0</h3>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card warning">
+                        <i class="fas fa-user-clock"></i>
                         <h5>Новые пользователи за сутки</h5>
                         <h3 th:text="${newUsersLastDay}">0</h3>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card danger">
+                        <i class="fas fa-clock"></i>
                         <h5>Общее время онлайн</h5>
                         <h3 id="onlineTime" th:text="${totalOnlineTime}">00:00:00</h3>
                     </div>
-                </div>
-
-                <div class="stats-row">
                     <div class="stat-card">
+                        <i class="fas fa-user-check"></i>
                         <h5>Активные пользователи за сутки</h5>
                         <h3 th:text="${activeUsersLastDay}">0</h3>
                     </div>
-
-                    <<!-- Топ пользователей по времени онлайн -->
-<!--                    <div class="top-users-container">-->
-<!--                        <h5>Топ пользователей по времени онлайн</h5>-->
-<!--                        <ul class="top-users-list">-->
-<!--                            <li th:each="entry, iterStat : ${topUsers}">-->
-<!--                                <i th:class="${iterStat.index == 0} ? 'fas fa-medal gold-icon' :-->
-<!--                        (${iterStat.index == 1} ? 'fas fa-medal silver-icon' : 'fas fa-medal bronze-icon')">-->
-<!--                                </i>-->
-<!--                                <span th:text="${entry.key.username}"></span>-->
-<!--                                <span th:text="${#numbers.formatDecimal(entry.value / 3600, 0, '.') + 'ч ' + #numbers.formatDecimal((entry.value % 3600) / 60, 0, '.') + 'м'}"></span>-->
-<!--                            </li>-->
-<!--                        </ul>-->
-<!--                    </div>-->
-
                 </div>
 
-                <!-- Контролы: сортировка и кнопки -->
+                <!-- Контролы: сортировка, поиск и кнопки -->
                 <div class="controls-row">
-                    <div>
-                        <label for="sort-select" style="margin-right: 10px;">Сортировать по:</label>
+                    <div class="controls-left">
+                        <label for="sort-select">Сортировать по:</label>
                         <select id="sort-select" class="form-select" onchange="sortUsers()">
                             <option value="registrationDateDesc">Когда зарегистрировались (новые сначала)</option>
                             <option value="alphabetical">По алфавиту</option>
-                            <option value="role">По ролям (админы, затем пользователи)</option>
+                            <option value="onlyAdmins">Только админы</option>
+                            <option value="onlyUsers">Только пользователи</option>
+                            <option value="activity">По активности</option>
                         </select>
                     </div>
-                    <!-- Кнопки -->
+                    <div class="search-controls">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="sidebarUserSearchInput" placeholder="Поиск пользователей..." oninput="filterUsersSidebar()">
+                    </div>
+
+
+
                     <div class="controls-buttons">
                         <button type="button" class="add-admin-btn" onclick="addAdmins()">Добавить админа</button>
                         <button type="button" class="ban-users-btn" onclick="banSelectedUsers()">Забанить</button>
@@ -552,9 +724,9 @@
                 </div>
 
                 <!-- Список пользователей -->
-                <div th:fragment="userList">
+                <div th:fragment="userList" style="margin-top:30px;">
                     <div class="user-list">
-                        <div th:each="user : ${users}" class="user-item" data-username="${user.username}">
+                        <div th:each="user : ${users}" class="user-item" th:data-username="${user.username.toLowerCase()}" th:data-email="${user.email.toLowerCase()}">
                             <!-- Чекбокс для выбора пользователя -->
                             <label class="custom-checkbox">
                                 <input type="checkbox" class="user-select-checkbox" data-user-id="${user.id}">
@@ -567,17 +739,17 @@
                             </div>
                             <span class="user-role" th:text="${user.role}"></span>
                             <div class="action-icons">
-                                <a th:href="@{/admin/users/{id}(id=${user.id})}">
-                                    <i class='bx bx-user profile-icon' style=" font-size: 20px; color: #0366d6;" title="Посмотреть профиль"></i>
+                                <a th:href="@{/admin/users/{id}(id=${user.id})}" title="Посмотреть профиль">
+                                    <i class='bx bx-user profile-icon' style="font-size: 20px; color: #0366d6;"></i>
                                 </a>
                                 <form th:action="@{/admin/users/{id}/ban(id=${user.id})}" method="post" style="display: inline;" th:if="${user.role != 'ROLE_BANNED'}">
-                                    <button type="submit" style="background: none; border: none; cursor: pointer;  font-size: 20px;  color: #d73a49;">
-                                        <i class='bx bx-lock ban-icon' title="Заблокировать"></i>
+                                    <button type="submit" style="background: none; border: none; cursor: pointer;" title="Заблокировать">
+                                        <i class='bx bx-lock ban-icon' style="font-size: 20px; color: #d73a49;"></i>
                                     </button>
                                 </form>
                                 <form th:action="@{/admin/users/{id}/unban(id=${user.id})}" method="post" style="display: inline;" th:if="${user.role == 'ROLE_BANNED'}">
-                                    <button type="submit" style="background: none; border: none; cursor: pointer;  font-size: 20px; color: #28a745;">
-                                        <i class='bx bx-lock-open unban-icon' title="Разблокировать"></i>
+                                    <button type="submit" style="background: none; border: none; cursor: pointer;" title="Разблокировать">
+                                        <i class='bx bx-lock-open unban-icon' style="font-size: 20px; color: #28a745;"></i>
                                     </button>
                                 </form>
                             </div>
@@ -585,40 +757,39 @@
                     </div>
                 </div>
 
-                <!-- Дополнительные графики -->
-                <div class="row">
-                    <div class="col-md-6 mb-4">
-                        <div class="card chart-container">
-                            <div class="card-body">
-                                <h5 class="card-title">Активные пользователи</h5>
-                                <canvas id="usersChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
+<!--                &lt;!&ndash; Графики &ndash;&gt;-->
+<!--                <div class="row">-->
+<!--                    <div class="col-md-6 mb-4">-->
+<!--                        <div class="chart-container">-->
+<!--                            <div class="card-body">-->
+<!--                                <h5 class="card-title">Активные пользователи</h5>-->
+<!--                                <canvas id="usersChart"></canvas>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
 
-                    <div class="col-md-6 mb-4">
-                        <div class="card chart-container">
-                            <div class="card-body">
-                                <h5 class="card-title">Активные проекты</h5>
-                                <canvas id="projectsChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<!--                    <div class="col-md-6 mb-4">-->
+<!--                        <div class="chart-container">-->
+<!--                            <div class="card-body">-->
+<!--                                <h5 class="card-title">Активные проекты</h5>-->
+<!--                                <canvas id="projectsChart"></canvas>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
 
-                <!-- График распределения браузеров пользователей -->
-                <div class="row">
-                    <div class="col-md-12 mb-4">
-                        <div class="card chart-container">
-                            <div class="card-body">
-                                <h5 class="card-title">Распределение пользователей по браузерам</h5>
-                                <canvas id="browserChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!--                <div class="row">-->
+<!--                    <div class="col-md-12 mb-4">-->
+<!--                        <div class="chart-container">-->
+<!--                            <div class="card-body">-->
+<!--                                <h5 class="card-title">Распределение пользователей по браузерам</h5>-->
+<!--                                <canvas id="browserChart"></canvas>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
 
     </div>
 </div>
@@ -627,15 +798,15 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
-    // Данные для графиков из модели
+    const csrfToken = /*[[${_csrf.token}]]*/ '';
+    const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
+
     const userLabels = [[${activityLabels}]];
     const userData = [[${activityUserCounts}]];
     const projectLabels = [[${activityProjectCounts}]];
     const projectData = [[${activityProjectCounts}]];
     const browserLabels = [[${projectLanguageLabels}]];
     const browserData = [[${projectLanguageCounts}]];
-
-    // Настройка графика пользователей
     const usersCtx = document.getElementById('usersChart').getContext('2d');
     new Chart(usersCtx, {
         type: 'line',
@@ -670,7 +841,6 @@
         }
     });
 
-    // Настройка графика проектов
     const projectsCtx = document.getElementById('projectsChart').getContext('2d');
     new Chart(projectsCtx, {
         type: 'line',
@@ -705,7 +875,6 @@
         }
     });
 
-    // Настройка графика браузеров
     const browserCtx = document.getElementById('browserChart').getContext('2d');
     new Chart(browserCtx, {
         type: 'pie',
@@ -767,14 +936,11 @@
             .catch(error => console.error('Error fetching online time:', error));
     }
 
-    // Обновлять время каждые 10 секунд
     setInterval(updateOnlineTime, 10000);
 
-    // Первый вызов при загрузке страницы
     updateOnlineTime();
 
-    // Функция для добавления админов
-    function addAdmins() {
+     function addAdmins() {
         const selectedCheckboxes = document.querySelectorAll('.user-select-checkbox:checked');
         if (selectedCheckboxes.length === 0) {
             alert('Выберите хотя бы одного пользователя для добавления админом.');
@@ -782,17 +948,22 @@
         }
 
         const userIds = Array.from(selectedCheckboxes).map(checkbox => Number(checkbox.getAttribute('data-user-id')));
+        const validUserIds = userIds.filter(id => id);
 
-        console.log("Selected userIds for adding admins:", userIds); // Для отладки
+        if (validUserIds.length === 0) {
+            alert('Невалидные ID пользователей.');
+            return;
+        }
 
-        // Отправка данных на сервер
+        console.log("Selected userIds for adding admins:", validUserIds); // Для отладки
+
         fetch('/admin/users/addAdmins', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                [csrfHeader]: csrfToken // Добавляем CSRF-заголовок
+                [csrfHeader]: csrfToken
             },
-            body: JSON.stringify({ userIds: userIds })
+            body: JSON.stringify({ userIds: validUserIds })
         })
         .then(response => {
             if (response.ok) {
@@ -807,8 +978,6 @@
             alert('Произошла ошибка: ' + error.message);
         });
     }
-
-    // Функция для бана выбранных пользователей
     function banSelectedUsers() {
         const selectedCheckboxes = document.querySelectorAll('.user-select-checkbox:checked');
         if (selectedCheckboxes.length === 0) {
@@ -819,13 +988,11 @@
         const userIds = Array.from(selectedCheckboxes).map(checkbox => Number(checkbox.getAttribute('data-user-id')));
 
         console.log("Selected userIds for banning:", userIds); // Для отладки
-
-        // Отправка данных на сервер
         fetch('/admin/users/ban', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                [csrfHeader]: csrfToken // Добавляем CSRF-заголовок
+                [csrfHeader]: csrfToken
             },
             body: JSON.stringify({ userIds: userIds })
         })
@@ -865,6 +1032,40 @@
                 console.error('Error sorting users:', error);
                 alert('Произошла ошибка при сортировке пользователей.');
             });
+    }
+
+    // Функция фильтрации пользователей
+    function filterUsers() {
+        const searchInput = document.getElementById('userSearchInput').value.toLowerCase();
+        const userItems = document.querySelectorAll('.user-item');
+
+        userItems.forEach(item => {
+            const username = item.getAttribute('data-username');
+            const email = item.getAttribute('data-email');
+
+            if (username.includes(searchInput) || email.includes(searchInput)) {
+                item.style.display = ''; // Показать элемент
+            } else {
+                item.style.display = 'none'; // Скрыть элемент
+            }
+        });
+    }
+
+    // Функция фильтрации пользователей из боковой панели
+    function filterUsersSidebar() {
+        const searchInput = document.getElementById('sidebarUserSearchInput').value.toLowerCase();
+        const userItems = document.querySelectorAll('.user-item');
+
+        userItems.forEach(item => {
+            const username = item.getAttribute('data-username');
+            const email = item.getAttribute('data-email');
+
+            if (username.includes(searchInput) || email.includes(searchInput)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
     }
     /*]]>*/
 </script>

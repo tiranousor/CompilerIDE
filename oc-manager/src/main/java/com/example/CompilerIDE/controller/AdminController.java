@@ -6,6 +6,8 @@ import com.example.CompilerIDE.repositories.LoginTimestampRepository;
 import com.example.CompilerIDE.repositories.ProjectRepository;
 import com.example.CompilerIDE.repositories.UnbanRequestRepository;
 import com.example.CompilerIDE.services.*;
+import lombok.Data;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
@@ -161,7 +163,7 @@ public class AdminController {
 
     @Secured("ROLE_ADMIN")
     @GetMapping("/dashboard")
-    public String getDashboard(Model model) {
+    public String getDashboard(Model model, Authentication authentication) {
         List<Client> allClients = clientRepository.findAll();
         List<LoginTimestamp> allTimestamps = loginTimestampRepository.findAll();
         userActivityService.updateDailyStats();
@@ -181,6 +183,11 @@ public class AdminController {
                 .map(DailyStats::getProjectCount)
                 .collect(Collectors.toList());
 
+        model.addAttribute("activityLabels", activityLabels);
+        model.addAttribute("activityUserCounts", activityUserCounts);
+        model.addAttribute("activityProjectCounts", activityProjectCounts);
+        Client client = clientService.findByUsername(authentication.getName()).orElse(null);
+        model.addAttribute("client", client);
         model.addAttribute("newUsersLastDay", userActivityService.countNewUsersInLastDays(1));
         model.addAttribute("newUsersLastWeek", userActivityService.countNewUsersInLastDays(7));
         model.addAttribute("newUsersLastMonth", userActivityService.countNewUsersInLastDays(30));
@@ -189,26 +196,39 @@ public class AdminController {
         model.addAttribute("activeUsersLastDay", userActivityService.countActiveUsersInLastDays(1));
         model.addAttribute("activeUsersLastWeek", userActivityService.countActiveUsersInLastDays(7));
         model.addAttribute("activeUsersLastMonth", userActivityService.countActiveUsersInLastDays(30));
-        model.addAttribute("topUsers", userActivityService.getTopUsersByOnlineTime(10));
+//        model.addAttribute("topUsers", userActivityService.getTopUsersByOnlineTime(10));
 
         String formattedTime = formatDuration(totalOnlineTime);
         model.addAttribute("totalOnlineTime", formattedTime);
         model.addAttribute("totalUsers", totalUsers);
         model.addAttribute("totalProjects", totalProjects);
-        model.addAttribute("activityLabels", activityLabels);
-        model.addAttribute("activityUserCounts", activityUserCounts);
-        model.addAttribute("activityProjectCounts", activityProjectCounts);
+        List<Map.Entry<Client, Long>> topUsersByOnlineTime = userActivityService.getTopUsersByOnlineTime(10);
+        List<ActivityData> topUsers = topUsersByOnlineTime.stream()
+                .map(entry -> new ActivityData(entry.getKey().getUsername(), entry.getValue()))
+                .collect(Collectors.toList());
 
+        model.addAttribute("topUsers", topUsers);
         // Projects
         model.addAttribute("totalProjects", projectService.countTotalProjects());
         model.addAttribute("newProjectsToday", projectService.countNewProjectsInLastDays(1));
         model.addAttribute("newProjectsThisWeek", projectService.countNewProjectsInLastDays(7));
         model.addAttribute("newProjectsThisMonth", projectService.countNewProjectsInLastDays(30));
-        model.addAttribute("activeProjects", projectService.countActiveProjects(7));
-        model.addAttribute("projectLanguageStats", projectService.getProjectLanguageDistribution());
-        model.addAttribute("popularProjects", projectService.getMostPopularProjects(5));
+//        model.addAttribute("activeProjects", projectService.countActiveProjects(7));
+//        model.addAttribute("projectLanguageStats", projectService.getProjectLanguageDistribution());
+//        model.addAttribute("popularProjects", projectService.getMostPopularProjects(5));
 
         return "admin/dashboard";
+    }
+    @Data
+    public static class ActivityData {
+        private String username;
+        private Long onlineTime;
+
+        public ActivityData(String username, Long onlineTime) {
+            this.username = username;
+            this.onlineTime = onlineTime;
+        }
+
     }
 
     @GetMapping("/totalOnlineTime")

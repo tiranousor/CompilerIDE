@@ -112,22 +112,23 @@ public class UserController {
     public String showLoginPage() {
         return "loginAndRegistration";
     }
+
     @PostMapping("/process_login")
     public String processLogin(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()) {
             Client client = clientService.findByUsername(authentication.getName()).orElse(null);
 
-            if (client != null) {
-                LoginTimestamp loginTimestamp = new LoginTimestamp();
-                loginTimestamp.setClient(client);
-                loginTimestamp.setLoginTime(new Timestamp(System.currentTimeMillis()).toLocalDateTime());
-
-                System.out.println("Saving login timestamp for user: " + client.getUsername());
-
-                loginTimestampRepository.save(loginTimestamp);
-            }
-
-            return "redirect:/userProfile";
+//            if (client != null) {
+//                LoginTimestamp loginTimestamp = new LoginTimestamp();
+//                loginTimestamp.setClient(client);
+//                loginTimestamp.setLoginTime(new Timestamp(System.currentTimeMillis()).toLocalDateTime());
+//
+//                System.out.println("Saving login timestamp for user: " + client.getUsername());
+//
+//                loginTimestampRepository.save(loginTimestamp);
+//            }
+//
+//            return "redirect:/userProfile";
         }
         return "loginAndRegistration";
     }
@@ -168,11 +169,6 @@ public class UserController {
             return "redirect:/loginAndRegistration";
         }
         Client client = clientOpt.get();
-
-        LoginTimestamp loginTimestamp = new LoginTimestamp();
-        loginTimestamp.setClient(client);
-        loginTimestamp.setLoginTime(new Timestamp(System.currentTimeMillis()).toLocalDateTime());
-        loginTimestampRepository.save(loginTimestamp);
 
         List<Project> projects = projectService.findByClient(client);
         List<Client> friends = friendshipService.getFriends(client);

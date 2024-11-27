@@ -238,6 +238,12 @@
         <form th:action="@{/logout}" th:method="POST" style="margin: 0;">
             <button type="submit" class="logout-icon" title="Logout" style="border: none; background: none;"><i class='bx bx-log-out'></i></button>
         </form>
+        <form th:action="@{/logout}" th:method="POST">
+            <input type="hidden" name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <button type="submit" title="Выход" style="background: none; border: none;" class="logout-icon">
+                <i class='bx bx-log-out'></i>
+            </button>
+        </form>
     </div>
 </div>
 <input type="hidden" id="csrfToken" name="_csrf" th:value="${_csrf.token}" />

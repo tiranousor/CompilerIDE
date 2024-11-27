@@ -48,10 +48,21 @@ public class UserActivityService {
                 return users.stream()
                         .sorted(Comparator.comparing(Client::getRole).reversed())
                         .collect(Collectors.toList());
-            // case "lastLoginDesc":
-            //     return users.stream()
-            //             .sorted(Comparator.comparing(Client::getLastLogin).reversed())
-            //             .collect(Collectors.toList());
+            case "onlyAdmins":
+                return users.stream()
+                        .filter(user -> "ROLE_ADMIN".equals(user.getRole()))
+                        .collect(Collectors.toList());
+            case "onlyUsers":
+                return users.stream()
+                        .filter(user -> "ROLE_USER".equals(user.getRole()))
+                        .collect(Collectors.toList());
+            case "activity":
+                Map<Long, Long> userIdToOnlineTime = getUserOnlineTimeMap();
+                return users.stream()
+                        .sorted(Comparator.comparing(
+                                user -> userIdToOnlineTime.getOrDefault(user.getId(), 0L), Comparator.reverseOrder()))
+                        .collect(Collectors.toList());
+
             case "registrationDateDesc":
             default:
                 return users.stream()
@@ -59,7 +70,14 @@ public class UserActivityService {
                         .collect(Collectors.toList());
         }
     }
-
+    private Map<Long, Long> getUserOnlineTimeMap() {
+        return loginTimestampRepository.findAll().stream()
+                .filter(ts -> ts.getLogoutTime() != null)
+                .collect(Collectors.groupingBy(
+                        ts -> ts.getClient().getId(),
+                        Collectors.summingLong(ts -> java.time.Duration.between(ts.getLoginTime(), ts.getLogoutTime()).getSeconds())
+                ));
+    }
     @Transactional
     public void addAdmins(List<Long> userIds) {
         System.out.println("Adding admins for userIds: " + userIds);

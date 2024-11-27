@@ -24,11 +24,13 @@ public class SecurityConfiguration {
     };
     private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
     private final UserDetailsService clientDetailsService;
+    private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
 
     @Autowired
-    public SecurityConfiguration(CustomLogoutSuccessHandler customLogoutSuccessHandler, ClientDetailsService clientDetailsService) {
+    public SecurityConfiguration(CustomLogoutSuccessHandler customLogoutSuccessHandler, ClientDetailsService clientDetailsService, CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler) {
         this.customLogoutSuccessHandler = customLogoutSuccessHandler;
         this.clientDetailsService = clientDetailsService;
+        this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler;
     }
 
     @Bean
@@ -53,23 +55,19 @@ public class SecurityConfiguration {
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/process_login")
-                        .successHandler(customSuccessHandler())
+                        .successHandler(customAuthenticationSuccessHandler)
                         .failureUrl("/login?error")
                         .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessHandler(customLogoutSuccessHandler) // Укажите бин напрямую
+                        .logoutSuccessHandler(customLogoutSuccessHandler)
                         .permitAll());
 
         return http.build();
     }
 
 
-    @Bean
-    public AuthenticationSuccessHandler customSuccessHandler() {
-        return new CustomAuthenticationSuccessHandler();
-    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
