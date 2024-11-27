@@ -1,9 +1,11 @@
+version: '3.8'
+
 services:
   redis:
     image: "redis:6.2"
     container_name: redis
     ports:
-      - "6379:6379"  # Порт для Redis
+      - "6379:6379"
     networks:
       - app-network
     restart: always
@@ -13,7 +15,7 @@ services:
     container_name: minio
     ports:
       - "9000:9000"
-      - "9001:9001" # Консоль управления
+      - "9001:9001"
     environment:
       MINIO_ROOT_USER: qwerdsaf
       MINIO_ROOT_PASSWORD: 88888888556556556
@@ -24,7 +26,21 @@ services:
       - app-network
     restart: always
 
-  # Worker сервисы
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 3012
+      POSTGRES_DB: Compiler_DB
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    restart: always
+
   worker1:
     build:
       context: ../oc-agent-javac
@@ -50,15 +66,10 @@ services:
         limits:
           cpus: '0.5'
           memory: 512M
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   worker2:
     build:
-      context: ./oc-agent-javac
+      context: ../oc-agent-javac
     image: compiler-worker:latest
     container_name: worker2
     ports:
@@ -81,267 +92,14 @@ services:
         limits:
           cpus: '0.5'
           memory: 512M
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  worker3:
-    build:
-      context: ./oc-agent-javac
-    image: compiler-worker:latest
-    container_name: worker3
-    ports:
-      - "5003:5000"
-    environment:
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=qwerdsaf
-      - MINIO_SECRET_KEY=88888888556556556
-      - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
-    restart: always
-    read_only: true
-    tmpfs:
-      - /tmp
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  worker4:
-    build:
-      context: ./oc-agent-javac
-    image: compiler-worker:latest
-    container_name: worker4
-    ports:
-      - "5004:5000"
-    environment:
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=qwerdsaf
-      - MINIO_SECRET_KEY=88888888556556556
-      - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
-    restart: always
-    read_only: true
-    tmpfs:
-      - /tmp
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  worker5:
-    build:
-      context: ./oc-agent-javac
-    image: compiler-worker:latest
-    container_name: worker5
-    ports:
-      - "5005:5000"
-    environment:
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=qwerdsaf
-      - MINIO_SECRET_KEY=88888888556556556
-      - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
-    restart: always
-    read_only: true
-    tmpfs:
-      - /tmp
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  worker6:
-    build:
-      context: ./oc-agent-javac
-    image: compiler-worker:latest
-    container_name: worker6
-    ports:
-      - "5006:5000"
-    environment:
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=qwerdsaf
-      - MINIO_SECRET_KEY=88888888556556556
-      - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
-    restart: always
-    read_only: true
-    tmpfs:
-      - /tmp
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  worker7:
-    build:
-      context: ./oc-agent-javac
-    image: compiler-worker:latest
-    container_name: worker7
-    ports:
-      - "5007:5000"
-    environment:
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=qwerdsaf
-      - MINIO_SECRET_KEY=88888888556556556
-      - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
-    restart: always
-    read_only: true
-    tmpfs:
-      - /tmp
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  worker8:
-    build:
-      context: ./oc-agent-javac
-    image: compiler-worker:latest
-    container_name: worker8
-    ports:
-      - "5008:5000"
-    environment:
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=qwerdsaf
-      - MINIO_SECRET_KEY=88888888556556556
-      - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
-    restart: always
-    read_only: true
-    tmpfs:
-      - /tmp
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  worker9:
-    build:
-      context: ./oc-agent-javac
-    image: compiler-worker:latest
-    container_name: worker9
-    ports:
-      - "5009:5000"
-    environment:
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=qwerdsaf
-      - MINIO_SECRET_KEY=88888888556556556
-      - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
-    restart: always
-    read_only: true
-    tmpfs:
-      - /tmp
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  worker10:
-    build:
-      context: ./oc-agent-javac
-    image: compiler-worker:latest
-    container_name: worker10
-    ports:
-      - "5010:5000"
-    environment:
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=qwerdsaf
-      - MINIO_SECRET_KEY=88888888556556556
-      - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
-    restart: always
-    read_only: true
-    tmpfs:
-      - /tmp
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   python-worker1:
     build:
-      context: ./oc-agent-python-java
+      context: ../oc-agent-python
     image: python-java-worker:latest
     container_name: python-worker1
     ports:
-      - "6001:6000" # Внутренний порт 6000, внешний 6001
+      - "6001:6000"
     environment:
       - MINIO_ENDPOINT=http://minio:9000
       - MINIO_ACCESS_KEY=qwerdsaf
@@ -360,19 +118,14 @@ services:
         limits:
           cpus: '0.5'
           memory: 512M
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:6000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   python-worker2:
     build:
-      context: ./oc-agent-python-java
+      context: ../oc-agent-python
     image: python-java-worker:latest
     container_name: python-worker2
     ports:
-      - "6002:6000" # Внутренний порт 6000, внешний 6001
+      - "6002:6000"
     environment:
       - MINIO_ENDPOINT=http://minio:9000
       - MINIO_ACCESS_KEY=qwerdsaf
@@ -391,264 +144,10 @@ services:
         limits:
           cpus: '0.5'
           memory: 512M
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:6000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  python-worker3:
-    build:
-      context: ./oc-agent-python-java
-    image: python-java-worker:latest
-    container_name: python-worker3
-    ports:
-      - "6003:6000" # Внутренний порт 6000, внешний 6001
-    environment:
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=qwerdsaf
-      - MINIO_SECRET_KEY=88888888556556556
-      - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
-    restart: always
-    read_only: true
-    tmpfs:
-      - /tmp
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:6000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  python-worker4:
-    build:
-      context: ./oc-agent-python-java
-    image: python-java-worker:latest
-    container_name: python-worker4
-    ports:
-      - "6004:6000" # Внутренний порт 6000, внешний 6001
-    environment:
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=qwerdsaf
-      - MINIO_SECRET_KEY=88888888556556556
-      - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
-    restart: always
-    read_only: true
-    tmpfs:
-      - /tmp
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:6000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  python-worker5:
-    build:
-      context: ./oc-agent-python-java
-    image: python-java-worker:latest
-    container_name: python-worker5
-    ports:
-      - "6005:6000" # Внутренний порт 6000, внешний 6001
-    environment:
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=qwerdsaf
-      - MINIO_SECRET_KEY=88888888556556556
-      - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
-    restart: always
-    read_only: true
-    tmpfs:
-      - /tmp
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:6000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  python-worker6:
-    build:
-      context: ./oc-agent-python-java
-    image: python-java-worker:latest
-    container_name: python-worker6
-    ports:
-      - "6006:6000" # Внутренний порт 6000, внешний 6001
-    environment:
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=qwerdsaf
-      - MINIO_SECRET_KEY=88888888556556556
-      - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
-    restart: always
-    read_only: true
-    tmpfs:
-      - /tmp
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:6000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  python-worker7:
-    build:
-      context: ./oc-agent-python-java
-    image: python-java-worker:latest
-    container_name: python-worker7
-    ports:
-      - "6007:6000" # Внутренний порт 6000, внешний 6001
-    environment:
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=qwerdsaf
-      - MINIO_SECRET_KEY=88888888556556556
-      - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
-    restart: always
-    read_only: true
-    tmpfs:
-      - /tmp
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:6000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  python-worker8:
-    build:
-      context: ./oc-agent-python-java
-    image: python-java-worker:latest
-    container_name: python-worker8
-    ports:
-      - "6008:6000" # Внутренний порт 6000, внешний 6001
-    environment:
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=qwerdsaf
-      - MINIO_SECRET_KEY=88888888556556556
-      - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
-    restart: always
-    read_only: true
-    tmpfs:
-      - /tmp
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:6000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  python-worker9:
-    build:
-      context: ./oc-agent-python-java
-    image: python-java-worker:latest
-    container_name: python-worker9
-    ports:
-      - "6009:6000" # Внутренний порт 6000, внешний 6001
-    environment:
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=qwerdsaf
-      - MINIO_SECRET_KEY=88888888556556556
-      - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
-    restart: always
-    read_only: true
-    tmpfs:
-      - /tmp
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:6000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  python-worker10:
-    build:
-      context: ./oc-agent-python-java
-    image: python-java-worker:latest
-    container_name: python-worker10
-    ports:
-      - "6010:6000" # Внутренний порт 6000, внешний 6001
-    environment:
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=qwerdsaf
-      - MINIO_SECRET_KEY=88888888556556556
-      - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
-    restart: always
-    read_only: true
-    tmpfs:
-      - /tmp
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:6000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
 
   dispatcher:
     build:
-      context: ./dispatcher
+      context: /
     image: dispatcher:latest
     container_name: dispatcher
     ports:
@@ -658,30 +157,14 @@ services:
       - MINIO_ACCESS_KEY=qwerdsaf
       - MINIO_SECRET_KEY=88888888556556556
       - MINIO_BUCKET_NAME=my-bucket
-      - WORKER_URLS=http://worker1:5000,http://worker2:5000,http://worker3:5000,http://worker4:5000,http://worker5:5000,http://worker6:5000,http://worker7:5000,http://worker8:5000,http://worker9:5000,http://worker10:5000
-      - PYTHON_WORKER_URLS=http://python-worker1:6000,http://python-worker2:6000,http://python-worker3:6000,http://python-worker4:6000,http://python-worker5:6000,http://python-worker6:6000,http://python-worker7:6000,http://python-worker8:6000,http://python-worker9:6000,http://python-worker10:6000
+      - WORKER_URLS=http://worker1:5000,http://worker2:5000
+      - PYTHON_WORKER_URLS=http://python-worker1:6000,http://python-worker2:6000
     depends_on:
       - minio
       - worker1
       - worker2
-      - worker3
-      - worker4
-      - worker5
-      - worker6
-      - worker7
-      - worker8
-      - worker9
-      - worker10
       - python-worker1
       - python-worker2
-      - python-worker3
-      - python-worker4
-      - python-worker5
-      - python-worker6
-      - python-worker7
-      - python-worker8
-      - python-worker9
-      - python-worker10
     networks:
       - app-network
     restart: always
@@ -690,11 +173,49 @@ services:
         limits:
           cpus: '2'
           memory: 2048M
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+
+  oc-manager:
+    build:
+      context: ../oc-manager
+    image: oc-manager:latest
+    container_name: oc-manager
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/Compiler_DB
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 3012
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_PROPERTIES_HIBERNATE_SHOW_SQL: "true"
+      UPLOAD_DIRECTORY: /app/uploads
+      GIT_CLONE_DIRECTORY: /tmp/git-clones
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: qwerdsaf
+      MINIO_SECRET_KEY: 88888888556556556
+      MINIO_BUCKET_NAME: my-bucket
+      SPRING_REDIS_HOST: redis
+      SPRING_SESSION_STORE_TYPE: redis
+      FEIGN_CLIENT_CONFIG_DEFAULT_CONNECTTIMEOUT: 5000
+      FEIGN_CLIENT_CONFIG_DEFAULT_READTIMEOUT: 60000
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_USERNAME: your-email@gmail.com
+      SPRING_MAIL_PASSWORD: your-email-password
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - dispatcher
+    networks:
+      - app-network
+    volumes:
+      - oc-manager-uploads:/app/uploads
+      - oc-manager-git-clones:/tmp/git-clones
+    restart: always
 
 networks:
   app-network:
@@ -702,3 +223,6 @@ networks:
 
 volumes:
   minio-data:
+  postgres-data:
+  oc-manager-uploads:
+  oc-manager-git-clones:
