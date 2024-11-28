@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Map;
 
-@FeignClient(name = "dispatcher", url = "http://localhost:8081", configuration = CompileClientConfig.class)
+@FeignClient(name = "dispatcher", url = "http://dispatcher:8081", configuration = CompileClientConfig.class)
 public interface CompileClient {
     @PostMapping(value = "/compile", consumes = "application/json")
     ResponseEntity<Map<String, Object>> compileCode(@RequestBody CompileRequest request);}

@@ -25,9 +25,7 @@ public class CompilationController {
     @PostMapping
     public ResponseEntity<CompilationResult> compileCode(@RequestBody CompileRequest request) {
         CompilationResult result = codeCompilationService.compileCode(request);
-        if (result.getReturnCode() != 0) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
-        }
         return ResponseEntity.ok(result);
     }
+
 }

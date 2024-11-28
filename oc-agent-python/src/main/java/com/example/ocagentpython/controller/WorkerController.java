@@ -166,26 +166,55 @@ public class WorkerController {
 
         ProcessBuilder processBuilder = new ProcessBuilder("python3", mainScriptPath.toString());
         processBuilder.directory(projectDir.toFile());
-        processBuilder.redirectErrorStream(true);
         Process process = processBuilder.start();
 
         StringBuilder output = new StringBuilder();
         StringBuilder error = new StringBuilder();
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line).append("\n");
+        // Чтение stdout
+        Thread outputThread = new Thread(() -> {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line).append("\n");
+                }
+            } catch (IOException e) {
+                logger.error("Ошибка при чтении stdout: {}", e.getMessage());
             }
-        }
+        });
+
+        // Чтение stderr
+        Thread errorThread = new Thread(() -> {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    error.append(line).append("\n");
+                }
+            } catch (IOException e) {
+                logger.error("Ошибка при чтении stderr: {}", e.getMessage());
+            }
+        });
+
+        outputThread.start();
+        errorThread.start();
 
         boolean finished = process.waitFor(60, TimeUnit.SECONDS);
+        outputThread.join(1000);
+        errorThread.join(1000);
+
         if (!finished) {
             process.destroyForcibly();
             logger.error("Запуск скрипта '{}' превысил время выполнения и был принудительно завершен.", mainScriptName);
-            return ResponseEntity.status(500).body(Map.of(
-                    "stdout", "",
-                    "stderr", "Время выполнения скрипта истекло.",
+            return ResponseEntity.ok(Map.of(
+                    "stdout", output.toString(),
+                    "stderr", Collections.singletonList(
+                            Map.of(
+                                    "message", error.toString().isEmpty() ? "Время выполнения скрипта истекло." : error.toString(),
+                                    "file", mainScriptName,
+                                    "line", 0,
+                                    "column", 0
+                            )
+                    ),
                     "returncode", 1
             ));
         }
@@ -193,11 +222,76 @@ public class WorkerController {
         int exitCode = process.exitValue();
         logger.info("Скрипт завершился с кодом {}", exitCode);
 
+        List<Map<String, Object>> stderrDetails = parsePythonError(error.toString(), mainScriptName, projectDir);
+
+
         return ResponseEntity.ok(Map.of(
                 "stdout", output.toString(),
-                "stderr", error.toString(),
+                "stderr", stderrDetails,
                 "returncode", exitCode
         ));
     }
+
+    private List<Map<String, Object>> parsePythonError(String errorOutput, String scriptName, Path projectDir) {
+        List<Map<String, Object>> errorList = new ArrayList<>();
+        if (errorOutput == null || errorOutput.isEmpty()) {
+            return errorList;
+        }
+
+        String[] lines = errorOutput.split("\n");
+        String message = "";
+        String file = scriptName;
+        int lineNumber = 0;
+        int columnNumber = 0;
+
+        String projectDirPath = projectDir.toString();
+
+        for (int i = 0; i < lines.length; i++) {
+            String line = lines[i].trim();
+            if (line.startsWith("File")) {
+                // Пример: File "/tmp/3/pyt.py", line 1
+                int fileStartIndex = line.indexOf("\"") + 1;
+                int fileEndIndex = line.indexOf("\", line ");
+                if (fileStartIndex != -1 && fileEndIndex != -1) {
+                    String filePath = line.substring(fileStartIndex, fileEndIndex);
+
+                    // Удаляем префикс временной директории из пути файла
+                    if (filePath.startsWith(projectDirPath)) {
+                        filePath = filePath.substring(projectDirPath.length());
+                        if (filePath.startsWith(File.separator)) {
+                            filePath = filePath.substring(1);
+                        }
+                    }
+
+                    file = filePath;
+
+                    String lineNumberStr = line.substring(fileEndIndex + 8).trim();
+                    try {
+                        lineNumber = Integer.parseInt(lineNumberStr);
+                    } catch (NumberFormatException e) {
+                        lineNumber = 0;
+                    }
+                }
+            } else if (line.startsWith("SyntaxError") || line.startsWith("IndentationError") || line.contains("Error")) {
+                message = line;
+            } else if (!line.isEmpty() && message.isEmpty()) {
+                message = line;
+            } else if (line.contains("^")) {
+                // Попробуем извлечь номер столбца
+                columnNumber = line.indexOf('^') + 1;
+            }
+        }
+
+        Map<String, Object> errorMap = new HashMap<>();
+        errorMap.put("message", message);
+        errorMap.put("file", file);
+        errorMap.put("line", lineNumber);
+        errorMap.put("column", columnNumber);
+
+        errorList.add(errorMap);
+        return errorList;
+    }
+
+
 
 }
