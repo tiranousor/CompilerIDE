@@ -12,8 +12,8 @@ WORKDIR /app
 COPY target/oc-manager.jar app.jar
 
 # Создаём необходимые директории и устанавливаем права доступа
-RUN mkdir -p /app/uploads /tmp/git-clones && \
-    chown -R appuser:appgroup /app/uploads /tmp/git-clones
+RUN mkdir -p /app/uploads /tmp/git-clones /app/user-photos && \
+    chown -R appuser:appgroup /app/uploads /tmp/git-clones /app/user-photos
 
 # Переключаемся на пользователя appuser
 USER appuser
