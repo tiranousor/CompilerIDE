@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -29,7 +30,9 @@ public class LoginTimestamp {
     @JoinColumn(name = "client_id")
     private Client client;
     @Column(name = "login_time")
-    private Timestamp loginTime;
+    private LocalDateTime loginTime;
+    @Column(name = "logout_time")
+    private LocalDateTime  logoutTime;
 
 
 }

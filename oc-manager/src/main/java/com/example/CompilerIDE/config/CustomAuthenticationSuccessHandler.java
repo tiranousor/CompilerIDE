@@ -19,14 +19,17 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         ClientDetails clientDetails = (ClientDetails) authentication.getPrincipal();
         Client client = clientDetails.getClient();
+
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         String roles = authorities.stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
+
+
         if (roles.contains("ROLE_BANNED")) {
             response.sendRedirect("/banned");
         } else if (roles.contains("ROLE_ADMIN")) {
-            response.sendRedirect("/admin/users");
+            response.sendRedirect("/admin/dashboard");
         } else if (roles.contains("ROLE_USER")) {
             response.sendRedirect("/userProfile/" + client.getId());
         } else {

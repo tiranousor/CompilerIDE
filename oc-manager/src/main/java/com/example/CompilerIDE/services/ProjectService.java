@@ -3,6 +3,7 @@ package com.example.CompilerIDE.services;
 import com.example.CompilerIDE.dto.FileNodeDto;
 import com.example.CompilerIDE.dto.JsTreeNodeDto;
 import com.example.CompilerIDE.providers.*;
+import com.example.CompilerIDE.repositories.ProjectAccessLogRepository;
 import com.example.CompilerIDE.repositories.ProjectRepository;
 import com.example.CompilerIDE.repositories.ProjectStructRepository;
 import com.example.CompilerIDE.util.HashUtil;
@@ -21,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -32,16 +34,19 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final ProjectStructRepository projectStructRepository;
     private final MinioService minioService;
+    private final ProjectAccessLogRepository projectAccessLogRepository;
+
     private static final Logger logger = LoggerFactory.getLogger(ProjectService.class);
     @Value("${git.clone.directory}")
     private String gitCloneDirectory;
     private final ProjectTeamService projectTeamService;
     @Autowired
     public ProjectService(ProjectRepository projectRepository, ProjectStructRepository projectStructRepository,
-                          MinioService minioService, ProjectTeamService projectTeamService) {
+                          MinioService minioService, ProjectAccessLogRepository projectAccessLogRepository, ProjectTeamService projectTeamService) {
         this.projectRepository = projectRepository;
         this.minioService = minioService;
         this.projectStructRepository = projectStructRepository;
+        this.projectAccessLogRepository = projectAccessLogRepository;
         this.projectTeamService = projectTeamService;
     }
     public boolean isProjectCreator(Project project, Client client) {
@@ -354,4 +359,40 @@ public class ProjectService {
                 .distinct()
                 .collect(Collectors.toList());
     }
+
+    public long countTotalProjects() {
+        return projectRepository.count();
+    }
+
+    public long countNewProjectsInLastDays(int days) {
+        LocalDate cutoff = LocalDate.now().minusDays(days);
+        return projectRepository.findAll().stream()
+                .filter(project -> project.getCreatedAt().isAfter(cutoff.atStartOfDay()))
+                .count();
+    }
+
+    public long countActiveProjects(int days) {
+        LocalDate cutoff = LocalDate.now().minusDays(days);
+        return projectAccessLogRepository.findAll().stream()
+                .filter(log -> log.getAccessTime().toLocalDateTime().isAfter(cutoff.atStartOfDay()))
+                .map(ProjectAccessLog::getProject)
+                .distinct()
+                .count();
+    }
+
+    public Map<String, Long> getProjectLanguageDistribution() {
+        return projectRepository.findAll().stream()
+                .collect(Collectors.groupingBy(Project::getLanguage, Collectors.counting()));
+    }
+
+    public List<Project> getMostPopularProjects(int limit) {
+        return projectAccessLogRepository.findAll().stream()
+                .collect(Collectors.groupingBy(ProjectAccessLog::getProject, Collectors.counting()))
+                .entrySet().stream()
+                .sorted((e1, e2) -> Long.compare(e2.getValue(), e1.getValue()))
+                .map(Map.Entry::getKey)
+                .limit(limit)
+                .collect(Collectors.toList());
+    }
+
 }

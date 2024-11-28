@@ -13,8 +13,8 @@ public class WorkerStatusService {
         this.compileClient = compileClient;
     }
 
-    public Map<String, Boolean> getWorkerStatus() {
-        return compileClient.getWorkerStatus();
-    }
+//    public Map<String, Boolean> getWorkerStatus() {
+//        return compileClient.getWorkerStatus();
+//    }
 }
 

@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.io.Serializable;
 @Entity
@@ -18,19 +19,20 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Client implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @Id
     @Column(name="user_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @Column(name = "username")
     @NotBlank(message = "Имя пользователя не может быть пустым")
     private String username;
 
-//    @Column(name = "last_login_time")
-//    private Date lastLoginTime;
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
+
 
     // Связь с таблицей login_timestamps
     @OneToMany(mappedBy = "client", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -68,6 +70,9 @@ public class Client implements Serializable {
     @OneToMany(mappedBy = "receiver", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<FriendRequest> receivedFriendRequests = new ArrayList<>();
 
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
     @ManyToMany
     @JoinTable(
             name = "friendships",
@@ -83,4 +88,8 @@ public class Client implements Serializable {
 //    @Column(name = "mainColor")
 //    @Pattern(regexp = "^#([A-Fa-f0-9]{6})$", message = "Недопустимый цвет фона")
 //    private String mainColor;
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 }

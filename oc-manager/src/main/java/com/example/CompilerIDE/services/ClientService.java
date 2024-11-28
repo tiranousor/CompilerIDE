@@ -44,7 +44,7 @@ public class ClientService {
         return clientRepository.findByUsername(username);
     }
 
-    public Client findOne(int id) {
+    public Client findOne(long id) {
         Optional<Client> foundClient = clientRepository.findById(id);
         return foundClient.orElse(null);
     }
@@ -77,7 +77,7 @@ public class ClientService {
     }
 
     @Transactional
-    public void update(int id, Client updateClient){
+    public void update(long id, Client updateClient){
         updateClient.setId(id);
         clientRepository.save(updateClient);
     }

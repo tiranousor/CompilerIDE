@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель Управления</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
+
+    <style>
+        /* Ваши стили здесь */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            font-size: inherit !important;
+            background-color: #ffffff;
+            color: #24292e;
+        }
+
+        #wrapper {
+            display: flex;
+        }
+
+        #sidebar-wrapper {
+            width: 60px;
+            height: 100vh;
+            background-color: #fff;
+            border-right: 1px solid #e3e6f0;
+            transition: width 0.2s ease;
+            position: fixed;
+        }
+
+        #sidebar-wrapper.expanded {
+            width: 200px;
+        }
+
+        .sidebar-heading {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #e3e6f0;
+        }
+
+        .sidebar-heading i {
+            font-size: 24px;
+            color: #6c757d;
+        }
+
+        .list-group-item {
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #e3e6f0;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .list-group-item:hover {
+            background-color: #f8f9fa;
+            color: #6f42c1;
+        }
+
+        .list-group-item i {
+            margin-right: 10px;
+        }
+
+        .sidebar-text {
+            display: none;
+        }
+
+        #sidebar-wrapper.expanded .sidebar-text {
+            display: inline;
+        }
+
+        #page-content-wrapper {
+            margin-left: 60px;
+            flex-grow: 1;
+            transition: margin-left 0.2s ease;
+        }
+
+        #sidebar-wrapper.expanded + #page-content-wrapper {
+            margin-left: 200px;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e3e6f0;
+        }
+
+        .navbar .form-control {
+            width: calc(100% - 50px);
+            padding: 8px;
+        }
+
+        .navbar button {
+            padding: 8px;
+            background-color: #6c757d;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .navbar button:hover {
+            background-color: #5a6268;
+        }
+
+        .search-bar {
+            display: flex;
+            flex-grow: 1;
+        }
+
+        .search-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #e3e6f0;
+            border-radius: 4px 0 0 4px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .search-button {
+            padding: 10px;
+            border: 1px solid #28a745;
+            border-radius: 0 4px 4px 0;
+            color: white;
+            cursor: pointer;
+            margin-right: 20px;
+            background-color: #28a745;
+        }
+
+        .search-button:hover {
+            background-color: #218838;
+        }
+ .list-group-item.active i {
+        color: #ffffff;
+    }
+        .card {
+            margin: 20px;
+            padding: 15px;
+            border: 1px solid #e3e6f0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h5 {
+            margin: 0 0 10px;
+            font-size: 18px;
+            color: #6c757d;
+        }
+
+        .card h3 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .row {
+            display: flex;
+            margin-left: 50px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .col-md-6 {
+            flex: 0 0 calc(50% - 40px);
+        }
+
+        @media (max-width: 768px) {
+            .col-md-6 {
+                flex: 0 0 100%;
+            }
+        }
+
+        .canvas {
+            max-width: 100%;
+            margin: 0 auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<div id="wrapper">
+    <!-- Sidebar -->
+    <div id="sidebar-wrapper">
+        <div class="sidebar-heading">
+            <i class="fas fa-chart-line"></i> <span class="sidebar-text">Admin Panel</span>
+        </div>
+        <a href="/admin/dashboard" class="list-group-item " ><i class="fas fa-home"></i> <span class="sidebar-text">Dashboard</span></a>
+        <a href="/admin/users" class="list-group-item"><i class="fas fa-users"></i> <span class="sidebar-text">Users</span></a>
+        <a href="/admin/projects" class="list-group-item"><i class="fas fa-folder-open"></i> <span class="sidebar-text">Projects</span></a>
+        <a href="/admin/unbanRequests" class="list-group-item"><i class="fas fa-ban"></i> <span class="sidebar-text">Unban Requests</span></a>
+    </div>
+
+    <!-- Page content -->
+    <div id="page-content-wrapper">
+        <!-- Navbar -->
+        <div class="navbar">
+            <form class="search-bar">
+                <input type="text" class="search-input" placeholder="Поиск">
+                <button type="submit" class="search-button"><i class="fas fa-search"></i></button>
+            </form>
+            <div class="navbar-icons">
+                <a href="/admin/notifications" style="margin-right: 10px; color: #FFC107;"><i class="fas fa-bell"></i></a>
+                <form th:action="@{/logout}" th:method="POST" style="display: inline;">
+                    <button type="submit" style="background: none; border: none; color: #dc3545; cursor: pointer;">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="container-fluid">
+            <div class="row mt-4">
+                <!-- Карточка с общим количеством проектов -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Общее количество проектов</h5>
+                            <h3 th:text="${totalProjects}">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Карточка с новыми проектами -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Новые проекты за день</h5>
+                            <h3 th:text="${newProjectsToday}">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Новые проекты за неделю</h5>
+                            <h3 th:text="${newProjectsThisWeek}">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Новые проекты за месяц</h5>
+                            <h3 th:text="${newProjectsThisMonth}">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Таблица с популярными проектами -->
+            <div class="col-md-12 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Популярные проекты</h5>
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>№</th>
+                                <th>Название проекта</th>
+                                <th>Количество просмотров</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="project, iterStat : ${popularProjects}">
+                                <td th:text="${iterStat.index + 1}"></td>
+                                <td th:text="${project.name}"></td>
+                                <td th:text="${project.viewCount}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- График распределения проектов по языкам программирования -->
+            <div class="col-md-12 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Распределение проектов по языкам программирования</h5>
+                        <canvas id="languageChart" height="100"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <!-- Карточка с количеством пользователей -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Всего пользователей</h5>
+                            <h3 th:text="${totalUsers}">0</h3>
+                            <canvas id="usersChart" height="100"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Карточка с количеством проектов -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Всего проектов</h5>
+                            <h3 th:text="${totalProjects}">0</h3>
+                            <canvas id="projectsChart" height="100"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+
+               </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    // Данные для графиков из модели
+    const labels = [[${activityLabels}]];
+    const userData = [[${activityUserCounts}]];
+    const projectData = [[${activityProjectCounts}]];
+
+    // Настройка графика пользователей
+    const usersCtx = document.getElementById('usersChart').getContext('2d');
+    new Chart(usersCtx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Пользователи',
+                data: userData,
+                fill: true,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.4,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { display: true },
+                tooltip: { enabled: true }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Дата'
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Количество пользователей'
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Настройка графика проектов
+    const projectsCtx = document.getElementById('projectsChart').getContext('2d');
+    new Chart(projectsCtx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Проекты',
+                data: projectData,
+                fill: true,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                tension: 0.4,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { display: true },
+                tooltip: { enabled: true }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Дата'
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Количество проектов'
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    /*]]>*/
+</script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    function updateOnlineTime() {
+        fetch('/admin/totalOnlineTime')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.text();
+            })
+            .then(data => {
+                document.getElementById('onlineTime').innerText = data;
+            })
+            .catch(error => console.error('Error fetching online time:', error));
+    }
+
+    // Обновлять время каждые 10 секунд
+    setInterval(updateOnlineTime, 10000);
+
+    // Первый вызов при загрузке страницы
+    updateOnlineTime();
+    /*]]>*/
+</script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const languageLabels = [[${projectLanguageLabels}]]; // Языки
+    const languageCounts = [[${projectLanguageCounts}]]; // Количество проектов
+
+    const languageCtx = document.getElementById('languageChart').getContext('2d');
+    new Chart(languageCtx, {
+        type: 'pie',
+        data: {
+            labels: languageLabels,
+            datasets: [{
+                label: 'Проекты',
+                data: languageCounts,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: { enabled: true }
+            }
+        }
+    });
+    /*]]>*/
+</script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    function updateStats() {
+        fetch('/admin/users') // Эндпоинт для получения свежих данных
+            .then(response => response.json())
+            .then(data => {
+                document.querySelector('h3[th\\:text="${totalProjects}"]').innerText = data.totalProjects;
+                document.querySelector('h3[th\\:text="${newProjectsToday}"]').innerText = data.newProjectsToday;
+                document.querySelector('h3[th\\:text="${newProjectsThisWeek}"]').innerText = data.newProjectsThisWeek;
+                document.querySelector('h3[th\\:text="${newProjectsThisMonth}"]').innerText = data.newProjectsThisMonth;
+                // Обновить таблицы или графики, если нужно
+            })
+            .catch(error => console.error('Ошибка обновления статистики:', error));
+    }
+
+    setInterval(updateStats, 30000); // Обновлять каждые 30 секунд
+    /*]]>*/
+</script>
+
+</body>
+</html>
