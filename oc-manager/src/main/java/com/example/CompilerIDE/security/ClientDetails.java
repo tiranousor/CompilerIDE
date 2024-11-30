@@ -1,17 +1,19 @@
 package com.example.CompilerIDE.security;
 
 import com.example.CompilerIDE.providers.Client;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 
-public class ClientDetails implements UserDetails {
+public class ClientDetails implements UserDetails, Serializable {
+    private static final long serialVersionUID = 1L;
+
     private final Client client;
-    @Autowired
+
     public ClientDetails(Client client) {
         this.client = client;
     }

@@ -19,7 +19,6 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Client implements Serializable {
-    private static final long serialVersionUID = 2L;
 
     @Id
     @Column(name="user_id")

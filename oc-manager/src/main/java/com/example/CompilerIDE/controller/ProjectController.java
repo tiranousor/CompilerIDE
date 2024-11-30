@@ -132,7 +132,7 @@ public class ProjectController  {
                 return "new_project_form";
             }
         }
-        projectTeamService.addCreator(project, clientService.getClient(authentication.getName()).get());
+        projectTeamService.addCreator(project, clientService.findByUsername(authentication.getName()).get());
 
         return "redirect:/userProfile";
     }

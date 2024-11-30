@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
@@ -52,6 +53,7 @@ public class AdminController {
         this.userActivityService = userActivityService;
         this.loginTimestampRepository = loginTimestampRepository;
     }
+
 
     @GetMapping("/users")
     public String listUsers(@RequestParam(name = "sort", required = false, defaultValue = "registrationDateDesc") String sort,
