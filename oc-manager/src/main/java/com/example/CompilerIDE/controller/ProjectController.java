@@ -107,15 +107,18 @@ public class ProjectController  {
     }
 
     @PostMapping("/userProfile/new")
-    public String createProject(@Valid @ModelAttribute("project") Project project, BindingResult bindingResult, Authentication authentication) {
-        if (bindingResult.hasErrors()) {
-            return "new_project_form";
+    public String createProject(@Valid @ModelAttribute("project") Project project, BindingResult bindingResult, Authentication authentication, Model model) {
+        Client client = clientService.findByUsername(authentication.getName()).orElse(null);
+        if (client == null) {
+            return "redirect:/login";
         }
-        project.setClient(clientService.getClient(authentication.getName()).get());
         projectValidator.validate(project, bindingResult);
         if (bindingResult.hasErrors()) {
+            model.addAttribute("client", client);
+            model.addAttribute("project", new Project());
             return "new_project_form";
         }
+        project.setClient(client);
         projectService.save(project);
         if (project.getRefGit() != null && !project.getRefGit().isEmpty()) {
             try {
@@ -124,6 +127,8 @@ public class ProjectController  {
                 logger.error("Ошибка при импорте проекта из Git: {}", e.getMessage());
                 projectService.delete(project);
                 bindingResult.rejectValue("refGit", "error.refGit", "Не удалось импортировать проект из Git: " + e.getMessage());
+                // Добавляем client в модель
+                model.addAttribute("client", client);
                 return "new_project_form";
             }
         }
@@ -131,6 +136,7 @@ public class ProjectController  {
 
         return "redirect:/userProfile";
     }
+
 
     @PostMapping("/delete/{id}")
     public String deleteProject(@PathVariable("id") int projectId, Authentication authentication) {
@@ -144,45 +150,42 @@ public class ProjectController  {
         return "redirect:/userProfile";
     }
 
-@GetMapping("/edit/{id}")
-public String editProjectForm(@PathVariable("id") int projectId, Model model, Authentication authentication) {
-    Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
+    @GetMapping("/edit/{id}")
+    public String editProjectForm(@PathVariable("id") int projectId, Model model, Authentication authentication) {
+        Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
 
-    if (clientOpt.isEmpty()) {
-        return "redirect:/login";
-    }
+        if (clientOpt.isEmpty()) {
+            return "redirect:/login";
+        }
 
-    Client client = clientOpt.get();
-    model.addAttribute("client", client);
-    Optional<Project> projectOpt = projectService.findById(projectId);
-    if (projectOpt.isPresent()) {
-        Project project = projectOpt.get();
-        if (project.getClient().getId().equals(client.getId())) {
-            ProjectAccessLog accessLog = new ProjectAccessLog();
-            accessLog.setClient(client);
-            accessLog.setProject(project);
-            accessLog.setAccessTime(new Timestamp(System.currentTimeMillis()));
-            accessLog.setActionType("open");
-            projectAccessLogRepository.save(accessLog);
+        Client client = clientOpt.get();
+        model.addAttribute("client", client);
+        Optional<Project> projectOpt = projectService.findById(projectId);
+        if (projectOpt.isPresent()) {
+            Project project = projectOpt.get();
+            if (project.getClient().getId().equals(client.getId())) {
+                ProjectAccessLog accessLog = new ProjectAccessLog();
+                accessLog.setClient(client);
+                accessLog.setProject(project);
+                accessLog.setAccessTime(new Timestamp(System.currentTimeMillis()));
+                accessLog.setActionType("open");
+                projectAccessLogRepository.save(accessLog);
 
-            model.addAttribute("project", project);
-            return "edit_project_form";
+                model.addAttribute("project", project);
+                return "edit_project_form";
+            } else {
+                return "redirect:/userProfile";
+            }
         } else {
             return "redirect:/userProfile";
         }
-    } else {
-        return "redirect:/userProfile";
     }
-}
 
     @PostMapping("/edit/{id}")
     public String updateProject(@PathVariable("id") int projectId,
                                 @Valid @ModelAttribute("project") Project projectForm,
                                 BindingResult bindingResult,
-                                Authentication authentication) {
-        if (bindingResult.hasErrors()) {
-            return "edit_project_form";
-        }
+                                Authentication authentication, Model model) {
 
         Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
         if (clientOpt.isEmpty()) {
@@ -190,30 +193,45 @@ public String editProjectForm(@PathVariable("id") int projectId, Model model, Au
         }
 
         Client client = clientOpt.get();
-
         Optional<Project> projectOpt = projectService.findById(projectId);
-
-        if (projectOpt.isPresent()) {
-            Project existingProject = projectOpt.get();
-            if (existingProject.getClient().getId().equals(client.getId())) {
-                existingProject.setName(projectForm.getName());
-                existingProject.setLanguage(projectForm.getLanguage());
-                existingProject.setReadMe(projectForm.getReadMe());
-                existingProject.setRefGit(projectForm.getRefGit());
-                existingProject.setProjectType(projectForm.getProjectType());
-                existingProject.setAccessLevel(projectForm.getAccessLevel());
-                projectService.save(existingProject);
-
-                ProjectAccessLog accessLog = new ProjectAccessLog();
-                accessLog.setClient(client);
-                accessLog.setProject(existingProject);
-                accessLog.setAccessTime(new Timestamp(System.currentTimeMillis()));
-                accessLog.setActionType("edit");
-                projectAccessLogRepository.save(accessLog);
-            }
+        if (projectOpt.isEmpty()) {
+            return "redirect:/userProfile";
         }
+
+        Project existingProject = projectOpt.get();
+
+        if (!existingProject.getClient().getId().equals(client.getId())) {
+            return "redirect:/userProfile";
+        }
+
+        projectForm.setClient(client);
+
+        projectValidator.validate(projectForm, bindingResult);
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("client", client);
+            model.addAttribute("project", projectForm);
+            return "edit_project_form";
+        }
+
+        existingProject.setName(projectForm.getName());
+        existingProject.setLanguage(projectForm.getLanguage());
+        existingProject.setReadMe(projectForm.getReadMe());
+        existingProject.setRefGit(projectForm.getRefGit());
+        existingProject.setProjectType(projectForm.getProjectType());
+        existingProject.setAccessLevel(projectForm.getAccessLevel());
+        projectService.save(existingProject);
+
+        // Логирование изменений (опционально)
+        ProjectAccessLog accessLog = new ProjectAccessLog();
+        accessLog.setClient(client);
+        accessLog.setProject(existingProject);
+        accessLog.setAccessTime(new Timestamp(System.currentTimeMillis()));
+        accessLog.setActionType("edit");
+        projectAccessLogRepository.save(accessLog);
+
         return "redirect:/userProfile";
     }
+
 
 
     @GetMapping("/{projectId}/access-logs")
@@ -303,13 +321,27 @@ public String editProjectForm(@PathVariable("id") int projectId, Model model, Au
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("У вас нет доступа к этому проекту");
         }
 
-        List<ProjectStruct> javaFiles = projectStructRepository.findByProjectIdAndType(projectId, "file")
+        String language = project.getLanguage().toLowerCase();
+        String fileExtension;
+        switch (language) {
+            case "java":
+                fileExtension = ".java";
+                break;
+            case "python":
+                fileExtension = ".py";
+                break;
+            default:
+                return ResponseEntity.badRequest().body("Unsupported language: " + project.getLanguage());
+        }
+
+        List<ProjectStruct> filesWithMain = projectStructRepository.findByProjectIdAndType(projectId, "file")
                 .stream()
-                .filter(ps -> ps.getPath().endsWith(".java"))
+                .filter(ps -> ps.getPath().endsWith(fileExtension))
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(javaFiles);
+        return ResponseEntity.ok(filesWithMain);
     }
+
 
     public boolean canEditProject(Project project, Client client) {
         Optional<ProjectTeam> team = projectTeamService.findByProjectAndClient(project, client);

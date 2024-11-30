@@ -103,8 +103,9 @@ public class UserController {
             e.printStackTrace();
         }
         model.addAttribute("projectName", project.getName());
-
+        model.addAttribute("language", project.getLanguage());
         model.addAttribute("fileStructure", fileStructureJson);
+
         return "Compiler";
     }
 
@@ -151,6 +152,7 @@ public class UserController {
         Project project = new Project();
         project.setName("Untitled");
         project.setLanguage("Java");
+        project.setReadMe("Мой первый проект");
         project.setClient(client);
 
         projectService.save(project);
