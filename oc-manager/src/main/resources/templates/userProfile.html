@@ -293,7 +293,7 @@
                     </div>
                     <div class="project-details mt-2" style="display: none;">
                         <p><strong>Имя проекта:</strong> <span th:text="${project.name}"></span></p>
-                        <p><strong>ReadMe:</strong> <span th:text="${project.readMe}"></span></p>
+                        <p><strong>Описание:</strong> <span th:text="${project.readMe}"></span></p>
                         <p><strong>Язык:</strong> <span th:text="${project.language}"></span></p>
                         <a th:href="@{/projects/edit/{id}(id=${project.id})}" class="btn-edit-green">Редактировать</a>
                     </div>

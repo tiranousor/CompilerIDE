@@ -6,6 +6,7 @@
     <meta name="_csrf" th:content="${_csrf.token}" />
     <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     <meta name="fileStructure" th:content="${fileStructure}">
+    <meta name="projectLanguage" th:content="${language}">
     <link rel="icon" href="/favicon.png" type="image/png">
     <title>jsTree и Monaco Editor</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
@@ -302,6 +303,20 @@
             fetchClassesWithMain();
         });
     };
+    const ensureMainClassName = (mainClassName, projectLanguage) => {
+        const languageExtensionMap = {
+            'java': '.java',
+            'python': '.py',
+            // Добавьте другие языки и их расширения по мере необходимости
+        };
+
+        const extension = languageExtensionMap[projectLanguage.toLowerCase()] || '';
+
+        if (extension && !mainClassName.toLowerCase().endsWith(extension)) {
+            return mainClassName + extension;
+        }
+        return mainClassName;
+    };
     const fetchClassesWithMain = () => {
         $.ajax({
             url: `/projects/${projectId}/classes-with-main`,
@@ -327,15 +342,29 @@
         if (mainClasses.length === 0) {
             classesList.append('<li>Классы с main методом не найдены</li>');
         } else {
+            const projectLanguage = document.querySelector('meta[name="projectLanguage"]').getAttribute('content').toLowerCase();
+            const languageExtensionMap = {
+                'java': '.java',
+                'python': '.py',
+            };
+            const extension = languageExtensionMap[projectLanguage] || '';
+
             mainClasses.forEach(function(classItem) {
-                const path = classItem.path; // Например, "space/Space1.java"
-                // Преобразуем путь в полностью квалифицированное имя класса
-                const mainClassName = path.replace(/\//g, '.').replace(/\.java$/, '');
+                const path = classItem.path;
+                let mainClassName = path.replace(/\//g, '.').replace(/\.[^.]+$/, '');
+
+                if (extension && !path.toLowerCase().endsWith(extension)) {
+                    return;
+                }
+
+                if (extension && projectLanguage === 'python') {
+                    mainClassName += extension;
+                }
+
                 classesList.append(`<li data-class-name="${mainClassName}">${path}</li>`);
             });
         }
 
-        // Добавить обработчики клика по элементам списка
         $('#classesList li').on('click', function() {
             const selectedClass = $(this).data('class-name');
             if (selectedClass) {
@@ -348,6 +377,11 @@
 
     const setMainClass = (mainClassName) => {
         console.log("Установка mainClassName:", mainClassName);
+
+        const projectLanguage = document.querySelector('meta[name="projectLanguage"]').getAttribute('content');
+
+        mainClassName = ensureMainClassName(mainClassName, projectLanguage);
+
         $.ajax({
             url: `/projects/${projectId}/mainClass`,
             type: 'POST',
@@ -359,7 +393,6 @@
             success: function(response) {
                 console.log("mainClassName успешно установлен:", response);
                 showMessage("Главный класс успешно установлен.", "success");
-                // Обновить поле ввода main-class-input
                 $('#main-class-input').val(mainClassName);
             },
             error: function(xhr, status, error) {
@@ -368,6 +401,7 @@
             }
         });
     };
+
 
     // Обработчик изменения поля ввода имени главного класса
     $('#main-class-input').on('change', function() {
@@ -406,46 +440,41 @@
             return languageMap[extension] || 'plaintext';
         };
         const compileCode = () => {
-            // Получаем кнопку компиляции
             const compileButton = $('#compile-button');
 
-            // Отключаем кнопку
             compileButton.prop('disabled', true);
             compileButton.css('opacity', '0.6'); // Визуальное обозначение отключения
 
-            // Начинаем процесс сохранения проекта
             saveProject(false)
                 .then(function() {
-                    // Проверяем, был ли проект успешно сохранён
                     if (!currentFile) {
                         showMessage("Нет открытого файла для компиляции.", "error");
-                        // Включаем кнопку обратно
                         compileButton.prop('disabled', false);
                         compileButton.css('opacity', '1');
                         return;
                     }
 
-                    const language = getLanguageFromFilename(currentFile.text);
+                    const projectLanguage = document.querySelector('meta[name="projectLanguage"]').getAttribute('content');
 
                     const mainClassInput = document.getElementById('main-class-input');
                     let mainClassName = mainClassInput.value.trim();
                     if (!mainClassName) {
                         showMessage("Введите название класса для компиляции.", "error");
-                        // Включаем кнопку обратно
                         compileButton.prop('disabled', false);
                         compileButton.css('opacity', '1');
                         return;
                     }
 
+                    mainClassName = ensureMainClassName(mainClassName, projectLanguage);
+
                     const compileRequest = {
-                        project_id: Number(projectId), // Преобразуем в число, если требуется
-                        language: language,
+                        project_id: Number(projectId),
+                        language: projectLanguage,
                         mainClassName: mainClassName
                     };
 
                     console.log("Отправка compileRequest:", compileRequest);
 
-                    // Отправляем запрос на компиляцию
                     $.ajax({
                         url: '/compile',
                         type: 'POST',
@@ -470,18 +499,17 @@
                         showMessage("Ошибка при отправке запроса на компиляцию.", "error");
                     })
                     .always(function() {
-                        // Включаем кнопку обратно после завершения запроса
                         compileButton.prop('disabled', false);
                         compileButton.css('opacity', '1');
                     });
                 })
                 .fail(function() {
-                    // Если сохранение проекта не удалось, включаем кнопку обратно
                     compileButton.prop('disabled', false);
                     compileButton.css('opacity', '1');
                     showMessage("Не удалось сохранить проект перед компиляцией.", "error");
                 });
         };
+
 
         const displayCompileResult = (result) => {
             console.log("Display compile result:", result);

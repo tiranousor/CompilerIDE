@@ -263,10 +263,10 @@
 
         <!-- Search Users Section -->
         <div class="section">
-            <h2>Поис</h2>
+            <h2>Поиск</h2>
             <form class="search-form" th:action="@{/friends/list}" method="get">
-                <input type="text" name="username" placeholder="Enter username" th:value="${searchQuery}" required>
-                <button type="submit">Search</button>
+                <input type="text" name="username" placeholder="Введите никнейм" th:value="${searchQuery}" required>
+                <button type="submit">Поиск</button>
             </form>
             <ul>
                 <th:block th:each="user : ${users}">
@@ -287,7 +287,7 @@
 
         <!-- Friends List Section -->
         <div class="section">
-            <h2>Your Friends</h2>
+            <h2>Ваши друзья</h2>
             <ul>
                 <th:block th:each="friend : ${friends}">
                     <li>

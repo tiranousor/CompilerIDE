@@ -1,5 +1,6 @@
 package com.example.CompilerIDE.config;
 
+import com.example.CompilerIDE.providers.Client;
 import com.example.CompilerIDE.services.MinioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,5 +23,6 @@ public class BucketInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         minioService.createBucket(bucketName);
+
     }
 }

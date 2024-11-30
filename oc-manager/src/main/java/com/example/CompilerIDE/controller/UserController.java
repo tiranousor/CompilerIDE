@@ -103,8 +103,9 @@ public class UserController {
             e.printStackTrace();
         }
         model.addAttribute("projectName", project.getName());
-
+        model.addAttribute("language", project.getLanguage());
         model.addAttribute("fileStructure", fileStructureJson);
+
         return "Compiler";
     }
 
@@ -113,31 +114,12 @@ public class UserController {
         return "loginAndRegistration";
     }
 
-    @PostMapping("/process_login")
-    public String processLogin(Authentication authentication) {
-        if (authentication != null && authentication.isAuthenticated()) {
-            Client client = clientService.findByUsername(authentication.getName()).orElse(null);
-
-//            if (client != null) {
-//                LoginTimestamp loginTimestamp = new LoginTimestamp();
-//                loginTimestamp.setClient(client);
-//                loginTimestamp.setLoginTime(new Timestamp(System.currentTimeMillis()).toLocalDateTime());
-//
-//                System.out.println("Saving login timestamp for user: " + client.getUsername());
-//
-//                loginTimestampRepository.save(loginTimestamp);
-//            }
-//
-//            return "redirect:/userProfile";
-        }
-        return "loginAndRegistration";
-    }
-
 
     @GetMapping("/registration")
     public String registration(@ModelAttribute Client client){
         return "registrationPage";
     }
+
 
     @PostMapping("/process_registration")
     public String registrationPerson(@Valid @ModelAttribute("client") Client client, BindingResult bindingResult) {
@@ -151,6 +133,7 @@ public class UserController {
         Project project = new Project();
         project.setName("Untitled");
         project.setLanguage("Java");
+        project.setReadMe("Мой первый проект");
         project.setClient(client);
 
         projectService.save(project);
