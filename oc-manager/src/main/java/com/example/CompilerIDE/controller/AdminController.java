@@ -71,7 +71,16 @@ public class AdminController {
         model.addAttribute("activeUsersLastMonth", userActivityService.countActiveUsersInLastDays(30));
         model.addAttribute("topUsers", userActivityService.getTopUsersByOnlineTime(10));
 
-        return "admin/user_list"; // Полный шаблон
+        return "admin/user_list";
+    }
+
+    @GetMapping("/status")
+    public String getWorkerStatus(Model model) {
+        ResponseEntity<Map<String, Boolean>> response = workerStatusService.getWorkerStatus();
+        Map<String, Boolean> workerStatus = response.getBody();
+        model.addAttribute("workerStatus", workerStatus);
+
+        return "admin/status";
     }
     @GetMapping("/users/list")
     public String getUsersList(@RequestParam(name = "sort", required = false, defaultValue = "registrationDateDesc") String sort, Model model) {
@@ -167,6 +176,9 @@ public class AdminController {
         List<Client> allClients = clientRepository.findAll();
         List<LoginTimestamp> allTimestamps = loginTimestampRepository.findAll();
         userActivityService.updateDailyStats();
+        System.out.println("Accessing /admin/dashboard");
+        System.out.println("User: " + authentication.getName());
+        System.out.println("Authorities: " + authentication.getAuthorities());
 
         long totalUsers = userActivityService.countRegisteredUsers();
         long totalProjects = userActivityService.countTotalProjects();

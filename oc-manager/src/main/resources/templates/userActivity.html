@@ -1808,8 +1808,6 @@
 
 <div class="container">
     <h1>Все пользователи</h1>
-
-    <!-- Search Form -->
     <form th:action="@{/admin/users/search}" method="get">
         <div class="input-group">
             <input type="text" name="username" class="form-control" placeholder="Введите имя пользователя" th:value="${username}">

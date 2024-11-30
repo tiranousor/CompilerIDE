@@ -47,6 +47,9 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
             loginTimestampRepository.save(loginTimestamp);
             System.out.println("LoginTimestamp saved for user: " + username);
         }
+        System.out.println("User roles: " + roles);
+        System.out.println("Redirecting to /admin/dashboard");
+
 
         if (roles.contains("ROLE_BANNED")) {
             response.sendRedirect("/banned");

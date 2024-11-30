@@ -170,8 +170,10 @@
 </head>
 <div class="header">
     <div class="user-info">
-        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar">
-        <span th:text="${client.username}"></span>
+        <a th:href="@{/userProfile/{id}(id=${client.id})}" style="display: flex; align-items: center; text-decoration: none;">
+            <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar">
+            <span class="username" th:text="${client.username}" style="margin-left: 10px; color: inherit;"></span>
+        </a>
     </div>
     <div class="actions">
         <a th:href="@{/edit/{id}(id=${client.id})}"><i class='bx bx-user'></i></a>
