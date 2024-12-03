@@ -6,6 +6,7 @@ import com.example.CompilerIDE.providers.LoginTimestamp;
 import com.example.CompilerIDE.providers.Project;
 import com.example.CompilerIDE.providers.ProjectTeam;
 import com.example.CompilerIDE.repositories.LoginTimestampRepository;
+import com.example.CompilerIDE.security.ClientDetails;
 import com.example.CompilerIDE.services.*;
 import com.example.CompilerIDE.util.ClientValidator;
 import com.example.CompilerIDE.util.FileUploadUtil;
@@ -149,7 +150,7 @@ public class UserController {
 
         Optional<Client> clientOpt = clientService.findByUsername(authName);
         if (clientOpt.isEmpty()) {
-            return "redirect:/loginAndRegistration";
+            return "redirect:/login";
         }
         Client client = clientOpt.get();
 
@@ -169,7 +170,7 @@ public class UserController {
     public String editProfile(Model model, @PathVariable("id") int id, Authentication authentication) {
         Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
         if (clientOpt.isEmpty()) {
-            return "redirect:/loginAndRegistration";
+            return "redirect:/login";
         }
         Client client = clientOpt.get();
         model.addAttribute("client", clientService.findOne(client.getId()));
@@ -212,17 +213,18 @@ public class UserController {
         existingClient.setEmail(clientForm.getEmail());
         existingClient.setGithubProfile(clientForm.getGithubProfile());
         existingClient.setAbout(clientForm.getAbout());
-//        existingClient.setBackgroundColor(clientForm.getBackgroundColor());
-//        existingClient.setMainColor(clientForm.getMainColor());
 
         clientService.update(id, existingClient);
 
         if (!authentication.getName().equals(existingClient.getUsername())) {
+            ClientDetails updatedClientDetails = new ClientDetails(existingClient);
+
             Authentication newAuth = new UsernamePasswordAuthenticationToken(
-                    existingClient.getUsername(),
+                    updatedClientDetails,
                     authentication.getCredentials(),
-                    authentication.getAuthorities()
+                    updatedClientDetails.getAuthorities()
             );
+
             SecurityContextHolder.getContext().setAuthentication(newAuth);
         }
 
@@ -235,7 +237,7 @@ public class UserController {
         String authName = authentication.getName();
         Optional<Client> currentUserOpt = clientService.findByUsername(authName);
         if (currentUserOpt.isEmpty()) {
-            return "redirect:/loginAndRegistration";
+            return "redirect:/login";
         }
         Client currentUser = currentUserOpt.get();
 

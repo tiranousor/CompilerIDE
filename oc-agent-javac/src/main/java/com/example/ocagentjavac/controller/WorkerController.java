@@ -25,6 +25,7 @@
     import java.util.concurrent.TimeUnit;
     import java.util.regex.Matcher;
     import java.util.regex.Pattern;
+    import java.util.stream.Collectors;
 
     @RestController
     public class WorkerController {
@@ -167,37 +168,75 @@
         }
 
         private ResponseEntity<?> handleMavenProject(Path projectDir, String mainClassName) throws IOException, InterruptedException {
-            // Компиляция Maven-проекта
-            CommandResult compileResult = executeCommand(Arrays.asList("mvn", "-e", "clean", "compile"), projectDir, 60);
-            if (compileResult.getReturnCode() != 0) {
-                List<Map<String, Object>> errors = parseJavacErrors(compileResult.getStderr(), projectDir);
-                return buildErrorResponse(compileResult.getStdout(), errors, compileResult.getReturnCode());
-            }
-            // Сбор classpath
-            CommandResult classpathResult = executeCommand(Arrays.asList("mvn", "dependency:build-classpath", "-Dmdep.outputFile=classpath.txt"), projectDir, 30);
-            if (classpathResult.getReturnCode() != 0) {
-                return buildErrorResponse(classpathResult.getStdout(), classpathResult.getStderr(), classpathResult.getReturnCode());
-            }
+            // Создайте директорию для локального репозитория Maven
+            Path mavenRepo = Paths.get("/tmp/.m2/repository");
+            Files.createDirectories(mavenRepo);
 
-            Path classpathFile = projectDir.resolve("classpath.txt");
-            if (!Files.exists(classpathFile)) {
-                return buildErrorResponse("", "Не удалось получить classpath", 1);
-            }
+            boolean hasShadePlugin = hasShadePlugin(projectDir);
 
-            String classpath = Files.readString(classpathFile).trim();
-            if (classpath.isEmpty()) {
-                return buildErrorResponse("", "Classpath пустой", 1);
-            }
+            if (hasShadePlugin) {
+                // Выполняем сборку с package и запускаем JAR
+                List<String> mvnPackageCommand = Arrays.asList(
+                        "mvn",
+                        "-e",
+                        "-Dmaven.repo.local=/tmp/.m2/repository",
+                        "clean",
+                        "package"
+                );
+                CommandResult packageResult = executeCommand(mvnPackageCommand, projectDir, 120);
+                if (packageResult.getReturnCode() != 0) {
+                    return buildErrorResponse(packageResult.getStdout(), packageResult.getStderr(), packageResult.getReturnCode());
+                }
 
-            // Запуск главного класса
-            List<String> javaRunCommand = Arrays.asList("java", "-cp", classpath + File.pathSeparator + "target/classes", mainClassName);
-            CommandResult runResult = executeCommand(javaRunCommand, projectDir, 30);
-            if (runResult.getReturnCode() != 0) {
-                return buildErrorResponse(runResult.getStdout(), runResult.getStderr(), runResult.getReturnCode());
-            }
+                // Поиск сгенерированного JAR-файла
+                String jarFileName = findJarFileName(projectDir.resolve("target"));
+                if (jarFileName == null) {
+                    return buildErrorResponse("", "Не удалось найти сгенерированный JAR-файл", 1);
+                }
 
-            return buildSuccessResponse(runResult.getStdout(), runResult.getStderr());
+                // Запуск JAR-файла
+                List<String> javaRunCommand = Arrays.asList("java", "-jar", "target/" + jarFileName);
+                CommandResult runResult = executeCommand(javaRunCommand, projectDir, 30);
+                if (runResult.getReturnCode() != 0) {
+                    return buildErrorResponse(runResult.getStdout(), runResult.getStderr(), runResult.getReturnCode());
+                }
+
+                return buildSuccessResponse(runResult.getStdout(), runResult.getStderr());
+
+            } else {
+                // **Альтернативный метод**
+                // Компиляция проекта
+                List<String> mvnCompileCommand = Arrays.asList(
+                        "mvn",
+                        "-e",
+                        "-Dmaven.repo.local=/tmp/.m2/repository",
+                        "clean",
+                        "compile"
+                );
+                CommandResult compileResult = executeCommand(mvnCompileCommand, projectDir, 120);
+                if (compileResult.getReturnCode() != 0) {
+                    return buildErrorResponse(compileResult.getStdout(), compileResult.getStderr(), compileResult.getReturnCode());
+                }
+
+                // Собираем classpath
+                String classpath = buildClasspath(projectDir, mavenRepo);
+                if (classpath == null) {
+                    return buildErrorResponse("", "Не удалось собрать classpath", 1);
+                }
+
+                // Запуск главного класса
+                List<String> javaRunCommand = Arrays.asList("java", "-cp", classpath, mainClassName);
+                CommandResult runResult = executeCommand(javaRunCommand, projectDir, 30);
+                if (runResult.getReturnCode() != 0) {
+                    return buildErrorResponse(runResult.getStdout(), runResult.getStderr(), runResult.getReturnCode());
+                }
+
+                return buildSuccessResponse(runResult.getStdout(), runResult.getStderr());
+            }
         }
+
+
+
 
         private ResponseEntity<?> handleNonMavenProject(Path projectDir, String mainClassName) throws IOException, InterruptedException {
             List<Path> javaFiles = collectJavaFiles(projectDir);
@@ -224,6 +263,41 @@
             return buildSuccessResponse(runResult.getStdout(), runResult.getStderr());
         }
 
+        private String findJarFileName(Path targetDir) throws IOException {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(targetDir, "*.jar")) {
+                for (Path entry : stream) {
+                    return entry.getFileName().toString();
+                }
+            }
+            return null;
+        }
+
+
+        private boolean hasShadePlugin(Path projectDir) throws IOException {
+            Path pomFile = projectDir.resolve("pom.xml");
+            if (!Files.exists(pomFile)) {
+                return false;
+            }
+            String pomContent = Files.readString(pomFile);
+            return pomContent.contains("maven-shade-plugin");
+        }
+
+
+        private String buildClasspath(Path projectDir, Path mavenRepo) throws IOException {
+            List<String> classpathEntries = new ArrayList<>();
+
+            // Добавляем все JAR-файлы из локального Maven-репозитория
+            Files.walk(mavenRepo)
+                    .filter(path -> path.toString().endsWith(".jar"))
+                    .forEach(path -> classpathEntries.add(path.toString()));
+
+            // Добавляем директорию с скомпилированными классами
+            classpathEntries.add(projectDir.resolve("target/classes").toString());
+
+            return String.join(File.pathSeparator, classpathEntries);
+        }
+
+
 
         private List<Path> collectJavaFiles(Path projectDir) throws IOException {
             List<Path> javaFiles = new ArrayList<>();
@@ -237,6 +311,13 @@
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             processBuilder.directory(workingDir.toFile());
             processBuilder.redirectErrorStream(false);
+
+            // Установка переменной окружения для Maven
+            processBuilder.environment().put("MAVEN_OPTS", "-Dmaven.repo.local=/tmp/.m2/repository");
+
+            // Убедитесь, что директория для локального репозитория существует
+            Files.createDirectories(Paths.get("/tmp/.m2/repository"));
+
             Process process = processBuilder.start();
 
             StringBuilder stdout = new StringBuilder();

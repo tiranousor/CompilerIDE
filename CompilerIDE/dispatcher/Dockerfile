@@ -1,16 +1,17 @@
-FROM maven:3.9.4-eclipse-temurin-21
+
+FROM openjdk:21-jdk-slim
 
 RUN groupadd -r appgroup --gid=1000 && \
     useradd -r -g appgroup --uid=1000 appuser
 
 WORKDIR /app
 
-COPY target/oc-agent-javac.jar worker.jar
+COPY dispatcher.jar dispatcher.jar
 
 RUN chown -R appuser:appgroup /app
 
 USER appuser
 
-EXPOSE 5000
+EXPOSE 8081
 
-ENTRYPOINT ["java", "-jar", "worker.jar"]
+ENTRYPOINT ["java", "-jar", "dispatcher.jar"]

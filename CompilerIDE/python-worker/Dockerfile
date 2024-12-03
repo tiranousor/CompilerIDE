@@ -8,7 +8,7 @@ RUN groupadd -r appgroup --gid=1000 && \
 
 WORKDIR /app
 
-COPY target/oc-agent-python.jar worker.jar
+COPY oc-agent-python.jar worker.jar
 
 RUN chown -R appuser:appgroup /app
 

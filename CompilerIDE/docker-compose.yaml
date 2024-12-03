@@ -41,7 +41,7 @@ services:
 
   worker1:
     build:
-      context: ../oc-agent-javac
+      context: /java-worker
     image: compiler-worker:latest
     container_name: worker1
     ports:
@@ -67,7 +67,7 @@ services:
 
   worker2:
     build:
-      context: ../oc-agent-javac
+      context: /java-worker
     image: compiler-worker:latest
     container_name: worker2
     ports:
@@ -93,7 +93,7 @@ services:
 
   python-worker1:
     build:
-      context: ../oc-agent-python
+      context: /python-worker
     image: python-java-worker:latest
     container_name: python-worker1
     ports:
@@ -119,7 +119,7 @@ services:
 
   python-worker2:
     build:
-      context: ../oc-agent-python
+      context: /python-worker
     image: python-java-worker:latest
     container_name: python-worker2
     ports:
@@ -145,7 +145,7 @@ services:
 
   dispatcher:
     build:
-      context: /
+      context: /dispatcher
     image: dispatcher:latest
     container_name: dispatcher
     ports:
@@ -174,7 +174,7 @@ services:
 
   oc-manager:
     build:
-      context: ../oc-manager
+      context: /oc-manager
     image: oc-manager:latest
     container_name: oc-manager
     ports:
