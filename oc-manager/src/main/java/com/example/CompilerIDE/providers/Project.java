@@ -35,7 +35,7 @@ public class Project {
     @NotBlank(message = "Язык программирования не может быть пустым")
     private String language;
 
-    private String readMe = "Мой первый проект";
+    private String readMe;
 
     @URL(message = "Неверный формат URL")
     private String refGit;

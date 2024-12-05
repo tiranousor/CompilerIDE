@@ -154,6 +154,8 @@
     <div class="edit-container">
         <h1>Редактировать Проект</h1>
         <form th:action="@{/projects/edit/{id}(id=${project.id})}" method="post" th:object="${project}">
+            <input type="hidden" th:field="*{id}" />
+
             <div class="form-input">
                 <input type="text" class="form-control" id="name" name="name" th:field="*{name}" placeholder="Название проекта" required>
                 <div class="form-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Ошибка в названии проекта</div>
@@ -168,7 +170,7 @@
                 <div class="form-error" th:if="${#fields.hasErrors('language')}" th:errors="*{language}">Ошибка в языке программирования</div>
             </div>
             <div class="form-input">
-                <textarea class="form-control" id="readMe" name="readMe" th:field="*{readMe}" rows="4" placeholder="Read Me"></textarea>
+                <textarea class="form-control" id="readMe" name="readMe" th:field="*{readMe}" rows="4" placeholder="Описание"></textarea>
                 <div class="form-error" th:if="${#fields.hasErrors('readMe')}" th:errors="*{readMe}">Ошибка в поле Read Me</div>
             </div>
             <div class="form-input">
