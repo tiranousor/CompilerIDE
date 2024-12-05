@@ -1,147 +1,73 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Полученные Приглашения на Проекты</title>
-    <link rel="icon" href="/favicon.png" type="image/png">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <style>
-        /* Стили для страницы приглашений */
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background: linear-gradient(70deg, #8EC5FC, #E0C3FC);
-            padding: 20px;
+    <title>Полученные приглашения</title>
+    <link rel="stylesheet" href="/path/to/your/styles.css">
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+        function acceptInvitation(invitationId) {
+            axios.post('/invitations/accept/' + invitationId)
+                .then(response => {
+                    if (response.data === 'success') {
+                        alert('Приглашение принято.');
+                        location.reload();
+                    } else {
+                        alert('Ошибка: ' + response.data);
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert('Произошла ошибка.');
+                });
         }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: #FFFFFF;
-            border-radius: 15px;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-            padding: 30px;
+        function rejectInvitation(invitationId) {
+            axios.post('/invitations/reject/' + invitationId)
+                .then(response => {
+                    if (response.data === 'success') {
+                        alert('Приглашение отклонено.');
+                        location.reload();
+                    } else {
+                        alert('Ошибка: ' + response.data);
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert('Произошла ошибка.');
+                });
         }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .invitation {
-            border-bottom: 1px solid #ddd;
-            padding: 15px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .invitation:last-child {
-            border-bottom: none;
-        }
-
-        .invitation-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .invitation-info span {
-            margin-bottom: 5px;
-            color: #555;
-        }
-
-        .invitation-actions button {
-            padding: 8px 12px;
-            margin-right: 5px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            color: #fff;
-        }
-
-        .btn-accept {
-            background-color: #1DB954;
-        }
-
-        .btn-reject {
-            background-color: #FF4D4F;
-        }
-    </style>
+    </script>
 </head>
 <body>
-<div class="invitations-container">
-    <h1>Приглашения на Проекты</h1>
-    <ul class="invitations-list">
-        <th:block th:each="invitation : ${invitations}">
-            <li>
-                <p><strong>Проект:</strong> <span th:text="${invitation.project.name}">Project Name</span></p>
-                <p><strong>Отправитель:</strong> <span th:text="${invitation.sender.username}">Sender Username</span></p>
-                <div class="invitation-actions">
-                    <form th:action="@{/invitations/accept/{id}(id=${invitation.id})}" method="post">
-                        <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
-                        <button type="submit" class="btn-accept">Принять</button>
-                    </form>
-                    <form th:action="@{/invitations/reject/{id}(id=${invitation.id})}" method="post">
-                        <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
-                        <button type="submit" class="btn-reject">Отклонить</button>
-                    </form>
-                </div>
-            </li>
-        </th:block>
-    </ul>
+<div class="container">
+    <h1>Полученные приглашения</h1>
+    <div th:if="${invitations.empty}">
+        <p>Нет новых приглашений.</p>
+    </div>
+    <div th:unless="${invitations.empty}">
+        <table>
+            <thead>
+            <tr>
+                <th>Проект</th>
+                <th>Отправитель</th>
+                <th>Дата</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="invitation : ${invitations}">
+                <td th:text="${invitation.project.name}">Название проекта</td>
+                <td th:text="${invitation.sender.username}">Отправитель</td>
+                <td th:text="${#dates.format(invitation.timestamp, 'dd.MM.yyyy HH:mm')}">Дата</td>
+                <td>
+                    <button th:onclick="'acceptInvitation(' + ${invitation.id} + ')'">Принять</button>
+                    <button th:onclick="'rejectInvitation(' + ${invitation.id} + ')'">Отклонить</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
-
-<script>
-    // Функции для принятия и отклонения приглашений
-    document.querySelectorAll('.btn-accept').forEach(button => {
-        button.addEventListener('click', () => {
-            const invitationId = button.getAttribute('data-id');
-            if (confirm('Вы уверены, что хотите принять это приглашение?')) {
-                fetch(`/invitations/accept/${invitationId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-CSRF-TOKEN': document.querySelector('input[name="_csrf"]').value
-                    }
-                })
-                .then(response => response.text())
-                .then(data => {
-                    if (data === 'success') {
-                        alert('Приглашение принято.');
-                        button.closest('.invitation').remove();
-                    } else {
-                        alert('Ошибка: ' + data);
-                    }
-                })
-                .catch(error => console.error('Error accepting invitation:', error));
-            }
-        });
-    });
-
-    document.querySelectorAll('.btn-reject').forEach(button => {
-        button.addEventListener('click', () => {
-            const invitationId = button.getAttribute('data-id');
-            if (confirm('Вы уверены, что хотите отклонить это приглашение?')) {
-                fetch(`/invitations/reject/${invitationId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-CSRF-TOKEN': document.querySelector('input[name="_csrf"]').value
-                    }
-                })
-                .then(response => response.text())
-                .then(data => {
-                    if (data === 'success') {
-                        alert('Приглашение отклонено.');
-                        button.closest('.invitation').remove();
-                    } else {
-                        alert('Ошибка: ' + data);
-                    }
-                })
-                .catch(error => console.error('Error rejecting invitation:', error));
-            }
-        });
-    });
-</script>
 </body>
 </html>

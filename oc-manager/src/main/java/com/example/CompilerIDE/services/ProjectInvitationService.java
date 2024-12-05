@@ -71,6 +71,7 @@ public class ProjectInvitationService {
         projectInvitationRepository.save(invitation);
     }
 
+
     public void rejectInvitation(Integer invitationId, Client receiver) throws Exception {
         ProjectInvitation invitation = projectInvitationRepository.findById(invitationId)
                 .orElseThrow(() -> new Exception("Приглашение не найдено."));

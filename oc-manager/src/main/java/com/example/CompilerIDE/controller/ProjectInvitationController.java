@@ -1,8 +1,10 @@
 package com.example.CompilerIDE.controller;
 
+import com.example.CompilerIDE.providers.Friendship;
 import com.example.CompilerIDE.providers.Project;
 import com.example.CompilerIDE.providers.ProjectInvitation;
 import com.example.CompilerIDE.providers.Client;
+import com.example.CompilerIDE.services.FriendshipService;
 import com.example.CompilerIDE.services.ProjectInvitationService;
 import com.example.CompilerIDE.services.ProjectService;
 import com.example.CompilerIDE.services.ClientService;
@@ -21,21 +23,48 @@ import java.util.List;
 @Controller
 @RequestMapping("/invitations")
 public class ProjectInvitationController {
-
+    private final FriendshipService friendshipService;
     private final ProjectInvitationService projectInvitationService;
     private final ProjectService projectService;
     private final ClientService clientService;
-    private static final Logger logger = LoggerFactory.getLogger(ProjectService.class);
+    private static final Logger logger = LoggerFactory.getLogger(ProjectInvitationController.class);
 
     @Autowired
-    public ProjectInvitationController(ProjectInvitationService projectInvitationService,
+    public ProjectInvitationController(FriendshipService friendshipService, ProjectInvitationService projectInvitationService,
                                        ProjectService projectService,
                                        ClientService clientService) {
+        this.friendshipService = friendshipService;
         this.projectInvitationService = projectInvitationService;
         this.projectService = projectService;
         this.clientService = clientService;
     }
+    @GetMapping("/send")
+    public String showSendInvitationPage(@RequestParam("projectId") int projectId,
+                                         Model model,
+                                         Authentication authentication) {
+        // Найти текущего пользователя
+        Client currentUser = clientService.findByUsername(authentication.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден."));
 
+        // Найти проект
+        Project project = projectService.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Проект не найден"));
+
+        // Проверить, что текущий пользователь является владельцем проекта
+        boolean isOwner = project.getClient().getId().equals(currentUser.getId());
+        if (!isOwner) {
+            return "redirect:/userProfile";
+        }
+
+        // Получить список друзей текущего пользователя
+        List<Client> friends = friendshipService.getFriends(currentUser);
+
+        // Добавить данные в модель
+        model.addAttribute("project", project);
+        model.addAttribute("friends", friends);
+
+        return "sendInvitation"; // Имя HTML-шаблона
+    }
 
     @PostMapping("/send")
     public String sendInvitation(@RequestParam("projectId") int projectId,
@@ -57,7 +86,6 @@ public class ProjectInvitationController {
         }
         return "redirect:/userProfile";
     }
-
 
     @GetMapping("/received")
     public String viewReceivedInvitations(Model model, Authentication authentication) {
@@ -103,5 +131,4 @@ public class ProjectInvitationController {
             return e.getMessage();
         }
     }
-
 }

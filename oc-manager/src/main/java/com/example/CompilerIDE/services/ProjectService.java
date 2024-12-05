@@ -74,6 +74,10 @@ public class ProjectService {
     public List<Project> findByClient(Client client) {
         return projectRepository.findByClient(client);
     }
+    public boolean canAccessProject(Project project, Client client) {
+        Optional<ProjectTeam> team = projectTeamService.findByProjectAndClient(project, client);
+        return team.isPresent() && (team.get().getRole() == ProjectTeam.Role.CREATOR || team.get().getRole() == ProjectTeam.Role.COLLABORATOR);
+    }
 
     @Transactional
     public void saveProjectFilesFromJson(Project project, List<FileNodeDto> files) throws Exception {

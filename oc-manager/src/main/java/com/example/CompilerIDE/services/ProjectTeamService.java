@@ -36,13 +36,20 @@ public class ProjectTeamService {
         return projectTeamRepository.findByClient(client);
     }
 
-    public ProjectTeam addCollaborator(Project project, Client client) {
+    public void addCollaborator(Project project, Client collaborator) throws Exception {
+        Optional<ProjectTeam> existingTeam = projectTeamRepository.findByProjectAndClient(project, collaborator);
+        if (existingTeam.isPresent()) {
+            throw new Exception("Пользователь уже является участником проекта.");
+        }
+
         ProjectTeam projectTeam = new ProjectTeam();
         projectTeam.setProject(project);
-        projectTeam.setClient(client);
+        projectTeam.setClient(collaborator);
         projectTeam.setRole(ProjectTeam.Role.COLLABORATOR);
-        return projectTeamRepository.save(projectTeam);
+
+        projectTeamRepository.save(projectTeam);
     }
+
     public void addCreator(Project project, Client client) {
         ProjectTeam projectTeam = new ProjectTeam();
         projectTeam.setProject(project);

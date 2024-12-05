@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.*;
@@ -87,10 +88,14 @@ public class ProjectController  {
         // Используем ProjectTeamService через ProjectService
         ProjectTeamService projectTeamService = projectService.getProjectTeamService();
         Optional<ProjectTeam> projectTeamOpt = projectTeamService.findByProjectAndClient(project, currentUser);
+        boolean isOwner = project.getClient().getId().equals(currentUser.getId());
+        boolean isCollaborator = projectTeamService.findByProjectAndClient(project, currentUser)
+                .map(team -> team.getRole() == ProjectTeam.Role.COLLABORATOR || team.getRole() == ProjectTeam.Role.CREATOR)
+                .orElse(false);
 
-        boolean isOwner = projectTeamOpt.isPresent() && projectTeamOpt.get().getRole() == ProjectTeam.Role.CREATOR;
-        boolean isCollaborator = projectTeamOpt.isPresent() && projectTeamOpt.get().getRole() == ProjectTeam.Role.COLLABORATOR;
-
+        if (!isOwner && !isCollaborator) {
+            return "redirect:/userProfile";
+        }
         model.addAttribute("project", project);
         model.addAttribute("isOwner", isOwner);
         model.addAttribute("isCollaborator", isCollaborator);
@@ -104,6 +109,23 @@ public class ProjectController  {
         model.addAttribute("client", client);
 
         return "new_project_form";
+    }
+    @GetMapping("/{projectId}")
+    public String openProject(@PathVariable int projectId, Authentication authentication, Model model) throws Exception {
+        Client currentUser = clientService.findByUsername(authentication.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + authentication.getName()));
+        Project project = projectService.findById(projectId)
+                .orElseThrow(() -> new Exception("Проект не найден."));
+
+        boolean canAccess = projectService.canAccessProject(project, currentUser);
+
+        if (!canAccess) {
+            return "redirect:/userProfile";
+        }
+
+        model.addAttribute("project", project);
+        model.addAttribute("files", minioService.listFiles("projects/" + projectId));
+        return "projectEditor";
     }
 
     @PostMapping("/userProfile/new")
@@ -260,6 +282,7 @@ public String editProjectForm(@PathVariable("id") int projectId, Model model, Au
         Client client = clientOpt.get();
 
         Optional<Project> projectOpt = projectService.findById(projectId);
+
         if (projectOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Проект не найден");
         }
@@ -268,7 +291,14 @@ public String editProjectForm(@PathVariable("id") int projectId, Model model, Au
         if (!project.getClient().getId().equals(client.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("У вас нет доступа к этому проекту");
         }
+        boolean isOwner = project.getClient().getId().equals(client.getId());
+        boolean isCollaborator = projectTeamService.findByProjectAndClient(project, client)
+                .map(team -> team.getRole() == ProjectTeam.Role.COLLABORATOR)
+                .orElse(false);
 
+        if (!isOwner && !isCollaborator) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("У вас нет доступа к этому проекту");
+        }
         List<FileNodeDto> files = saveRequest.getFiles();
         if (files == null || files.isEmpty()) {
             return ResponseEntity.badRequest().body("Массив 'files' пуст или отсутствует");

@@ -252,6 +252,7 @@
             <p class="color-fg-muted" th:text="${client.email}"></p>
             <a th:href="${client.githubProfile}" class="Link--primary" target="_blank">GitHub Профиль</a>
             <p class="color-fg-default mt-3" th:text="${client.about}"></p>
+            <a th:href="@{/invitations/received}">Полученные приглашения</a>
         </div>
         <div class="mt-3">
             <a th:href="@{/friends/list}" class="btn-link">Друзья</a>
