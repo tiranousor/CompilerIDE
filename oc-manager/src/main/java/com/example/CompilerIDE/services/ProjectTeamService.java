@@ -59,10 +59,10 @@ public class ProjectTeamService {
     public List<ProjectTeam> findCollaboratorProjects(Client client) {
         return projectTeamRepository.findByClientAndRole(client, ProjectTeam.Role.COLLABORATOR);
     }
-
     public List<ProjectTeam> findByProjectAndRole(Project project, ProjectTeam.Role role) {
         return projectTeamRepository.findByProjectAndRole(project, role);
     }
+
 
     public List<Project> findProjectsByClient(Client viewedUser, Client currentUser, ProjectTeam.Role role) {
         return projectTeamRepository.findByProject_ClientAndClientAndRole(viewedUser, currentUser, role)
@@ -70,4 +70,5 @@ public class ProjectTeamService {
                 .map(ProjectTeam::getProject)
                 .collect(Collectors.toList());
     }
+
 }

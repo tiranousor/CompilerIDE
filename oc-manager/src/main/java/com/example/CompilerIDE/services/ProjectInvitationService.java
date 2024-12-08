@@ -26,7 +26,9 @@ public class ProjectInvitationService {
         this.projectInvitationRepository = projectInvitationRepository;
         this.projectTeamService = projectTeamService;
     }
-
+    public Optional<ProjectInvitation> findById(int projectId) {
+        return projectInvitationRepository.findById(projectId);
+    }
     public void sendInvitation(Project project, Client sender, Client receiver) throws Exception {
         if (sender.equals(receiver)) {
             throw new Exception("Нельзя отправить приглашение самому себе.");

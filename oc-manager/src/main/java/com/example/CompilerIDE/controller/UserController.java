@@ -35,7 +35,7 @@ import java.util.*;
 
 @Controller
 public class UserController {
-
+    private final ProjectAccessLogService projectAccessLogService;
     private final ClientService clientService;
     private final ProjectService projectService;
     private final ClientValidator clientValidator;
@@ -48,10 +48,11 @@ public class UserController {
     private final ProjectTeamService projectTeamService;
 
     @Autowired
-    public UserController(ClientService clientService, ProjectService projectService, ClientValidator clientValidator,
+    public UserController(ProjectAccessLogService projectAccessLogService, ClientService clientService, ProjectService projectService, ClientValidator clientValidator,
                           PasswordEncoder passwordEncoder, ProjectValidator projectValidator, MinioService minioService,
                           ObjectMapper objectMapper, FriendshipService friendshipService,
                           LoginTimestampRepository loginTimestampRepository, ProjectTeamService projectTeamService) {
+        this.projectAccessLogService = projectAccessLogService;
         this.passwordEncoder = passwordEncoder;
         this.clientService = clientService;
         this.clientValidator = clientValidator;
@@ -87,6 +88,7 @@ public class UserController {
         if (!isOwner && !isCollaborator) {
             return "redirect:/userProfile";
         }
+        projectAccessLogService.logAccess(currentUser, project, "view");
 
         model.addAttribute("projectId", projectId);
         model.addAttribute("mainClass", project.getMainClass());
@@ -136,9 +138,9 @@ public class UserController {
         project.setLanguage("Java");
         project.setReadMe("Мой первый проект");
         project.setClient(client);
-
+        project.setDashboardUid("YOUR_GRAFANA_DASHBOARD_UID");
         projectService.save(project);
-
+        projectTeamService.addCreator(project, client);
         return "redirect:/login?registration";
     }
 
@@ -166,6 +168,7 @@ public class UserController {
 
         return "userProfile";
     }
+
     @GetMapping("/edit/{id}")
     public String editProfile(Model model, @PathVariable("id") int id, Authentication authentication) {
         Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
@@ -248,6 +251,9 @@ public class UserController {
 
         boolean isOwnProfile = viewedUser.getId().equals(currentUser.getId());
         model.addAttribute("isOwnProfile", isOwnProfile);
+        List<ProjectTeam> collaboratorProjects = projectTeamService.findCollaboratorProjects(currentUser);
+
+        model.addAttribute("collaboratorProjects", collaboratorProjects);
 
         model.addAttribute("client", viewedUser);
         model.addAttribute("friendsCount", friendshipService.getFriends(viewedUser).size());
@@ -262,5 +268,30 @@ public class UserController {
         return "userProfile";
     }
 
+    @GetMapping("/monitoring")
+    public String monitoringPage(Authentication authentication, Model model) {
+        Client currentUser = clientService.findByUsername(authentication.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        // Получение созданных проектов
+        List<Project> ownedProjects = projectService.findByClient(currentUser);
+        if (ownedProjects.isEmpty()) {
+            model.addAttribute("message", "У вас нет созданных проектов для мониторинга.");
+            return "monitoring";
+        }
+
+        // Получение UID дашбордов для каждого проекта (предполагается, что UID хранится в проекте)
+        Map<String, String> projectDashboards = new HashMap<>();
+        for (Project project : ownedProjects) {
+            // Предполагается, что у вас есть поле `dashboardUid` в сущности Project
+            // Если такого поля нет, добавьте его и заполните соответствующим UID дашборда Grafana
+            projectDashboards.put(project.getName(), project.getDashboardUid());
+        }
+
+        model.addAttribute("projectDashboards", projectDashboards);
+        model.addAttribute("ownedProjects", ownedProjects);
+
+        return "monitoring"; // Название вашего Thymeleaf шаблона
+    }
 
 }

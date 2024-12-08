@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Мониторинг Проектов</title>
+    <style>
+        .grafana-iframe {
+            width: 100%;
+            height: 800px;
+            border: none;
+        }
+    </style>
+    <script>
+        function updateDashboard() {
+            const selectedDashboard = document.getElementById("dashboardSelect").value;
+            const iframe = document.getElementById("grafanaIframe");
+            iframe.src = `http://localhost:3000/d-solo/${selectedDashboard}/monitoring-projects?orgId=1&panelId=1`;
+        }
+    </script>
+</head>
+<body>
+<div class="monitoring-container">
+    <h1>Мониторинг Проектов</h1>
+    <label for="dashboardSelect">Выберите Дашборд:</label>
+    <select id="dashboardSelect" onchange="updateDashboard()">
+        <th:block th:each="entry : ${projectDashboards.entrySet()}">
+            <option th:value="${entry.value}" th:text="${entry.key}">Project Name</option>
+        </th:block>
+    </select>
+    <iframe id="grafanaIframe" th:src="'http://localhost:3000/d-solo/' + ${projectDashboards.get(ownedProjects.get(0).name)} + '/monitoring-projects?orgId=1&panelId=1'" class="grafana-iframe"></iframe>
+</div>
+</body>
+</html>

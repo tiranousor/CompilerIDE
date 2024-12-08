@@ -4,6 +4,8 @@ import com.example.CompilerIDE.providers.Client;
 import com.example.CompilerIDE.repositories.ClientRepository;
 import com.example.CompilerIDE.util.ClientNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,7 +42,17 @@ public class ClientService {
     public Optional<Client> findByUsername(String username) {
         return clientRepository.findByUsername(username);
     }
+    public List<Client> searchByUsername(String username) {
+        Client probe = new Client();
+        probe.setUsername(username);
 
+        ExampleMatcher matcher = ExampleMatcher.matching()
+                .withIgnorePaths("id", "email", "githubProfile", "about", "avatarUrl") // игнорируем поля, не участвующие в поиске
+                .withMatcher("username", match -> match.contains().ignoreCase());
+
+        Example<Client> example = Example.of(probe, matcher);
+        return clientRepository.findAll(example);
+    }
     public Client findOne(long id) {
         Optional<Client> foundClient = clientRepository.findById(id);
         return foundClient.orElse(null);

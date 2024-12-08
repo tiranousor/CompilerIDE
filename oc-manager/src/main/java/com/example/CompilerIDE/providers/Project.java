@@ -63,7 +63,7 @@ public class Project {
     private List<ProjectTeam> projectTeams;
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-
+    private String dashboardUid;
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

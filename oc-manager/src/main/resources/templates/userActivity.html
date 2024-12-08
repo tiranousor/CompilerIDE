@@ -3488,3 +3488,487 @@ returncode: ${result.returncode}
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link rel="icon" href="/favicon.png" type="image/png">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
+    <style th:inline="css">
+        /* Ваши стили */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            font-size: inherit !important;
+        }
+
+        .profile-avatar {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 20px;
+            box-shadow: 0 0 25px rgba(40, 167, 69, 0.1), 0 0 50px rgba(40, 167, 69, 0.2);
+        }
+
+        .friend-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            box-shadow: 0 0 25px rgba(40, 167, 69, 0.1), 0 0 50px rgba(40, 167, 69, 0.2);
+            object-fit: cover;
+        }
+
+        .btn-custom {
+            background: none;
+            color: #0366d6;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 0;
+            font-size: 1em;
+        }
+
+        .btn-custom:hover {
+            color: #0056b3;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 20px;
+            background-color: #f6f8fa;
+            border-bottom: 1px solid #d1d5da;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 900;
+            box-sizing: border-box;
+        }
+
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .header .actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header .actions a {
+            display: flex;
+            align-items: center;
+            color: #24292e;
+            text-decoration: none;
+            font-size: 24px;
+            transition: color 0.3s ease;
+        }
+
+        .header .actions a:hover {
+            color: #0366d6;
+        }
+
+        .header .actions .logout-icon {
+            color: #24292e;
+            cursor: pointer;
+            font-size: 24px;
+            transition: color 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .header .actions .logout-icon:hover {
+            color: #d73a49;
+        }
+
+        .Box {
+            box-shadow: none;
+            border: none;
+        }
+
+        .main-container {
+            margin-top: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 0 20px;
+            box-sizing: border-box;
+            width: 100%;
+            gap: 40px;
+        }
+
+        .profile-info-container {
+            width: 35%;
+            max-width: 400px;
+            padding: 20px;
+            background-color: #ffffff;
+            text-align: center;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        .projects-container {
+            width: 60%;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        .btn-link {
+            background: none;
+            color: #0366d6;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 0;
+            font-size: 1em;
+        }
+
+        .profile-info-container .profile-avatar {
+            align-self: center;
+        }
+
+        .friends-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .friend-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .friend-username {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #24292e;
+            text-decoration: none;
+        }
+
+        .friend-username:hover {
+            color: #0366d6;
+        }
+
+        .d-flex.gap-2 > button {
+            margin-right: 15px;
+        }
+
+        .btn-green {
+            background-color: #28a745;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .btn-green:hover {
+            background-color: #218838;
+            box-shadow: 0 0 10px rgba(33, 136, 56, 0.3);
+        }
+
+        .btn-edit-green {
+            background-color: #28a745;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
+            text-align: center;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .btn-edit-green:hover {
+            background-color: #218838;
+            box-shadow: 0 0 10px rgba(33, 136, 56, 0.3);
+        }
+.badge-java {
+    background-color: #b07219; /* Оранжевый для Java */
+}
+
+.badge-python {
+    background-color: #306998; /* Синий для Python */
+}
+
+.badge-default {
+    background-color: #6c757d; /* Серый по умолчанию */
+}
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #6c757d; /* Серый цвет, можно изменить */
+            color: #ffffff;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .collaborators-list a {
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .collaborators-list img.collaborator-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 5px;
+            object-fit: cover;
+            border: 1px solid #ccc;
+        }
+
+    </style>
+</head>
+
+<body class="Box p-3">
+<div class="header">
+    <div class="user-info">
+        <a th:href="@{/userProfile/{id}(id=${client.id})}" style="display: flex; align-items: center; text-decoration: none;">
+            <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar">
+            <span class="username" th:text="${client.username}" style="margin-left: 10px; color: inherit;"></span>
+        </a>
+    </div>
+    <div class="actions">
+        <a th:href="@{/edit/{id}(id=${client.id})}"><i class='bx bx-user'></i></a>
+        <form th:action="@{/logout}" th:method="POST" style="margin: 0;">
+            <button type="submit" class="logout-icon" title="Logout" style="border: none; background: none;"><i class='bx bx-log-out'></i></button>
+        </form>
+    </div>
+</div>
+<input type="hidden" id="csrfToken" name="_csrf" th:value="${_csrf.token}" />
+<div class="main-container clearfix gutter-lg">
+    <!-- Левая панель: Информация о пользователе -->
+    <div class="profile-info-container d-flex flex-column align-items-center">
+        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="profile-avatar">
+        <div class="profile-info text-center mt-2">
+            <h2 th:text="${client.username}">
+                User Name
+                <span class="badge" th:text="${client.language}">Language</span>
+            </h2>
+            <p class="color-fg-muted" th:text="${client.email}">user@example.com</p>
+            <a th:href="${client.githubProfile}" class="Link--primary" target="_blank">GitHub Профиль</a>
+            <p class="color-fg-default mt-3" th:text="${client.about}">About me</p>
+        </div>
+        <div>
+            <a th:href="@{/invitations/received}">Полученные приглашения</a>
+        </div>
+        <div class="mt-3">
+            <a th:href="@{/friends/list}" class="btn-link">Друзья</a>
+        </div>
+        <div class="friends-list">
+            <th:block th:each="friend, iterStat : ${friends}">
+                <div class="friend-item">
+                    <a th:href="@{/userProfile/{id}(id=${friend.id})}">
+                        <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar" class="friend-avatar">
+                    </a>
+                    <span th:text="${friend.username}" class="friend-username"></span>
+                </div>
+            </th:block>
+        </div>
+    </div>
+
+    <!-- Правая панель: Список проектов -->
+    <div class="projects-container">
+        <!-- Заголовок и форма поиска -->
+        <div class="d-flex flex-items-center flex-justify-between" style="border: none;">
+            <h2 class="">Мои Проекты</h2>
+            <div class="d-flex">
+                <input type="text" id="projectSearchInput" placeholder="Поиск проектов..." oninput="filterProjects()" class="form-control input-sm" style="border: 1px solid #d1d5da; border-radius: 6px;">
+                <a th:href="@{/projects/userProfile/new}" class="btn-custom ml-3" style="border: none;">
+                    <i class='bx bx-plus'></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Список собственных проектов -->
+        <ul class="list-style-none mt-3">
+            <th:block th:each="project : ${projects}">
+                <li class="Box-row project-item p-3 mb-3" style="border: 1px solid #d1d5da; border-radius: 6px;" th:data-project-id="${project.id}">
+                    <div class="d-flex flex-items-center flex-justify-between">
+                        <strong class="f4" style="color: #000000;">
+                            <span th:text="${project.name}">Название Проекта</span>
+                            <span class="badge" th:text="${project.language}"
+                                  th:classappend="${project.language} == 'Java' ? 'badge-java' :
+                    (${project.language} == 'Python' ? 'badge-python' : 'badge-default')}">
+    Language
+</span>
+
+                        </strong>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-green btn-open"><i class='bx bx-folder-open'></i></button>
+                            <button class="btn btn-sm btn-info btn-info-project"><i class='bx bx-info-circle'></i></button>
+                            <form th:action="@{/projects/delete/{id}(id=${project.id})}" method="post" style="display: inline;" onsubmit="return confirm('Вы действительно хотите удалить проект?');">
+                                <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+                                <button type="submit" class="btn btn-sm btn-danger"><i class='bx bx-trash'></i></button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="project-details mt-2" style="display: none;">
+                        <p><strong>Имя проекта:</strong> <span th:text="${project.name}"></span></p>
+                        <p><strong>Описание:</strong> <span th:text="${project.readMe}"></span></p>
+                        <!-- Удалено отображение языка -->
+                        <!-- Добавлены кнопки "Редактировать" и "Пригласить" рядом -->
+                        <div class="d-flex gap-2">
+                            <a th:href="@{/projects/edit/{id}(id=${project.id})}" class="btn-edit-green">Редактировать</a>
+                            <a th:href="@{/invitations/projects/{projectId}/invite(projectId=${project.id})}" class="btn-edit-green">Пригласить</a>
+                        </div>
+                        <!-- Отображение аватаров коллабораторов -->
+                        <div class="collaborators-section mt-3">
+                            <h3>Коллаборации</h3>
+                            <div class="collaborators-list">
+                                <th:block th:each="team : ${project.projectTeams}">
+                                    <th:block th:if="${team.role == 'COLLABORATOR'}">
+                                        <a th:href="@{/userProfile/{id}(id=${team.client.id})}">
+                                            <img th:src="${team.client.avatarUrl != null ? team.client.avatarUrl : '/noAvatar.png'}"
+                                                 alt="Avatar" class="collaborator-avatar">
+                                        </a>
+                                    </th:block>
+                                </th:block>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </th:block>
+        </ul>
+
+        <!-- Список проектов, в которых пользователь является коллабораторами -->
+        <div class="collaborator-projects-section">
+            <h2 class="section-title">Проекты, в которых вы соавтор</h2>
+            <ul class="list-style-none mt-3">
+                <th:block th:each="team : ${collaboratorProjects}">
+                    <li class="Box-row project-item p-3 mb-3" style="border: 1px solid #d1d5da; border-radius: 6px;" th:data-project-id="${team.project.id}">
+                        <div class="d-flex flex-items-center flex-justify-between">
+                            <strong class="f4" style="color: #000000;">
+                                <span th:text="${team.project.name}">Название Проекта</span>
+                                <span class="badge" th:text="${team.project.language}">Language</span>
+                            </strong>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-green btn-open"><i class='bx bx-folder-open'></i></button>
+                                <button class="btn btn-sm btn-info btn-info-project"><i class='bx bx-info-circle'></i></button>
+                                <!-- Кнопки "Удалить", "Редактировать", "Пригласить" не отображаются -->
+                            </div>
+                        </div>
+                        <div class="project-details mt-2" style="display: none;">
+                            <p><strong>Имя проекта:</strong> <span th:text="${team.project.name}"></span></p>
+                            <p><strong>Описание:</strong> <span th:text="${team.project.readMe}"></span></p>
+                            <!-- Удалено отображение языка -->
+                            <!-- Нет кнопок "Пригласить" -->
+                            <!-- Отображение аватаров коллабораторов -->
+<!--                            <div class="collaborators-section mt-3">-->
+<!--                                <h3>Коллаборации</h3>-->
+<!--                                <div class="collaborators-list">-->
+<!--                                    <th:block th:each="collab : ${team.project.projectTeams}">-->
+<!--                                        <th:block th:if="${collab.role == 'COLLABORATOR'}">-->
+<!--                                            <a th:href="@{/userProfile/{id}(id=${collab.client.id})}">-->
+<!--                                                <img th:src="${collab.client.avatarUrl != null ? collab.client.avatarUrl : '/noAvatar.png'}"-->
+<!--                                                     alt="Avatar" class="collaborator-avatar">-->
+<!--                                            </a>-->
+<!--                                        </th:block>-->
+<!--                                    </th:block>-->
+<!--                                </div>-->
+<!--                            </div>-->
+                        </div>
+                    </li>
+                </th:block>
+            </ul>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Назначение событий кнопкам "Открыть проект"
+        const openButtons = document.querySelectorAll('.btn-open');
+        openButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const projectItem = button.closest('.project-item');
+                const projectId = projectItem.getAttribute('data-project-id');
+                if (projectId) {
+                    window.location.href = `/Compiler/project/${projectId}`;
+                } else {
+                    console.error("Project ID не найден");
+                }
+            });
+        });
+
+        // Назначение событий кнопкам "Инфо"
+        const infoButtons = document.querySelectorAll('.btn-info-project');
+        infoButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const projectItem = button.closest('.project-item');
+                const projectDetails = projectItem.querySelector('.project-details');
+                // Переключение видимости информации о проекте
+                projectDetails.style.display = (projectDetails.style.display === 'none' || projectDetails.style.display === '') ? 'block' : 'none';
+            });
+        });
+    });
+
+    // Функция фильтрации проектов
+    function filterProjects() {
+        const searchInput = document.getElementById('projectSearchInput').value.toLowerCase();
+        const projectItems = document.querySelectorAll('.project-item');
+        projectItems.forEach(item => {
+            const projectName = item.querySelector('strong').textContent.toLowerCase();
+            if (projectName.includes(searchInput)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+</script>
+</body>
+
+</html>
+

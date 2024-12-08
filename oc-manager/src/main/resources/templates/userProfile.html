@@ -197,7 +197,7 @@
             background-color: #218838;
             box-shadow: 0 0 10px rgba(33, 136, 56, 0.3);
         }
-                .btn-edit-green {
+        .btn-edit-green {
             background-color: #28a745;
             color: #ffffff;
             border: none;
@@ -207,24 +207,51 @@
             cursor: pointer;
             transition: background-color 0.3s, box-shadow 0.3s;
             text-align: center;
-            display: block;
             margin: 0 auto;
+            width: 50%;
+            gap: 20px;
         }
 
         .btn-edit-green:hover {
             background-color: #218838;
             box-shadow: 0 0 10px rgba(33, 136, 56, 0.3);
         }
-          .badge {
-            position: absolute;
-            top: -5px;
-            left: 50px; /* Сдвигаем, чтобы правильно позиционировать */
-            background-color: #d73a49;
-            color: white;
-            border-radius: 50%;
-            padding: 3px 8px;
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #6c757d; /* Серый цвет, можно изменить */
+            color: #ffffff;
+            border-radius: 12px;
             font-size: 12px;
+            margin-left: 10px;
         }
+        .badge-java {
+    background-color: #b07219;
+    }
+
+    .badge-python {
+        background-color: #306998;
+    }
+
+    .badge-default {
+        background-color: #6c757d;
+    }
+ .collaborators-list a {
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .collaborators-list img.collaborator-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 5px;
+            object-fit: cover;
+            border: 1px solid #ccc;
+        }
+
+
     </style>
 </head>
 
@@ -253,6 +280,13 @@
             <a th:href="${client.githubProfile}" class="Link--primary" target="_blank">GitHub Профиль</a>
             <p class="color-fg-default mt-3" th:text="${client.about}"></p>
         </div>
+        <div>
+            <a th:href="@{/invitations/received}">Полученные приглашения</a>
+        </div>
+        <a th:href="@{/monitoring}" class="btn btn-sm btn-secondary">
+            <i class='bx bx-chart'></i> Мониторинг
+        </a>
+
         <div class="mt-3">
             <a th:href="@{/friends/list}" class="btn-link">Друзья</a>
         </div>
@@ -281,9 +315,16 @@
             <th:block th:each="project : ${projects}">
                 <li class="Box-row project-item p-3 mb-3" style="border: 1px solid #d1d5da; border-radius: 6px;" th:data-project-id="${project.id}">
                     <div class="d-flex flex-items-center flex-justify-between">
-                        <strong class="f4" style="color: #000000;" th:text="${project.name}"></strong>
+                        <strong class="f4" style="color: #000000;">
+                            <span th:text="${project.name}">Название Проекта</span>
+
+                            <span class="badge" th:text="${project.language}">
+                                    Language
+                            </span>
+                        </strong>
                         <div class="d-flex gap-2">
                             <button class="btn btn-sm btn-green btn-open"><i class='bx bx-folder-open'></i></button>
+
                             <button class="btn btn-sm btn-outline btn-info"><i class='bx bx-info-circle'></i></button>
                             <form th:action="@{/projects/delete/{id}(id=${project.id})}" method="post" style="display: inline;" onsubmit="return confirm('Вы действительно хотите удалить проект?');">
                                 <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
@@ -294,12 +335,66 @@
                     <div class="project-details mt-2" style="display: none;">
                         <p><strong>Имя проекта:</strong> <span th:text="${project.name}"></span></p>
                         <p><strong>Описание:</strong> <span th:text="${project.readMe}"></span></p>
-                        <p><strong>Язык:</strong> <span th:text="${project.language}"></span></p>
+<!--                        <p><strong>Язык:</strong> <span th:text="${project.language}"></span></p>-->
                         <a th:href="@{/projects/edit/{id}(id=${project.id})}" class="btn-edit-green">Редактировать</a>
+                        <a th:href="@{/invitations/projects/{projectId}/invite(projectId=${project.id})}" class="btn-edit-green" >Пригласить</a>
+                        <div class="collaborators-section mt-3">
+                            <h3>Коллаборации</h3>
+                            <div class="collaborators-list">
+                                <th:block th:each="team : ${project.projectTeams}">
+                                    <th:block th:if="${team.role == 'COLLABORATOR'}">
+                                        <a th:href="@{/userProfile/{id}(id=${team.client.id})}">
+                                            <img th:src="${team.client.avatarUrl != null ? team.client.avatarUrl : '/noAvatar.png'}"
+                                                 alt="Avatar" class="collaborator-avatar">
+                                        </a>
+                                    </th:block>
+                                </th:block>
+                            </div>
+                        </div>
                     </div>
                 </li>
             </th:block>
         </ul>
+
+        <div class="collaborator-projects-section">
+            <h2 class="section-title">Проекты, в которых вы соавтор</h2>
+            <ul class="list-style-none mt-3">
+                <th:block th:each="team : ${collaboratorProjects}">
+                    <li class="Box-row project-item p-3 mb-3" style="border: 1px solid #d1d5da; border-radius: 6px;" th:data-project-id="${team.project.id}">
+                        <div class="d-flex flex-items-center flex-justify-between">
+                            <strong class="f4" style="color: #000000;">
+                                <span th:text="${team.project.name}">Название Проекта</span>
+                                <span class="badge" th:text="${team.project.language}">Language</span>
+                            </strong>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-green btn-open"><i class='bx bx-folder-open'></i></button>
+                                <button class="btn btn-sm btn-info btn-info-project"><i class='bx bx-info-circle'></i></button>
+                            </div>
+                        </div>
+                        <div class="project-details mt-2" style="display: none;">
+                            <p><strong>Имя проекта:</strong> <span th:text="${team.project.name}"></span></p>
+                            <p><strong>Описание:</strong> <span th:text="${team.project.readMe}"></span></p>
+                            <!-- Удалено отображение языка -->
+                            <!-- Нет кнопок "Пригласить" -->
+                            <!-- Отображение аватаров коллабораторов -->
+                            <!--                            <div class="collaborators-section mt-3">-->
+                            <!--                                <h3>Коллаборации</h3>-->
+                            <!--                                <div class="collaborators-list">-->
+                            <!--                                    <th:block th:each="collab : ${team.project.projectTeams}">-->
+                            <!--                                        <th:block th:if="${collab.role == 'COLLABORATOR'}">-->
+                            <!--                                            <a th:href="@{/userProfile/{id}(id=${collab.client.id})}">-->
+                            <!--                                                <img th:src="${collab.client.avatarUrl != null ? collab.client.avatarUrl : '/noAvatar.png'}"-->
+                            <!--                                                     alt="Avatar" class="collaborator-avatar">-->
+                            <!--                                            </a>-->
+                            <!--                                        </th:block>-->
+                            <!--                                    </th:block>-->
+                            <!--                                </div>-->
+                            <!--                            </div>-->
+                        </div>
+                    </li>
+                </th:block>
+            </ul>
+        </div>
     </div>
 </div>
 <script>

@@ -283,7 +283,7 @@ public class ProjectController  {
         }
 
         Project project = projectOpt.get();
-        if (!project.getClient().getId().equals(client.getId())) {
+        if (!projectService.canEditProject(project, client)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("У вас нет доступа к этому проекту");
         }
 
