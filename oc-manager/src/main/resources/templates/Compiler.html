@@ -40,6 +40,15 @@
             border-right: 1px solid #333;
         }
 
+        .compile-error {
+            color: red;
+            cursor: pointer;
+        }
+
+        .compile-error:hover {
+            text-decoration: underline;
+        }
+
         #editor-container {
             position: relative;
             height: 100%;
@@ -305,18 +314,32 @@
     };
     const ensureMainClassName = (mainClassName, projectLanguage) => {
         const languageExtensionMap = {
-            'java': '.java',
             'python': '.py',
-            // Добавьте другие языки и их расширения по мере необходимости
         };
 
-        const extension = languageExtensionMap[projectLanguage.toLowerCase()] || '';
+        const extension = languageExtensionMap[projectLanguage.toLowerCase()];
 
         if (extension && !mainClassName.toLowerCase().endsWith(extension)) {
             return mainClassName + extension;
         }
         return mainClassName;
     };
+
+    const getJavaClassNameFromPath = (path) => {
+        if (path.startsWith('src/main/java/')) {
+            path = path.substring('src/main/java/'.length);
+        }
+
+        let className = path.replace(/\//g, '.');
+
+        if (className.endsWith('.java')) {
+            className = className.slice(0, -5);
+        }
+
+        return className;
+    };
+
+
     const fetchClassesWithMain = () => {
         $.ajax({
             url: `/projects/${projectId}/classes-with-main`,
@@ -343,22 +366,18 @@
             classesList.append('<li>Классы с main методом не найдены</li>');
         } else {
             const projectLanguage = document.querySelector('meta[name="projectLanguage"]').getAttribute('content').toLowerCase();
-            const languageExtensionMap = {
-                'java': '.java',
-                'python': '.py',
-            };
-            const extension = languageExtensionMap[projectLanguage] || '';
 
             mainClasses.forEach(function(classItem) {
                 const path = classItem.path;
-                let mainClassName = path.replace(/\//g, '.').replace(/\.[^.]+$/, '');
 
-                if (extension && !path.toLowerCase().endsWith(extension)) {
-                    return;
-                }
+                let mainClassName;
 
-                if (extension && projectLanguage === 'python') {
-                    mainClassName += extension;
+                if (projectLanguage === 'java') {
+                    // Используем новую функцию для Java
+                    mainClassName = getJavaClassNameFromPath(path);
+                } else {
+                    // Для других языков оставляем как есть
+                    mainClassName = path;
                 }
 
                 classesList.append(`<li data-class-name="${mainClassName}">${path}</li>`);
@@ -375,12 +394,16 @@
     };
 
 
+
     const setMainClass = (mainClassName) => {
         console.log("Установка mainClassName:", mainClassName);
 
-        const projectLanguage = document.querySelector('meta[name="projectLanguage"]').getAttribute('content');
+        const projectLanguage = document.querySelector('meta[name="projectLanguage"]').getAttribute('content').toLowerCase();
 
-        mainClassName = ensureMainClassName(mainClassName, projectLanguage);
+        if (projectLanguage === 'java') {
+        } else {
+            mainClassName = ensureMainClassName(mainClassName, projectLanguage);
+        }
 
         $.ajax({
             url: `/projects/${projectId}/mainClass`,
@@ -403,10 +426,55 @@
     };
 
 
-    // Обработчик изменения поля ввода имени главного класса
+
+
     $('#main-class-input').on('change', function() {
         saveMainClass();
     });
+
+
+    const saveMainClass = () => {
+        const mainClassInput = document.getElementById('main-class-input');
+        let mainClassName = mainClassInput.value.trim();
+
+        const projectLanguage = document.querySelector('meta[name="projectLanguage"]').getAttribute('content').toLowerCase();
+
+        if (!mainClassName) {
+            showMessage("Введите название класса для компиляции.", "error");
+            return;
+        }
+
+        if (projectLanguage === 'java') {
+            // Удаляем расширение '.java' если есть
+            if (mainClassName.endsWith('.java')) {
+                mainClassName = mainClassName.slice(0, -5);
+            }
+            // Удаляем 'src.main.java.' если есть
+            if (mainClassName.startsWith('src.main.java.')) {
+                mainClassName = mainClassName.substring('src.main.java.'.length);
+            }
+        }
+
+        $.ajax({
+            url: `/projects/${projectId}/mainClass`,
+            type: 'POST',
+            contentType: 'application/json',
+            headers: {
+                [csrfHeader]: csrfToken
+            },
+            data: JSON.stringify({ mainClass: mainClassName }),
+            success: function(response) {
+                console.log("mainClassName успешно установлен:", response);
+                showMessage("Главный класс успешно установлен.", "success");
+                $('#main-class-input').val(mainClassName);
+            },
+            error: function(xhr, status, error) {
+                console.error("Ошибка при установке mainClassName:", error);
+                showMessage("Ошибка при установке главного класса.", "error");
+            }
+        });
+    };
+
 
     $('#project-button').on('click', function() {
             if (isSidebarOpen) {
@@ -436,115 +504,140 @@
                 'c': 'c',
                 'cpp': 'cpp',
                 'ts': 'typescript',
+                'xml': 'xml', // Добавлено для XML файлов
             };
             return languageMap[extension] || 'plaintext';
         };
-        const compileCode = () => {
-            const compileButton = $('#compile-button');
 
-            compileButton.prop('disabled', true);
-            compileButton.css('opacity', '0.6'); // Визуальное обозначение отключения
+    const compileCode = () => {
+        const compileButton = $('#compile-button');
 
-            saveProject(false)
-                .then(function() {
-                    if (!currentFile) {
-                        showMessage("Нет открытого файла для компиляции.", "error");
-                        compileButton.prop('disabled', false);
-                        compileButton.css('opacity', '1');
-                        return;
-                    }
+        compileButton.prop('disabled', true);
+        compileButton.css('opacity', '0.6');
 
-                    const projectLanguage = document.querySelector('meta[name="projectLanguage"]').getAttribute('content');
+        saveProject(false)
+            .then(function() {
+                const projectLanguage = document.querySelector('meta[name="projectLanguage"]').getAttribute('content').toLowerCase();
 
-                    const mainClassInput = document.getElementById('main-class-input');
-                    let mainClassName = mainClassInput.value.trim();
-                    if (!mainClassName) {
-                        showMessage("Введите название класса для компиляции.", "error");
-                        compileButton.prop('disabled', false);
-                        compileButton.css('opacity', '1');
-                        return;
-                    }
-
-                    mainClassName = ensureMainClassName(mainClassName, projectLanguage);
-
-                    const compileRequest = {
-                        project_id: Number(projectId),
-                        language: projectLanguage,
-                        mainClassName: mainClassName
-                    };
-
-                    console.log("Отправка compileRequest:", compileRequest);
-
-                    $.ajax({
-                        url: '/compile',
-                        type: 'POST',
-                        contentType: 'application/json',
-                        headers: {
-                            [csrfHeader]: csrfToken
-                        },
-                        data: JSON.stringify(compileRequest),
-                    })
-                    .done(function(response) {
-                        console.log("Результат компиляции:", response);
-                        displayCompileResult(response);
-
-                        if (response.returnCode === 0) {
-                            showMessage("Компиляция завершена успешно.", "success");
-                        } else {
-                            showMessage("Произошла ошибка при компиляции.", "error");
-                        }
-                    })
-                    .fail(function(xhr, status, error) {
-                        console.error("Ошибка при отправке запроса на компиляцию:", error);
-                        showMessage("Ошибка при отправке запроса на компиляцию.", "error");
-                    })
-                    .always(function() {
-                        compileButton.prop('disabled', false);
-                        compileButton.css('opacity', '1');
-                    });
-                })
-                .fail(function() {
+                const mainClassInput = document.getElementById('main-class-input');
+                let mainClassName = mainClassInput.value.trim();
+                if (!mainClassName) {
+                    showMessage("Введите название класса для компиляции.", "error");
                     compileButton.prop('disabled', false);
                     compileButton.css('opacity', '1');
-                    showMessage("Не удалось сохранить проект перед компиляцией.", "error");
+                    return;
+                }
+
+                if (projectLanguage === 'java') {
+                    if (mainClassName.endsWith('.java')) {
+                        mainClassName = mainClassName.slice(0, -5);
+                    }
+                    if (mainClassName.startsWith('src.main.java.')) {
+                        mainClassName = mainClassName.substring('src.main.java.'.length);
+                    }
+                } else {
+                    mainClassName = ensureMainClassName(mainClassName, projectLanguage);
+                }
+
+                const compileRequest = {
+                    project_id: Number(projectId),
+                    language: projectLanguage,
+                    mainClassName: mainClassName
+                };
+
+                console.log("Отправка compileRequest:", compileRequest);
+
+                $.ajax({
+                    url: '/compile',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    headers: {
+                        [csrfHeader]: csrfToken
+                    },
+                    data: JSON.stringify(compileRequest),
+                })
+                .done(function(response) {
+                    console.log("Результат компиляции:", response);
+                    displayCompileResult(response);
+
+                    if (response.returnCode === 0) {
+                        showMessage("Компиляция завершена успешно.", "success");
+                    } else {
+                        showMessage("Произошла ошибка при компиляции.", "error");
+                    }
+                })
+                .fail(function(xhr, status, error) {
+                    console.error("Ошибка при отправке запроса на компиляцию:", error);
+                    showMessage("Ошибка при отправке запроса на компиляцию.", "error");
+                })
+                .always(function() {
+                    compileButton.prop('disabled', false);
+                    compileButton.css('opacity', '1');
                 });
-        };
+            })
+            .fail(function() {
+                compileButton.prop('disabled', false);
+                compileButton.css('opacity', '1');
+                showMessage("Не удалось сохранить проект перед компиляцией.", "error");
+            });
+    };
 
 
-        const displayCompileResult = (result) => {
-            console.log("Display compile result:", result);
-            $('#compile-output').show();
+    const displayCompileResult = (result) => {
+        console.log("Display compile result:", result);
+        $('#compile-output').show();
 
-            let output = "";
+        let outputHtml = "";
 
-            if (result.stderr && result.stderr.length > 0) {
-                result.stderr.forEach(error => {
-                    output += `${error.message}\n`;
-                    if (error.file) {
-                        output += `File: ${error.file}\n`;
-                    }
-                    if (error.line && error.line > 0) {
-                        output += `Line: ${error.line}\n`;
-                    }
-                    if (error.column && error.column > 0) {
-                        output += `Column: ${error.column}\n`;
-                    }
-                    output += "\n";
-                });
+        if (Array.isArray(result.stderr) && result.stderr.length > 0) {
+            result.stderr.forEach((error, index) => {
+                // Создаем уникальный идентификатор для каждого сообщения об ошибке
+                const errorId = `compile-error-${index}`;
+
+                outputHtml += `<div class="compile-error" data-error-id="${errorId}" data-file="${error.file}" data-line="${error.line}" data-column="${error.column}">`;
+                outputHtml += `<span class="error-message">${error.message}</span><br>`;
+                if (error.file) {
+                    outputHtml += `<span class="error-file">File: ${error.file}</span><br>`;
+                }
+                if (error.line && error.line > 0) {
+                    outputHtml += `<span class="error-line">Line: ${error.line}</span><br>`;
+                }
+                if (error.column && error.column > 0) {
+                    outputHtml += `<span class="error-column">Column: ${error.column}</span><br>`;
+                }
+                outputHtml += `</div><br>`;
+            });
+        } else if (result.stderr && typeof result.stderr === 'string' && result.stderr.trim() !== '') {
+            outputHtml += `<pre>${result.stderr}</pre>`;
+        }
+
+        if (result.stdout && result.stdout.trim() !== "") {
+            outputHtml += `<pre>${result.stdout}</pre>`;
+        }
+
+        if (outputHtml.trim() === "") {
+            outputHtml = "Нет вывода.";
+        }
+
+        outputHtml += `<div>Программа завершилась с кодом ${result.returncode}.</div>`;
+
+        $('#compile-result').html(outputHtml);
+
+        // Добавляем обработчик клика для сообщений об ошибках
+        $('.compile-error').on('click', function() {
+            const filePath = $(this).data('file');
+            const lineNumber = parseInt($(this).data('line'));
+            const columnNumber = parseInt($(this).data('column'));
+
+            console.log(`Clicked on error: file=${filePath}, line=${lineNumber}, column=${columnNumber}`);
+
+            if (filePath) {
+                navigateToError(filePath, lineNumber, columnNumber);
             }
+        });
+    };
 
-            if (result.stdout && result.stdout.trim() !== "") {
-                output += result.stdout;
-            }
 
-            if (output.trim() === "") {
-                output = "Нет вывода.";
-            }
-
-            output += `\nПрограмма завершилась с кодом ${result.returnCode}.`;
-
-            $('#compile-result').text(output);
-        };
 
 
 
@@ -592,6 +685,62 @@
                 }
             }
         };
+
+    const navigateToError = (filePath, lineNumber, columnNumber) => {
+        const tree = $('#jstree').jstree(true);
+        console.log(`Navigating to error: filePath=${filePath}, lineNumber=${lineNumber}, columnNumber=${columnNumber}`);
+
+        // Удаляем ведущий слэш из filePath, если он есть
+        if (filePath.startsWith('/')) {
+            filePath = filePath.substring(1);
+        }
+
+        // Функция для поиска узла по пути
+        const findNodeByPath = (path, parentId = 'root') => {
+            const segments = path.split('/');
+            let currentId = parentId;
+
+            for (let i = 0; i < segments.length; i++) {
+                const children = tree.get_node(currentId).children;
+                let found = false;
+
+                for (let childId of children) {
+                    const childNode = tree.get_node(childId);
+                    if (childNode.text === segments[i]) {
+                        currentId = childId;
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    return null;
+                }
+            }
+
+            return tree.get_node(currentId);
+        };
+
+        const node = findNodeByPath(filePath);
+
+        if (node) {
+            saveCurrentFile(); // Сохраняем текущий файл перед переключением
+            tree.select_node(node);
+
+            // Ожидаем, пока файл загрузится в редактор
+            setTimeout(() => {
+                if (editor && lineNumber) {
+                    editor.revealLineInCenter(lineNumber);
+                    editor.setPosition({ lineNumber: lineNumber, column: columnNumber || 1 });
+                    editor.focus();
+                }
+            }, 100);
+        } else {
+            showMessage(`Не удалось найти файл: ${filePath}`, "error");
+        }
+    };
+
+
         const clearEditorIfDeleted = (node) => {
             if (currentFile && node.id === currentFile.id) {
                 editor.setValue('');

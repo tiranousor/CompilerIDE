@@ -1,4 +1,22 @@
 services:
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - oc-manager
+    networks:
+      - app-network
+    environment:
+      - CADDY_ACME_CA_URL=https://acme-staging-v02.api.letsencrypt.org/directory
+    restart: always
+
   redis:
     image: "redis:6.2"
     container_name: redis
@@ -235,4 +253,6 @@ volumes:
   oc-manager-uploads:
   oc-manager-git-clones:
   oc-manager-user-photos:
+  caddy_data:
+  caddy_config:
 
