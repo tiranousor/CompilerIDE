@@ -45,6 +45,7 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/actuator/prometheus").permitAll()
                         .requestMatchers("/banned", "/sendUnbanRequest").hasAuthority("ROLE_BANNED")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 

@@ -64,12 +64,13 @@ public class ProjectInvitationController {
         try {
             projectInvitationService.acceptInvitation(invitationId, receiver);
             logger.info("Приглашение ID={} принято пользователем {}", invitationId, receiver.getUsername());
+
+            // Логирование принятия приглашения
             Optional<ProjectInvitation> invitationOpt = projectInvitationService.findById(invitationId);
             invitationOpt.ifPresent(invitation -> {
                 Project project = invitation.getProject();
                 projectAccessLogService.logAccess(receiver, project, "accept_invitation");
             });
-
 
             return "success";
         } catch (Exception e) {
@@ -77,6 +78,7 @@ public class ProjectInvitationController {
             return e.getMessage();
         }
     }
+
 
     @PostMapping("/reject/{id}")
     @ResponseBody
@@ -89,6 +91,8 @@ public class ProjectInvitationController {
         try {
             projectInvitationService.rejectInvitation(invitationId, receiver);
             logger.info("Приглашение ID={} отклонено пользователем {}", invitationId, receiver.getUsername());
+
+            // Логирование отклонения приглашения
             Optional<ProjectInvitation> invitationOpt = projectInvitationService.findById(invitationId);
             invitationOpt.ifPresent(invitation -> {
                 Project project = invitation.getProject();
@@ -100,9 +104,8 @@ public class ProjectInvitationController {
             logger.error("Ошибка при отклонении приглашения ID={}: {}", invitationId, e.getMessage());
             return e.getMessage();
         }
-
-
     }
+
     @GetMapping("/projects/{projectId}/invite")
     public String showInvitePage(@PathVariable("projectId") int projectId, Model model, Authentication authentication) {
         Project project = projectService.findById(projectId)
@@ -160,12 +163,16 @@ public class ProjectInvitationController {
 
             projectInvitationService.sendInvitation(project, sender, receiver);
             redirectAttributes.addFlashAttribute("success", "Приглашение успешно отправлено.");
+
+            // Логирование отправки приглашения
             projectAccessLogService.logAccess(sender, project, "send_invitation");
+
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/invitations/projects/" + projectId + "/invite";
     }
+
     @PostMapping("/projects/{projectId}/removeCollaborator")
     public String removeCollaborator(@PathVariable("projectId") int projectId,
                                      @RequestParam("collaboratorId") int collaboratorId,

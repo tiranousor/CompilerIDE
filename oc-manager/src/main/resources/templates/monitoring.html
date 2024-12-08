@@ -27,7 +27,7 @@
             <option th:value="${entry.value}" th:text="${entry.key}">Project Name</option>
         </th:block>
     </select>
-    <iframe id="grafanaIframe" th:src="'http://localhost:3000/d-solo/' + ${projectDashboards.get(ownedProjects.get(0).name)} + '/monitoring-projects?orgId=1&panelId=1'" class="grafana-iframe"></iframe>
+    <iframe src="http://localhost:3000/d/de6askgqns3k0f/monitoring-projects?orgId=1" class="grafana-iframe"></iframe>
 </div>
 </body>
 </html>

@@ -15,19 +15,14 @@ import java.sql.Timestamp;
 public class ProjectAccessLogService {
 
     private final ProjectAccessLogRepository projectAccessLogRepository;
-    private final Counter projectViewCounter;
-    private final Counter invitationSentCounter;
-    private final Counter invitationAcceptedCounter;
-    private final Counter invitationRejectedCounter;
+    private final MeterRegistry meterRegistry;
 
     @Autowired
     public ProjectAccessLogService(ProjectAccessLogRepository projectAccessLogRepository, MeterRegistry meterRegistry) {
         this.projectAccessLogRepository = projectAccessLogRepository;
-        this.projectViewCounter = meterRegistry.counter("project_access_logs_total", "action", "view");
-        this.invitationSentCounter = meterRegistry.counter("project_access_logs_total", "action", "send_invitation");
-        this.invitationAcceptedCounter = meterRegistry.counter("project_access_logs_total", "action", "accept_invitation");
-        this.invitationRejectedCounter = meterRegistry.counter("project_access_logs_total", "action", "reject_invitation");
+        this.meterRegistry = meterRegistry;
     }
+
 
     public void logAccess(Client client, Project project, String actionType) {
         ProjectAccessLog log = new ProjectAccessLog();
@@ -37,22 +32,10 @@ public class ProjectAccessLogService {
         log.setActionType(actionType);
         projectAccessLogRepository.save(log);
 
-        // Увеличение соответствующего счетчика
-        switch (actionType) {
-            case "view":
-                projectViewCounter.increment();
-                break;
-            case "send_invitation":
-                invitationSentCounter.increment();
-                break;
-            case "accept_invitation":
-                invitationAcceptedCounter.increment();
-                break;
-            case "reject_invitation":
-                invitationRejectedCounter.increment();
-                break;
-            default:
-                break;
-        }
+        Counter.builder("project_access_logs_total")
+                .tag("project", project.getName())  // используем имя или id проекта
+                .tag("action", actionType)
+                .register(meterRegistry)
+                .increment();
     }
 }

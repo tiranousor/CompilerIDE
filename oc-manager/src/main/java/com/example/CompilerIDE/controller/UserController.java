@@ -88,6 +88,8 @@ public class UserController {
         if (!isOwner && !isCollaborator) {
             return "redirect:/userProfile";
         }
+
+        // Логирование доступа
         projectAccessLogService.logAccess(currentUser, project, "view");
 
         model.addAttribute("projectId", projectId);
@@ -112,6 +114,7 @@ public class UserController {
         return "Compiler";
     }
 
+
     @GetMapping("/login")
     public String showLoginPage() {
         return "loginAndRegistration";
@@ -119,7 +122,7 @@ public class UserController {
 
 
     @GetMapping("/registration")
-    public String registration(@ModelAttribute Client client){
+    public String registration(@ModelAttribute Client client) {
         return "registrationPage";
     }
 
@@ -138,7 +141,7 @@ public class UserController {
         project.setLanguage("Java");
         project.setReadMe("Мой первый проект");
         project.setClient(client);
-        project.setDashboardUid("YOUR_GRAFANA_DASHBOARD_UID");
+        project.setDashboardUid("de6askgqns3k0f");
         projectService.save(project);
         projectTeamService.addCreator(project, client);
         return "redirect:/login?registration";
@@ -179,6 +182,7 @@ public class UserController {
         model.addAttribute("client", clientService.findOne(client.getId()));
         return "editProfile";
     }
+
     @PostMapping("/edit/{id}")
     public String updateProfile(Authentication authentication, @PathVariable("id") int id,
                                 @Valid @ModelAttribute("client") Client clientForm, BindingResult bindingResult,
@@ -284,7 +288,6 @@ public class UserController {
         Map<String, String> projectDashboards = new HashMap<>();
         for (Project project : ownedProjects) {
             // Предполагается, что у вас есть поле `dashboardUid` в сущности Project
-            // Если такого поля нет, добавьте его и заполните соответствующим UID дашборда Grafana
             projectDashboards.put(project.getName(), project.getDashboardUid());
         }
 
@@ -293,5 +296,4 @@ public class UserController {
 
         return "monitoring"; // Название вашего Thymeleaf шаблона
     }
-
 }
