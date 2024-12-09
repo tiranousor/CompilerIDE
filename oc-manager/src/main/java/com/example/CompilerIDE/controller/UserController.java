@@ -1,10 +1,7 @@
 package com.example.CompilerIDE.controller;
 
 import com.example.CompilerIDE.dto.JsTreeNodeDto;
-import com.example.CompilerIDE.providers.Client;
-import com.example.CompilerIDE.providers.LoginTimestamp;
-import com.example.CompilerIDE.providers.Project;
-import com.example.CompilerIDE.providers.ProjectTeam;
+import com.example.CompilerIDE.providers.*;
 import com.example.CompilerIDE.repositories.LoginTimestampRepository;
 import com.example.CompilerIDE.security.ClientDetails;
 import com.example.CompilerIDE.services.*;
@@ -38,6 +35,7 @@ public class UserController {
     private final ProjectAccessLogService projectAccessLogService;
     private final ClientService clientService;
     private final ProjectService projectService;
+    private final ProjectInvitationService projectInvitationService;
     private final ClientValidator clientValidator;
     private final PasswordEncoder passwordEncoder;
     private final ProjectValidator projectValidator;
@@ -48,11 +46,12 @@ public class UserController {
     private final ProjectTeamService projectTeamService;
 
     @Autowired
-    public UserController(ProjectAccessLogService projectAccessLogService, ClientService clientService, ProjectService projectService, ClientValidator clientValidator,
+    public UserController(ProjectAccessLogService projectAccessLogService, ClientService clientService, ProjectService projectService, ProjectInvitationService projectInvitationService, ClientValidator clientValidator,
                           PasswordEncoder passwordEncoder, ProjectValidator projectValidator, MinioService minioService,
                           ObjectMapper objectMapper, FriendshipService friendshipService,
                           LoginTimestampRepository loginTimestampRepository, ProjectTeamService projectTeamService) {
         this.projectAccessLogService = projectAccessLogService;
+        this.projectInvitationService = projectInvitationService;
         this.passwordEncoder = passwordEncoder;
         this.clientService = clientService;
         this.clientValidator = clientValidator;
@@ -158,17 +157,18 @@ public class UserController {
             return "redirect:/login";
         }
         Client client = clientOpt.get();
-
+        List<ProjectInvitation> pendingInvitations = projectInvitationService.getPendingInvitationsForReceiver(client);
+        int invitationCount = pendingInvitations.size();
+        model.addAttribute("invitationCount", invitationCount);
         List<Project> projects = projectService.findByClient(client);
         List<Client> friends = friendshipService.getFriends(client);
         List<ProjectTeam> collaboratorProjects = projectTeamService.findCollaboratorProjects(client);
-
         model.addAttribute("client", client);
         model.addAttribute("projects", projects);
         model.addAttribute("friendsCount", friends.size());
         model.addAttribute("friends", friends);
-        model.addAttribute("collaboratorProjects", collaboratorProjects);
 
+        model.addAttribute("collaboratorProjects", collaboratorProjects);
         return "userProfile";
     }
 
@@ -256,11 +256,14 @@ public class UserController {
         boolean isOwnProfile = viewedUser.getId().equals(currentUser.getId());
         model.addAttribute("isOwnProfile", isOwnProfile);
         List<ProjectTeam> collaboratorProjects = projectTeamService.findCollaboratorProjects(currentUser);
-
+        List<ProjectTeam> projectTeams = projectTeamService.findByClient(viewedUser);
         model.addAttribute("collaboratorProjects", collaboratorProjects);
-
+        List<ProjectInvitation> pendingInvitations = projectInvitationService.getPendingInvitationsForReceiver(currentUser);
+        int invitationCount = pendingInvitations.size();
+        model.addAttribute("invitationCount", invitationCount);
         model.addAttribute("client", viewedUser);
         model.addAttribute("friendsCount", friendshipService.getFriends(viewedUser).size());
+        model.addAttribute("collaboratorProjects", collaboratorProjects);
         if (isOwnProfile) {
             model.addAttribute("projects", projectService.findByClient(viewedUser));
             model.addAttribute("friends", friendshipService.getFriends(viewedUser));

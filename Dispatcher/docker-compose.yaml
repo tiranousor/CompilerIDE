@@ -1,20 +1,136 @@
-version: '3.8'
-
 services:
-  postgres:
-    image: postgres:15
-    container_name: postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 3012
-      POSTGRES_DB: Compiler_DB
+  worker1:
+    build:
+      context: ../oc-agent-javac
+    image: compiler-worker:latest
+    container_name: worker1
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - "5001:5000"
+    environment:
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ACCESS_KEY=qwerdsaf
+      - MINIO_SECRET_KEY=88888888556556556
+      - MINIO_BUCKET_NAME=my-bucket
+    depends_on:
+      - minio
     networks:
       - app-network
     restart: always
+    read_only: true
+    tmpfs:
+      - /tmp
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  worker2:
+    build:
+      context: ../oc-agent-javac
+    image: compiler-worker:latest
+    container_name: worker2
+    ports:
+      - "5002:5000"
+    environment:
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ACCESS_KEY=qwerdsaf
+      - MINIO_SECRET_KEY=88888888556556556
+      - MINIO_BUCKET_NAME=my-bucket
+    depends_on:
+      - minio
+    networks:
+      - app-network
+    restart: always
+    read_only: true
+    tmpfs:
+      - /tmp
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  python-worker1:
+    build:
+      context: ../oc-agent-python
+    image: python-java-worker:latest
+    container_name: python-worker1
+    ports:
+      - "6001:6000"
+    environment:
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ACCESS_KEY=qwerdsaf
+      - MINIO_SECRET_KEY=88888888556556556
+      - MINIO_BUCKET_NAME=my-bucket
+    depends_on:
+      - minio
+    networks:
+      - app-network
+    restart: always
+    read_only: true
+    tmpfs:
+      - /tmp
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  python-worker2:
+    build:
+      context: ../oc-agent-python
+    image: python-java-worker:latest
+    container_name: python-worker2
+    ports:
+      - "6002:6000"
+    environment:
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ACCESS_KEY=qwerdsaf
+      - MINIO_SECRET_KEY=88888888556556556
+      - MINIO_BUCKET_NAME=my-bucket
+    depends_on:
+      - minio
+    networks:
+      - app-network
+    restart: always
+    read_only: true
+    tmpfs:
+      - /tmp
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  dispatcher:
+    build:
+      context: /
+    image: dispatcher:latest
+    container_name: dispatcher
+    ports:
+      - "8081:8081"
+    environment:
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ACCESS_KEY=qwerdsaf
+      - MINIO_SECRET_KEY=88888888556556556
+      - MINIO_BUCKET_NAME=my-bucket
+      - WORKER_URLS=http://worker1:5000,http://worker2:5000
+      - PYTHON_WORKER_URLS=http://python-worker1:6000,http://python-worker2:6000
+    depends_on:
+      - minio
+      - worker1
+      - worker2
+      - python-worker1
+      - python-worker2
+    networks:
+      - app-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
 
   redis:
     image: "redis:6.2"
@@ -37,6 +153,20 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - minio-data:/data
+    networks:
+      - app-network
+    restart: always
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8082:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
     networks:
       - app-network
     restart: always
@@ -82,4 +212,3 @@ networks:
 volumes:
   minio-data:
   grafana-data:
-  postgres-data:

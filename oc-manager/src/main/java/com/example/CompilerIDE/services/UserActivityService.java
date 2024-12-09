@@ -56,6 +56,10 @@ public class UserActivityService {
                 return users.stream()
                         .filter(user -> "ROLE_USER".equals(user.getRole()))
                         .collect(Collectors.toList());
+            case "bannedFirst":
+                return users.stream()
+                        .filter(user -> "ROLE_BANNED".equals(user.getRole()))
+                        .collect(Collectors.toList());
             case "activity":
                 Map<Long, Long> userIdToOnlineTime = getUserOnlineTimeMap();
                 return users.stream()
@@ -180,4 +184,21 @@ public class UserActivityService {
             return loginCount;
         }
     }
+    @Transactional
+    public void banUsers(List<Long> userIds) {
+        System.out.println("Banning users with IDs: " + userIds);
+        List<Client> users = clientRepository.findAllById(userIds);
+        if (users.isEmpty()) {
+            throw new IllegalArgumentException("No users found with the provided IDs.");
+        }
+        users.forEach(user -> {
+            if (!"ROLE_BANNED".equals(user.getRole())) {
+                System.out.println("Updating user: " + user.getUsername() + " to ROLE_BANNED");
+                user.setRole("ROLE_BANNED");
+            }
+        });
+        clientRepository.saveAll(users);
+        System.out.println("Successfully banned users: " + users.stream().map(Client::getUsername).collect(Collectors.toList()));
+    }
+
 }

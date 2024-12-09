@@ -15,6 +15,6 @@ public interface ProjectInvitationRepository extends JpaRepository<ProjectInvita
     List<ProjectInvitation> findBySenderAndStatus(Client sender, ProjectInvitation.Status status);
     Optional<ProjectInvitation> findByProjectAndSenderAndReceiver(Project project, Client sender, Client receiver);
     Optional<ProjectInvitation> findByProjectAndReceiverAndStatus(Project project, Client receiver, ProjectInvitation.Status status);
-
+    List<ProjectInvitation> findByProjectAndReceiver(Project project, Client receiver);
 }
 

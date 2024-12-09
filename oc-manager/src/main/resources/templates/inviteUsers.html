@@ -7,72 +7,134 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
     <style>
-        /* Ваши стили */
-        .invite-container {
-            width: 80%;
-            margin: 0 auto;
-            padding: 20px;
+        * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+<!--            font-size: inherit !important;-->
         }
-        .search-form {
-            margin-bottom: 20px;
+
+        body {
+            color: #24292e;
             display: flex;
             justify-content: center;
-            gap: 10px;
+            align-items: flex-start;
+            padding: 20px;
+            min-height: 100vh;
         }
-        .users-list, .collaborators-list {
-            list-style-type: none;
-            padding: 0;
-        }
-        .users-list li, .collaborators-list li {
+
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #ccc;
+            padding: 5px 20px;
+            background-color: #f6f8fa;
+            border-bottom: 1px solid #d1d5da;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 900;
+            box-sizing: border-box;
         }
-        .success-message {
-            color: green;
-            text-align: center;
-            margin-bottom: 10px;
+
+        .header .user-info {
+            display: flex;
+            align-items: center;
         }
-        .error-message {
-            color: red;
-            text-align: center;
-            margin-bottom: 10px;
+
+        .header .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
         }
-        .btn-invite, .btn-remove {
-            padding: 5px 10px;
-            background-color: #28a745;
-            border: none;
-            color: white;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: background-color 0.3s, box-shadow 0.3s;
-        }
-        .btn-invite:hover {
-            background-color: #218838;
-            box-shadow: 0 0 10px rgba(33, 136, 56, 0.3);
-        }
-        .btn-remove {
-            background-color: #d73a49;
-        }
-        .btn-remove:hover {
-            background-color: #b31d28;
-            box-shadow: 0 0 10px rgba(211, 58, 73, 0.3);
-        }
-        .collaborators-section {
-            margin-top: 40px;
-        }
-        .collaborators-section h2 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .collaborators-list li {
+
+        .header .actions {
             display: flex;
             align-items: center;
             gap: 15px;
         }
+
+        .header .actions a {
+            display: flex;
+            align-items: center;
+            color: #24292e;
+            text-decoration: none;
+            font-size: 24px;
+            transition: color 0.3s ease;
+        }
+
+        .header .actions a:hover {
+            color: #0366d6;
+        }
+
+        .main-container {
+            margin-top: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            padding: 20px;
+            border: 1px solid #d1d5da;
+            border-radius: 10px;
+            background-color: #ffffff;
+        }
+
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 28px;
+            color: #24292e;
+        }
+        .search-form {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+          .search-form input {
+            background-color: #f6f8fa;
+            border: 1px solid #d1d5da;
+            color: #24292e;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            width: 70%;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+    .search-form input:focus {
+            border-color: #17A846;
+            box-shadow: 0 0 10px rgba(23, 168, 70, 0.6);
+        }
+
+        .search-form button {
+            margin-left: 10px;
+        }
+
+        .users-list, .collaborators-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .users-list li, .collaborators-list li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #d1d5da;
+        }
+
+        .users-list li:last-child, .collaborators-list li:last-child {
+            border-bottom: none;
+        }
+
         .collaborator-avatar {
             width: 50px;
             height: 50px;
@@ -80,85 +142,104 @@
             object-fit: cover;
             border: 2px solid #d1d5da;
         }
+
         .collaborator-username {
             font-size: 18px;
             color: #0366d6;
             text-decoration: none;
         }
+
         .collaborator-username:hover {
             color: #0056b3;
+        }
+
+        button {
+            padding: 5px 10px;
+            background-color: #28a745;
+            border: none;
+            color: #ffffff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        button:hover {
+            background-color: #218838;
+            box-shadow: 0 0 10px rgba(33, 136, 56, 0.3);
+        }
+
+        .btn-remove {
+            background-color: #d73a49;
+        }
+
+        .btn-remove:hover {
+            background-color: #b31d28;
+            box-shadow: 0 0 10px rgba(211, 58, 73, 0.3);
         }
     </style>
 </head>
 <body>
-<div class="invite-container">
-    <h1>Пригласить пользователей в проект "<span th:text="${project.name}">Название Проекта</span>"</h1>
-
-    <!-- Отображение сообщений об успехе или ошибках -->
-    <div th:if="${success}">
-        <div class="success-message" th:text="${success}"></div>
+<div class="header">
+    <div class="user-info">
+        <a th:href="@{/userProfile/{id}(id=${client.id})}" style="display: flex; align-items: center; text-decoration: none;">
+            <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar">
+            <span class="username" th:text="${client.username}" style="margin-left: 10px; color: inherit;"></span>
+        </a>
     </div>
-    <div th:if="${error}">
-        <div class="error-message" th:text="${error}"></div>
+    <div class="actions">
+        <a th:href="@{/edit/{id}(id=${client.id})}"><i class='bx bx-user'></i></a>
+        <form th:action="@{/logout}" th:method="POST" style="margin: 0;">
+            <button type="submit" style="border: none; background: none; color: #d73a49;"><i class='bx bx-log-out'></i></button>
+        </form>
     </div>
+</div>
 
-    <!-- Форма поиска пользователей -->
-    <form th:action="@{/invitations/projects/{projectId}/invite/search(projectId=${project.id})}" method="get" class="search-form">
-        <input type="text" name="query" th:value="${query}" placeholder="Введите имя пользователя" required />
-        <button type="submit" class="btn-invite">Поиск</button>
-    </form>
+<div class="main-container">
+    <div class="container">
+        <h1>Пригласить пользователей в проект "<span th:text="${project.name}"></span>"</h1>
 
-    <!-- Отображение результатов поиска -->
-    <div th:if="${users != null}">
-        <h2>Результаты поиска</h2>
-        <ul class="users-list">
-            <th:block th:if="${users.isEmpty()}">
-                <li>Нет пользователей, соответствующих запросу.</li>
-            </th:block>
-            <th:block th:each="user : ${users}">
-                <li>
-                    <span th:text="${user.username}">Имя пользователя</span>
-                    <form th:action="@{/invitations/send}" method="post">
-                        <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
-                        <input type="hidden" name="projectId" th:value="${project.id}" />
-                        <input type="hidden" name="receiverId" th:value="${user.id}" />
-                        <button type="submit" class="btn-invite" onclick="return confirm('Вы уверены, что хотите пригласить этого пользователя?');">
-                            <i class='bx bx-user-plus'></i> Пригласить
-                        </button>
-                    </form>
-                </li>
-            </th:block>
-        </ul>
-    </div>
+        <div th:if="${success}" class="success-message" th:text="${success}"></div>
+        <div th:if="${error}" class="error-message" th:text="${error}"></div>
+        <form th:action="@{/invitations/projects/{projectId}/invite/search(projectId=${project.id})}" method="get" class="search-form">
+            <input type="text" name="query" th:value="${query}" placeholder="Введите имя пользователя" required>
+            <button type="submit">Поиск</button>
+        </form>
 
-    <!-- Раздел списка коллаборатора -->
-    <div class="collaborators-section">
-        <h2>Текущие коллабораторы</h2>
-        <ul class="collaborators-list">
-            <th:block th:each="collaborator : ${collaborators}">
-                <li>
-
-                    <a th:href="@{/userProfile/{id}(id=${collaborator.client.id})}">
-                        <img th:src="${collaborator.client.avatarUrl != null ? collaborator.client.avatarUrl : '/noAvatar.png'}"
-                             alt="Avatar" class="collaborator-avatar">
-                    </a>
-                    <a th:href="@{/userProfile/{id}(id=${collaborator.client.id})}" class="collaborator-username"
-                       th:text="${collaborator.client.username}">Username</a>
-
-                    <!-- Форма для удаления коллаборатора -->
-                    <form th:action="@{/invitations/projects/{projectId}/removeCollaborator(projectId=${project.id})}" method="post"
-                          style="display: inline;" onsubmit="return confirm('Вы действительно хотите удалить проект?');" >
-                        <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
-                        <input type="hidden" name="collaboratorId" th:value="${collaborator.client.id}" />
-
-                        <!-- Кнопка удаления с подтверждением -->
-                        <button type="submit" class="btn-remove">
-                            <i class='bx bx-trash'></i> Удалить
-                        </button>
-                    </form>
-                </li>
-            </th:block>
-        </ul>
+        <div th:if="${users}">
+            <h2>Результаты поиска</h2>
+            <ul class="users-list">
+                <th:block th:if="${users.isEmpty()}">
+                    <li>Нет подходящих пользователей.</li>
+                </th:block>
+                <th:block th:each="user : ${users}">
+                    <li>
+                        <span th:text="${user.username}"></span>
+                        <form th:action="@{/invitations/send}" method="post">
+                            <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+                            <input type="hidden" name="projectId" th:value="${project.id}">
+                            <input type="hidden" name="receiverId" th:value="${user.id}">
+                            <button type="submit" onclick="return confirm('Пригласить пользователя?');"><i class='bx bx-user-plus'></i></button>
+                        </form>
+                    </li>
+                </th:block>
+            </ul>
+        </div>
+        <div class="collaborators-section">
+            <h2>Текущие коллабораторы</h2>
+            <ul class="collaborators-list">
+                <th:block th:each="collaborator : ${collaborators}">
+                    <li>
+                        <img th:src="${collaborator.client.avatarUrl != null ? collaborator.client.avatarUrl : '/noAvatar.png'}" alt="Avatar" class="collaborator-avatar">
+                        <span th:text="${collaborator.client.username}" class="collaborator-username"></span>
+                        <form th:action="@{/invitations/projects/{projectId}/removeCollaborator(projectId=${project.id})}" method="post">
+                            <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+                            <input type="hidden" name="collaboratorId" th:value="${collaborator.client.id}">
+                            <button type="submit" class="btn-remove" onclick="return confirm('Удалить коллаборатора?');"><i class='bx bx-trash'></i></button>
+                        </form>
+                    </li>
+                </th:block>
+            </ul>
+        </div>
     </div>
 </div>
 </body>

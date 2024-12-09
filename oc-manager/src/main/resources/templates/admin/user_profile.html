@@ -9,102 +9,179 @@
     <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
 
     <style>
-        body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-            background-color: #ffffff;
+        * {
+           box-sizing: border-box;
+       }
+
+       body {
+           margin: 0;
+           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+           background-color: #f0f2f5;
+           color: #24292e;
+       }
+
+       #wrapper {
+           display: flex;
+       }
+
+             .navbar-icons a:hover {
+                color: #d39e00;
+            }
+
+            .navbar-icons form button .fas {
+                font-size: 24px;
+                color: #dc3545;
+                transition: color 0.3s;
+            }
+
+       #sidebar-wrapper {
+           width: 60px;
+           height: 100vh;
+           background-color: #ffffff;
+           border-right: none;
+           transition: width 0.3s ease;
+           position: fixed;
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           padding-top: 20px;
+       }
+
+       #sidebar-wrapper.expanded {
+           width: 250px;
+           align-items: flex-start;
+           padding-left: 20px;
+       }
+
+       .sidebar-heading {
+           text-align: center;
+           margin-bottom: 30px;
+       }
+
+       .sidebar-heading i {
+           font-size: 24px;
+           color: #6f42c1;
+       }
+
+       .sidebar-heading .sidebar-text {
+           margin-left: 10px;
+           font-size: 18px;
+           color: #6f42c1;
+           display: none;
+       }
+
+       #sidebar-wrapper.expanded .sidebar-text {
+           display: inline;
+       }
+
+       .list-group-item {
+           padding: 15px 20px;
+           text-decoration: none;
+           color: #6c757d;
+           display: flex;
+           align-items: center;
+           transition: background 0.3s, color 0.3s;
+           border: none;
+
+           border-radius: 8px;
+           margin: 5px 10px;
+           width: 100%;
+           position: relative;
+       }
+
+       .list-group-item:hover {
+           background-color: #e6e6e6;
+           color: #6f42c1;
+       }
+
+       .list-group-item.active {
+           background-color: #6f42c1;
+           color: #ffffff;
+           border: 1px solid #6f42c1;
+       }
+
+       .list-group-item i {
+           margin-right: 10px;
+           font-size: 18px;
+           min-width: 20px;
+           text-align: center;
+       }
+
+       #sidebar-wrapper .list-group-item {
+           text-decoration: none;
+       }
+
+
+       #page-content-wrapper {
+           margin-left: 60px;
+           flex-grow: 1;
+           transition: margin-left 0.2s ease;
+       }
+
+       #sidebar-wrapper.expanded + #page-content-wrapper {
+           margin-left: 200px;
+       }
+        .navbar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #f0f2f5;
+            border-bottom: none;
+            box-shadow: none;
+        }
+        .navbar-icons {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-right: auto;
+        }
+
+        .admin-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+
+        }
+
+        .admin-name {
+            font-size: 16px;
+            font-weight: 600;
             color: #24292e;
         }
 
-        #wrapper {
-            display: flex;
-        }
-
-        /* Sidebar */
-        #sidebar-wrapper {
-            width: 60px;
-            height: 100vh;
-            background-color: #fff;
-            border-right: 1px solid #e3e6f0;
-            transition: width 0.3s ease;
-            position: fixed;
-        }
-
-        #sidebar-wrapper.expanded {
-            width: 200px;
-        }
-
-        .sidebar-heading {
-            text-align: center;
-            padding: 20px 0;
-            border-bottom: 1px solid #e3e6f0;
-        }
-
-        .sidebar-heading i {
+        .navbar-icons a,
+        .navbar-icons form button {
             font-size: 24px;
-            color: #6c757d;
+            cursor: pointer;
+            transition: color 0.3s;
         }
 
-        .list-group-item {
-            padding: 10px 15px;
-            text-decoration: none;
-            color: #6c757d;
-            display: flex;
-            align-items: center;
-            border-bottom: 1px solid #e3e6f0;
-            transition: background 0.3s, color 0.3s;
+        .navbar-icons a:hover,
+        .navbar-icons form button:hover {
+            color: #d39e00;
         }
+         .navbar-icons form button .fas:hover {
+                    color: #bd2130;
+                }
+       .navbar button {
+           padding: 8px;
+           background-color: #6c757d;
+           border: none;
+           color: #fff;
+           cursor: pointer;
+       }
 
-        .list-group-item:hover {
-            background-color: #f8f9fa;
-            color: #6f42c1;
-        }
+       .navbar button:hover {
+           background-color: #5a6268;
+       }
 
-        .list-group-item i {
-            margin-right: 10px;
-        }
-
-        .sidebar-text {
-            display: none;
-        }
-
-        #sidebar-wrapper.expanded .sidebar-text {
-            display: inline;
-        }
-
-        #page-content-wrapper {
-            margin-left: 60px;
-            flex-grow: 1;
-            transition: margin-left 0.3s;
-        }
-
-        #sidebar-wrapper.expanded + #page-content-wrapper {
-            margin-left: 200px;
-        }
-
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #e3e6f0;
-        }
-
-        .search-bar {
-            display: flex;
-            flex-grow: 1;
-        }
-
-        .search-input {
-            flex-grow: 1;
-            padding: 10px;
-            border: 1px solid #d1d5da;
-            border-radius: 8px;
-            outline: none;
-            font-size: 14px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
 
         .main-container {
             margin-top: 20px;
@@ -172,28 +249,47 @@
 </head>
 <body>
 <div id="wrapper">
-    <!-- Sidebar -->
     <div id="sidebar-wrapper">
         <div class="sidebar-heading">
-            <i class="fas fa-chart-line"></i> <span class="sidebar-text">Admin Panel</span>
+            <i class="fas fa-chart-line"></i> <span class="sidebar-text"></span>
         </div>
-        <a href="/admin/dashboard" class="list-group-item"><i class="fas fa-home"></i> <span class="sidebar-text">Dashboard</span></a>
-        <a href="/admin/users" class="list-group-item"><i class="fas fa-users"></i> <span class="sidebar-text">Users</span></a>
-        <a href="/admin/projects" class="list-group-item"><i class="fas fa-folder-open"></i> <span class="sidebar-text">Projects</span></a>
-        <a href="/admin/unbanRequests" class="list-group-item"><i class="fas fa-ban"></i> <span class="sidebar-text">Unban Requests</span></a>
+        <a href="/admin/dashboard" class="list-group-item">
+            <i class="fas fa-home"></i> <span class="sidebar-text"></span>
+        </a>
+        <a href="/admin/users" class="list-group-item">
+            <i class="fas fa-users"></i> <span class="sidebar-text"></span>
+        </a>
+        <a href="/admin/projects" class="list-group-item">
+            <i class="fas fa-folder-open"></i> <span class="sidebar-text"></span>
+        </a>
+        <a href="/admin/unbanRequests" class="list-group-item  active">
+            <i class="fas fa-ban"></i> <span class="sidebar-text"> </span>
+        </a>
+        <a href="/admin/status" class="list-group-item">
+            <i class="fas fa-tools"></i> <span class="sidebar-text"></span>
+        </a>
     </div>
 
     <!-- Page content -->
     <div id="page-content-wrapper">
-        <!-- Navbar -->
         <div class="navbar">
-            <form class="search-bar">
-                <input type="text" id="search-input" class="search-input" placeholder="Search user">
-            </form>
+            <div class="admin-info">
+                <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="admin-avatar">
+                <span class="admin-name" th:text="${client.username}"></span>
+            </div>
+            <div class="navbar-icons">
+                <a href="/admin/notifications" title="Уведомления">
+                    <i class="fas fa-bell"></i>
+                </a>
+                <form th:action="@{/logout}" th:method="POST">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <button type="submit" title="Выход" style="background: none; border: none; padding: 0;">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </form>
+            </div>
         </div>
-
-        <!-- Main Content -->
-        <div class="main-container clearfix gutter-lg">
+        <div class="main-container">
             <div class="profile-info-container d-flex flex-column align-items-center">
                 <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="profile-avatar">
                 <div class="profile-info text-center mt-2">
@@ -235,10 +331,5 @@
 </div>
 
 
-<script>
-    const sidebarWrapper = document.getElementById('sidebar-wrapper');
-    sidebarWrapper.addEventListener('mouseover', () => sidebarWrapper.classList.add('expanded'));
-    sidebarWrapper.addEventListener('mouseleave', () => sidebarWrapper.classList.remove('expanded'));
-</script>
 </body>
 </html>

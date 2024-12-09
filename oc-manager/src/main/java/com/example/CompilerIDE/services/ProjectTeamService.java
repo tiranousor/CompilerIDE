@@ -1,8 +1,10 @@
 package com.example.CompilerIDE.services;
 
 import com.example.CompilerIDE.providers.Project;
+import com.example.CompilerIDE.providers.ProjectInvitation;
 import com.example.CompilerIDE.providers.ProjectTeam;
 import com.example.CompilerIDE.providers.Client;
+import com.example.CompilerIDE.repositories.ProjectInvitationRepository;
 import com.example.CompilerIDE.repositories.ProjectTeamRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,10 +17,12 @@ import java.util.stream.Collectors;
 public class ProjectTeamService {
 
     private final ProjectTeamRepository projectTeamRepository;
+    private final ProjectInvitationRepository projectInvitationRepository;
 
     @Autowired
-    public ProjectTeamService(ProjectTeamRepository projectTeamRepository) {
+    public ProjectTeamService(ProjectTeamRepository projectTeamRepository, ProjectInvitationRepository projectInvitationRepository) {
         this.projectTeamRepository = projectTeamRepository;
+        this.projectInvitationRepository = projectInvitationRepository;
     }
 
     public Optional<ProjectTeam> findByProjectAndClient(Project project, Client client) {
@@ -52,8 +56,13 @@ public class ProjectTeamService {
     }
 
     public void removeCollaborator(Project project, Client collaborator) {
+
         Optional<ProjectTeam> projectTeamOpt = projectTeamRepository.findByProjectAndClient(project, collaborator);
         projectTeamOpt.ifPresent(projectTeamRepository::delete);
+
+        // Удаляем все связанные приглашения
+        List<ProjectInvitation> invitations = projectInvitationRepository.findByProjectAndReceiver(project, collaborator);
+        projectInvitationRepository.deleteAll(invitations);
     }
 
     public List<ProjectTeam> findCollaboratorProjects(Client client) {

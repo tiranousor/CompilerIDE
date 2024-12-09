@@ -181,7 +181,7 @@
        .navbar button:hover {
            background-color: #5a6268;
        }
-    /* Статистические карточки */
+
     .stats-row {
         display: flex;
         flex-wrap: wrap;
@@ -228,7 +228,6 @@
         text-align: center;
     }
 
-    /* Маленькие карточки */
     .small-card {
         display: flex;
         align-items: center;
@@ -377,6 +376,16 @@
             flex: 1 1 100%;
         }
     }
+           .table-avatar {
+        display: flex;
+        align-items: center;
+    }
+    .table-avatar img {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
     </style>
 </head>
 <body>
@@ -397,11 +406,13 @@
         <a href="/admin/unbanRequests" class="list-group-item">
             <i class="fas fa-ban"></i> <span class="sidebar-text"> </span>
         </a>
+        <a href="/admin/status" class="list-group-item">
+            <i class="fas fa-tools"></i> <span class="sidebar-text"></span>
+        </a>
+
     </div>
 
-    <!-- Page content -->
     <div id="page-content-wrapper">
-        <!-- Navbar -->
         <div class="navbar">
             <div class="admin-info">
                 <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="admin-avatar">
@@ -420,9 +431,7 @@
             </div>
         </div>
 
-        <!-- Main Content -->
         <div class="container-fluid">
-            <!-- Статистические карточки -->
             <div class="stats-row">
                 <div class="stat-card">
                     <i class="fas fa-project-diagram"></i>
@@ -447,7 +456,10 @@
                     <h3 id="onlineTime" th:text="${totalOnlineTime}">00h:00m:00s</h3>
                 </div>
             </div>
-
+            <div class="chart-card">
+                <h5>Еженедельная активность</h5>
+                <canvas id="weeklyActivityChart" height="100"></canvas>
+            </div>
             <!-- Маленькие карточки для новых проектов и пользователей -->
             <div class="stats-row">
                 <div class="small-card">
@@ -502,13 +514,26 @@
             </div>
 
             <div class="chart-card">
-                <h5>Топ пользователей по времени онлайн</h5>
-                <ul>
-                    <li th:each="entry : ${topUsers}" style="display: flex; justify-content: space-between; width: 100%; padding: 5px 0;">
-                        <span th:text="${entry.username}">Username</span>
-<!--                        <span th:text="${#numbers.formatDecimal(entry.onlineTime / 3600, 1, 'POINT', 'COMMA')} + ' ч'">0 ч</span>-->
-                    </li>
-                </ul>
+                <h5>Топ пользователей за всё время</h5>
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>Пользователь</th>
+                        <th>Время онлайн</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="entry, iterStat : ${topUsers}">
+                        <td th:text="${iterStat.index + 1}">1</td>
+                        <td class="table-avatar">
+                            <img th:src="${entry.avatarUrl}" alt="Avatar" class="admin-avatar">
+                            <span th:text="${entry.username}">Username</span>
+                        </td>
+                        <td th:text="${entry.formattedOnlineTime}">00h:00m:00s</td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
 
 
@@ -708,5 +733,75 @@
     setInterval(updateStats, 30000); // Обновлять каждые 30 секунд
     /*]]>*/
 </script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    document.addEventListener("DOMContentLoaded", function () {
+        // Еженедельная гистограмма
+        const weeklyLabels = /*[[${activityLabels}]]*/ [];
+        const weeklyProjectsData = /*[[${activityProjectCounts}]]*/ [];
+        const weeklyUsersData = /*[[${activityUserCounts}]]*/ [];
+
+        if (weeklyLabels.length > 0) {
+            const weeklyActivityCtx = document.getElementById('weeklyActivityChart').getContext('2d');
+            new Chart(weeklyActivityCtx, {
+                type: 'bar',
+                data: {
+                    labels: weeklyLabels,
+                    datasets: [
+                        {
+                            label: 'Новые проекты',
+                            data: weeklyProjectsData,
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Новые пользователи',
+                            data: weeklyUsersData,
+                            backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            enabled: true,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: false,
+                            title: {
+                                display: true,
+                                text: 'Дата'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Количество'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Остальные графики...
+
+    });
+    /*]]>*/
+</script>
+
 </body>
 </html>

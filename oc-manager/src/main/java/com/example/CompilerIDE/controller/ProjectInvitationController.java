@@ -50,6 +50,7 @@ public class ProjectInvitationController {
                 .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден."));
         List<ProjectInvitation> invitations = projectInvitationService.getPendingInvitations(receiver);
         model.addAttribute("invitations", invitations);
+        model.addAttribute("client", receiver);
         return "receivedInvitations";
     }
 
@@ -124,9 +125,9 @@ public class ProjectInvitationController {
         }
         List<ProjectTeam> collaborators = projectTeamService.findByProjectAndRole(project, ProjectTeam.Role.COLLABORATOR);
         model.addAttribute("collaborators", collaborators);
-
+        model.addAttribute("client", sender);
         model.addAttribute("project", project);
-        return "inviteUsers"; // Создадим этот шаблон далее
+        return "inviteUsers";
     }
 
 
@@ -141,7 +142,10 @@ public class ProjectInvitationController {
         if (query != null && !query.trim().isEmpty()) {
             users = clientService.searchByUsername(query.trim());
         }
+        Client receiver = clientService.findByUsername(authentication.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден."));
 
+        model.addAttribute("client", receiver);
         model.addAttribute("project", project);
         model.addAttribute("query", query);
         model.addAttribute("users", users);

@@ -2,59 +2,169 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Полученные Приглашения на Проекты</title>
+    <title>Приглашения на проекты</title>
     <link rel="icon" href="/favicon.png" type="image/png">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
     <style>
-        /* Добавь необходимые стили */
-        .invitations-container {
-            width: 80%;
-            margin: 0 auto;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+        }
+
+        body {
+            color: #24292e;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 20px;
+            background-color: #f6f8fa;
+            border-bottom: 1px solid #d1d5da;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 900;
+            box-sizing: border-box;
+        }
+
+        .header .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .header .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+               .header .actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+
+        .header .actions a {
+            color: #24292e;
+            text-decoration: none;
+            font-size: 24px;
+            margin-left: 20px;
+        }
+
+        .header .actions a:hover {
+            color: #0366d6;
+        }
+
+        .main-container {
+            margin: 80px auto;
+            width: 90%;
+            max-width: 1000px;
+            background-color: #ffffff;
+            border: 1px solid #d1d5da;
+            border-radius: 8px;
             padding: 20px;
         }
-        .invitations-list {
-            list-style-type: none;
+
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        ul {
+            list-style: none;
             padding: 0;
         }
-        .invitations-list li {
-            border-bottom: 1px solid #ccc;
+
+        li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             padding: 10px 0;
+            border-bottom: 1px solid #d1d5da;
         }
+
+        li:last-child {
+            border-bottom: none;
+        }
+
+        .project-info {
+            flex: 1;
+        }
+
+        .project-info p {
+            margin: 0;
+            margin-bottom: 5px;
+        }
+
         .invitation-actions {
-            margin-top: 10px;
+            display: flex;
+            gap: 10px;
         }
-        .btn-accept, .btn-reject {
-            padding: 5px 10px;
+
+        button {
             border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
             cursor: pointer;
-            margin-right: 5px;
         }
+
         .btn-accept {
             background-color: #28a745;
             color: white;
         }
+
         .btn-reject {
-            background-color: #dc3545;
+            background-color: #d73a49;
             color: white;
         }
     </style>
 </head>
 <body>
-<div class="invitations-container">
-    <h1>Приглашения на Проекты</h1>
-    <ul class="invitations-list">
+<div class="header">
+    <div class="user-info">
+        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar">
+        <span th:text="${client.username}">Имя пользователя</span>
+    </div>
+    <div class="actions">
+        <a th:href="@{/edit/{id}(id=${client.id})}"><i class='bx bx-user'></i></a>
+        <form th:action="@{/logout}" th:method="POST" style="display: inline;">
+            <button type="submit" title="Выйти" style="background: none; border: none; color: #d73a49; font-size: 24px; cursor: pointer;">
+                <i class='bx bx-log-out'></i>
+            </button>
+        </form>
+    </div>
+</div>
+<div class="main-container">
+    <h1>Приглашения на проекты</h1>
+    <ul>
         <th:block th:each="invitation : ${invitations}">
             <li>
-                <p><strong>Проект:</strong> <span th:text="${invitation.project.name}">Название проекта</span></p>
-                <p><strong>Отправитель:</strong> <span th:text="${invitation.sender.username}">Имя отправителя</span></p>
+                <div class="project-info">
+                    <p><strong>Проект:</strong> <span th:text="${invitation.project.name}">Название проекта</span></p>
+                    <p><strong>Отправитель:</strong> <span th:text="${invitation.sender.username}">Имя отправителя</span></p>
+                </div>
                 <div class="invitation-actions">
-                    <form th:action="@{/invitations/accept/{id}(id=${invitation.id})}" method="post" onsubmit="return confirm('Вы уверены, что хотите принять это приглашение?');">
-                        <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
-                        <button type="submit" class="btn-accept">Принять</button>
+                    <form th:action="@{/invitations/accept/{id}(id=${invitation.id})}" method="post" style="margin: 0;">
+                        <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+                        <button type="submit" class="btn-accept"> <i class='bx bx-check accept-icon' title="Принять"></i></button>
                     </form>
-                    <form th:action="@{/invitations/reject/{id}(id=${invitation.id})}" method="post" onsubmit="return confirm('Вы уверены, что хотите отклонить это приглашение?');">
-                        <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
-                        <button type="submit" class="btn-reject">Отклонить</button>
+                    <form th:action="@{/invitations/reject/{id}(id=${invitation.id})}" method="post" style="margin: 0;">
+                        <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+                        <button type="submit" class="btn-reject"><i class='bx bx-x reject-icon' title="Отклонить"></i></button>
                     </form>
                 </div>
             </li>

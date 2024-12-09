@@ -1,11 +1,13 @@
 package com.example.CompilerIDE.controller;
 
+import com.example.CompilerIDE.dto.WorkerMetrics;
 import com.example.CompilerIDE.providers.*;
 import com.example.CompilerIDE.repositories.ClientRepository;
 import com.example.CompilerIDE.repositories.LoginTimestampRepository;
 import com.example.CompilerIDE.repositories.ProjectRepository;
 import com.example.CompilerIDE.repositories.UnbanRequestRepository;
 import com.example.CompilerIDE.services.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,11 +80,15 @@ public class AdminController {
 
     @GetMapping("/status")
     public String getWorkerStatus(Model model) {
-        ResponseEntity<Map<String, Boolean>> response = workerStatusService.getWorkerStatus();
-        Map<String, Boolean> workerStatus = response.getBody();
+        Map<String, Boolean> workerStatus = workerStatusService.getWorkerStatus();
         model.addAttribute("workerStatus", workerStatus);
-
         return "admin/status";
+    }
+
+    @GetMapping("/status/data")
+    public ResponseEntity<List<WorkerMetrics>> getWorkerStatusData() {
+        List<WorkerMetrics> metricsList = workerStatusService.getAllWorkerMetrics();
+        return ResponseEntity.ok(metricsList);
     }
     @GetMapping("/users/list")
     public String getUsersList(@RequestParam(name = "sort", required = false, defaultValue = "registrationDateDesc") String sort, Model model) {
@@ -94,13 +100,15 @@ public class AdminController {
     @GetMapping("/users/{id}")
     public String viewUserProfile(@PathVariable("id") Long id, Model model, Authentication authentication) {
         Client user = clientRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
+        List<LoginTimestamp> loginTimestamps = loginTimestampService.findAllByClient(user);
         List<Project> projects = projectRepository.findByClient(user);
+        Client client = clientService.findByUsername(authentication.getName()).orElse(null);
+
         model.addAttribute("user", user);
         model.addAttribute("projects", projects);
-        List<LoginTimestamp> loginTimestamps = loginTimestampService.findAllByClient(user);
         model.addAttribute("loginTimestamps", loginTimestamps);
-        Client client = clientService.findByUsername(authentication.getName()).orElse(null);
         model.addAttribute("client", client);
+
         return "admin/user_profile";
     }
 
@@ -111,6 +119,25 @@ public class AdminController {
         clientRepository.save(user);
         return "redirect:/admin/users";
     }
+    @Secured("ROLE_ADMIN")
+    @PostMapping("/users/ban")
+    @ResponseBody
+    public ResponseEntity<?> banUsers(@RequestBody Map<String, List<Long>> payload) {
+        List<Long> userIds = payload.get("userIds");
+        System.out.println("Received userIds for banning: " + userIds);
+        try {
+            userActivityService.banUsers(userIds);
+            System.out.println("Successfully banned users with IDs: " + userIds);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            System.err.println("Error in banUsers: " + e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Unexpected error in banUsers: " + e.getMessage());
+            return ResponseEntity.status(500).body("Unexpected error: " + e.getMessage());
+        }
+    }
+
 
     @PostMapping("/users/{id}/unban")
     public String unbanUser(@PathVariable("id") Long id) {
@@ -151,7 +178,7 @@ public class AdminController {
 
         return "redirect:/admin/unbanRequests";
     }
-
+    @Secured("ROLE_ADMIN")
     @PostMapping("/users/addAdmins")
     @ResponseBody
     public ResponseEntity<?> addAdmins(@RequestBody Map<String, List<Long>> payload) {
@@ -170,9 +197,6 @@ public class AdminController {
         }
     }
 
-
-
-    @Secured("ROLE_ADMIN")
     @GetMapping("/dashboard")
     public String getDashboard(Model model, Authentication authentication) {
         List<Client> allClients = clientRepository.findAll();
@@ -218,11 +242,9 @@ public class AdminController {
         model.addAttribute("totalProjects", totalProjects);
         List<Map.Entry<Client, Long>> topUsersByOnlineTime = userActivityService.getTopUsersByOnlineTime(10);
         List<ActivityData> topUsers = topUsersByOnlineTime.stream()
-                .map(entry -> new ActivityData(entry.getKey().getUsername(), entry.getValue()))
+                .map(entry -> new ActivityData(entry.getKey().getUsername(), entry.getValue(), entry.getKey().getAvatarUrl()))
                 .collect(Collectors.toList());
-
         model.addAttribute("topUsers", topUsers);
-        // Projects
         model.addAttribute("totalProjects", projectService.countTotalProjects());
         model.addAttribute("newProjectsToday", projectService.countNewProjectsInLastDays(1));
         model.addAttribute("newProjectsThisWeek", projectService.countNewProjectsInLastDays(7));
@@ -234,15 +256,18 @@ public class AdminController {
         return "admin/dashboard";
     }
     @Data
-    public static class ActivityData {
+    @AllArgsConstructor
+    public class ActivityData {
         private String username;
         private Long onlineTime;
-
-        public ActivityData(String username, Long onlineTime) {
+        private String formattedOnlineTime;
+        private String avatarUrl;
+        public ActivityData(String username, Long onlineTime, String avatarUrl) {
             this.username = username;
             this.onlineTime = onlineTime;
+            this.formattedOnlineTime = formatDuration(onlineTime);
+            this.avatarUrl = avatarUrl != null ? avatarUrl : "/noAvatar.png";
         }
-
     }
 
     @GetMapping("/totalOnlineTime")
@@ -252,11 +277,12 @@ public class AdminController {
         return formatDuration(totalOnlineSeconds); // Возвращаем форматированное время
     }
 
-    // Вспомогательный метод для форматирования времени (секунды в часы, минуты, секунды)
     private String formatDuration(long totalSeconds) {
         long hours = totalSeconds / 3600;
         long minutes = (totalSeconds % 3600) / 60;
         long seconds = totalSeconds % 60;
         return String.format("%02dh:%02dm:%02ds", hours, minutes, seconds);
     }
+
+
 }
