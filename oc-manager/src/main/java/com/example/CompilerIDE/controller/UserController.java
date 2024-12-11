@@ -1,10 +1,8 @@
 package com.example.CompilerIDE.controller;
 
 import com.example.CompilerIDE.dto.JsTreeNodeDto;
-import com.example.CompilerIDE.providers.Client;
-import com.example.CompilerIDE.providers.LoginTimestamp;
-import com.example.CompilerIDE.providers.Project;
-import com.example.CompilerIDE.providers.ProjectTeam;
+import com.example.CompilerIDE.dto.ProjectAccessLogDTO;
+import com.example.CompilerIDE.providers.*;
 import com.example.CompilerIDE.repositories.LoginTimestampRepository;
 import com.example.CompilerIDE.security.ClientDetails;
 import com.example.CompilerIDE.services.*;
@@ -14,6 +12,8 @@ import com.example.CompilerIDE.util.ProjectValidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,6 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Controller
 public class UserController {
@@ -277,23 +278,53 @@ public class UserController {
         Client currentUser = clientService.findByUsername(authentication.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        // Получение созданных проектов
         List<Project> ownedProjects = projectService.findByClient(currentUser);
-        if (ownedProjects.isEmpty()) {
-            model.addAttribute("message", "У вас нет созданных проектов для мониторинга.");
-            return "monitoring";
-        }
+        List<ProjectDTO> projectDTOs = ownedProjects.stream()
+                .map(project -> new ProjectDTO(project.getId(), project.getName()))
+                .collect(Collectors.toList());
 
-        // Получение UID дашбордов для каждого проекта (предполагается, что UID хранится в проекте)
-        Map<String, String> projectDashboards = new HashMap<>();
-        for (Project project : ownedProjects) {
-            // Предполагается, что у вас есть поле `dashboardUid` в сущности Project
-            projectDashboards.put(project.getName(), project.getDashboardUid());
-        }
+        model.addAttribute("projectDTOs", projectDTOs);
 
-        model.addAttribute("projectDashboards", projectDashboards);
-        model.addAttribute("ownedProjects", ownedProjects);
-
-        return "monitoring"; // Название вашего Thymeleaf шаблона
+        return "monitoring";
     }
+
+    @GetMapping("/monitoring/logs/{projectId}")
+    @ResponseBody
+    public List<ProjectAccessLogDTO> getProjectAccessLogs(@PathVariable("projectId") Integer projectId,
+                                                          Authentication authentication) {
+        Client currentUser = clientService.findByUsername(authentication.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        Project project = projectService.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("Проект не найден"));
+
+        // Проверяем, принадлежит ли проект текущему пользователю
+        if (!project.getClient().getId().equals(currentUser.getId())) {
+            throw new IllegalArgumentException("У вас нет доступа к этому проекту");
+        }
+
+        List<ProjectAccessLog> accessLogs = projectAccessLogService.getAccessLogsForProject(project);
+
+        // Преобразуем сущности в DTO
+        return accessLogs.stream()
+                .map(log -> new ProjectAccessLogDTO(
+                        log.getClient().getUsername(),
+                        log.getActionType(),
+                        log.getAccessTime(),
+                        log.getClient().getId().equals(project.getClient().getId())
+                ))
+                .collect(Collectors.toList());
+    }
+
+
+
+
+    @Data
+    @AllArgsConstructor
+    public static class ProjectDTO {
+        private Integer id;
+        private String name;
+
+    }
+
 }

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Service
 public class ProjectAccessLogService {
@@ -23,7 +24,6 @@ public class ProjectAccessLogService {
         this.meterRegistry = meterRegistry;
     }
 
-
     public void logAccess(Client client, Project project, String actionType) {
         ProjectAccessLog log = new ProjectAccessLog();
         log.setClient(client);
@@ -33,9 +33,18 @@ public class ProjectAccessLogService {
         projectAccessLogRepository.save(log);
 
         Counter.builder("project_access_logs_total")
-                .tag("project", project.getName())  // используем имя или id проекта
+                .tag("project_id", project.getId().toString())  // используем уникальный ID проекта
                 .tag("action", actionType)
                 .register(meterRegistry)
                 .increment();
+    }
+
+    // Метод для получения логов доступа по проекту, отсортированных по убыванию
+    public List<ProjectAccessLog> getAccessLogsForProject(Project project) {
+        return projectAccessLogRepository.findByProjectOrderByAccessTimeDesc(project);
+    }
+
+    public void save(ProjectAccessLog project) {
+        projectAccessLogRepository.save(project);
     }
 }

@@ -48,7 +48,7 @@ public class ProjectController  {
     private final ProjectTeamService projectTeamService;
     private final ProjectValidator projectValidator;
 
-    private final ProjectAccessLogRepository projectAccessLogRepository;
+    private final ProjectAccessLogService projectAccessLogService;
     private static final Logger logger = LoggerFactory.getLogger(ProjectService.class);
     @Value("${minio.bucket-name}")
     private String bucketName;
@@ -56,7 +56,7 @@ public class ProjectController  {
     public ProjectController(ProjectInvitationService projectInvitationService, ProjectService projectService,
                              ClientService clientService,
                              CompilationService compilationService,
-                             MinioService minioService, ProjectStructRepository projectStructRepository, ProjectTeamService projectTeamService, ProjectValidator projectValidator, ProjectAccessLogRepository projectAccessLogRepository) {
+                             MinioService minioService, ProjectStructRepository projectStructRepository, ProjectTeamService projectTeamService, ProjectValidator projectValidator, ProjectAccessLogService projectAccessLogService) {
         this.projectInvitationService = projectInvitationService;
         this.projectService = projectService;
         this.clientService = clientService;
@@ -65,7 +65,7 @@ public class ProjectController  {
         this.projectStructRepository = projectStructRepository;
         this.projectTeamService = projectTeamService;
         this.projectValidator = projectValidator;
-        this.projectAccessLogRepository = projectAccessLogRepository;
+        this.projectAccessLogService = projectAccessLogService;
     }
     @GetMapping("/info/{id}")
     public String projectInfo(@PathVariable("id") int projectId,
@@ -169,7 +169,7 @@ public class ProjectController  {
                 accessLog.setProject(project);
                 accessLog.setAccessTime(new Timestamp(System.currentTimeMillis()));
                 accessLog.setActionType("open");
-                projectAccessLogRepository.save(accessLog);
+                projectAccessLogService.save(accessLog);
 
                 model.addAttribute("project", project);
                 return "edit_project_form";
@@ -227,7 +227,7 @@ public class ProjectController  {
         accessLog.setProject(existingProject);
         accessLog.setAccessTime(new Timestamp(System.currentTimeMillis()));
         accessLog.setActionType("edit");
-        projectAccessLogRepository.save(accessLog);
+        projectAccessLogService.save(accessLog);
 
         return "redirect:/userProfile";
     }
@@ -242,7 +242,7 @@ public class ProjectController  {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
-        List<ProjectAccessLog> accessLogs = projectAccessLogRepository.findByProject(projectOpt.get());
+        List<ProjectAccessLog> accessLogs = projectAccessLogService.getAccessLogsForProject(projectOpt.get());
         return ResponseEntity.ok(accessLogs);
     }
 
