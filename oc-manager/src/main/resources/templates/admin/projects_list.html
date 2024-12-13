@@ -562,10 +562,10 @@ margin-bottom: 0;        }
                 <!-- Контролы (Сортировка, Поиск, Действия) -->
                 <div class="controls-row">
 
-<!--                    <div class="search-controls">-->
-<!--                        <i class="fas fa-search search-icon"></i>-->
-<!--                        <input type="text" id="projectSearchInput" placeholder="Поиск проектов..." oninput="filterProjects()">-->
-<!--                    </div>-->
+                    <!--                    <div class="search-controls">-->
+                    <!--                        <i class="fas fa-search search-icon"></i>-->
+                    <!--                        <input type="text" id="projectSearchInput" placeholder="Поиск проектов..." oninput="filterProjects()">-->
+                    <!--                    </div>-->
 
                 </div>
 
@@ -584,7 +584,6 @@ margin-bottom: 0;        }
                             <a th:href="@{'/projects/view/' + ${project.id}}" title="Просмотреть проект">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <!-- Добавьте другие действия при необходимости -->
                         </div>
                     </div>
                 </div>
@@ -599,8 +598,6 @@ margin-bottom: 0;        }
     const csrfToken = /*[[${_csrf.token}]]*/ '';
     const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
 
-
-    // Функция фильтрации проектов
     function filterProjects() {
         const searchInput = document.getElementById('projectSearchInput').value.toLowerCase();
         const projectItems = document.querySelectorAll('.project-item');

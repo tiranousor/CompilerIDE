@@ -74,6 +74,9 @@ public class ProjectService {
     public List<Project> findByClient(Client client) {
         return projectRepository.findByClient(client);
     }
+    public List<Project> findAllProjects() {
+        return projectRepository.findAll();
+    }
 
     @Transactional
     public void saveProjectFilesFromJson(Project project, List<FileNodeDto> files) throws Exception {

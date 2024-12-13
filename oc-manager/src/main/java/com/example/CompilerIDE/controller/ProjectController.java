@@ -1,6 +1,7 @@
 package com.example.CompilerIDE.controller;
 
 import com.example.CompilerIDE.dto.FileNodeDto;
+import com.example.CompilerIDE.dto.JsTreeNodeDto;
 import com.example.CompilerIDE.dto.SaveProjectRequest;
 import com.example.CompilerIDE.providers.*;
 import com.example.CompilerIDE.repositories.ProjectAccessLogRepository;
@@ -8,6 +9,8 @@ import com.example.CompilerIDE.repositories.ProjectStructRepository;
 import com.example.CompilerIDE.services.*;
 import com.example.CompilerIDE.util.FileUploadUtil;
 import com.example.CompilerIDE.util.ProjectValidator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +33,7 @@ import org.springframework.web.servlet.HandlerMapping;
 
 import java.io.IOException;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +48,7 @@ public class ProjectController  {
     private final ClientService clientService;
     private final CompilationService compilationService;
     private final MinioService minioService;
+    private final ObjectMapper objectMapper;
     private final ProjectStructRepository projectStructRepository;
     private final ProjectTeamService projectTeamService;
     private final ProjectValidator projectValidator;
@@ -56,12 +61,13 @@ public class ProjectController  {
     public ProjectController(ProjectInvitationService projectInvitationService, ProjectService projectService,
                              ClientService clientService,
                              CompilationService compilationService,
-                             MinioService minioService, ProjectStructRepository projectStructRepository, ProjectTeamService projectTeamService, ProjectValidator projectValidator, ProjectAccessLogRepository projectAccessLogRepository) {
+                             MinioService minioService, ObjectMapper objectMapper, ProjectStructRepository projectStructRepository, ProjectTeamService projectTeamService, ProjectValidator projectValidator, ProjectAccessLogRepository projectAccessLogRepository) {
         this.projectInvitationService = projectInvitationService;
         this.projectService = projectService;
         this.clientService = clientService;
         this.compilationService = compilationService;
         this.minioService = minioService;
+        this.objectMapper = objectMapper;
         this.projectStructRepository = projectStructRepository;
         this.projectTeamService = projectTeamService;
         this.projectValidator = projectValidator;
@@ -341,12 +347,103 @@ public class ProjectController  {
 
         return ResponseEntity.ok(filesWithMain);
     }
+    @GetMapping("/view/{id}")
+    public String viewProjectReadOnly(@PathVariable("id") int projectId, Model model, Authentication authentication) {
+        Optional<Project> projectOpt = projectService.findById(projectId);
+        if (projectOpt.isEmpty()) {
+            return "redirect:/userProfile";
+        }
 
+        Project project = projectOpt.get();
 
-    public boolean canEditProject(Project project, Client client) {
-        Optional<ProjectTeam> team = projectTeamService.findByProjectAndClient(project, client);
-        return team.isPresent() && (team.get().getRole() == ProjectTeam.Role.CREATOR || team.get().getRole() == ProjectTeam.Role.COLLABORATOR);
+        // Проверяем, является ли проект публичным или пользователь имеет доступ
+        Client client = null;
+        boolean hasAccess = false;
+        if (authentication != null && authentication.isAuthenticated() && !authentication.getName().equals("anonymousUser")) {
+            client = clientService.findByUsername(authentication.getName()).orElse(null);
+            if (client != null) {
+                if (project.getAccessLevel() == AccessLevel.PUBLIC) {
+                    hasAccess = true;
+                } else {
+                    // Проверяем, является ли пользователь владельцем или коллабораторами
+                    hasAccess = projectService.canEditProject(project, client);
+                }
+            }
+        } else {
+            // Если пользователь не авторизован, доступ только к публичным проектам
+            if (project.getAccessLevel() == AccessLevel.PUBLIC) {
+                hasAccess = true;
+            }
+        }
+
+        if (!hasAccess) {
+            return "redirect:/userProfile"; // Или отображаем страницу ошибки
+        }
+
+        // Получаем структуру проекта
+        List<JsTreeNodeDto> fileTree = projectService.buildJsTreeFileStructureFromStructs(project, String.valueOf(projectId));
+        String fileStructureJson = "[]";
+        try {
+            fileStructureJson = objectMapper.writeValueAsString(fileTree);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        model.addAttribute("projectName", project.getName());
+        model.addAttribute("language", project.getLanguage());
+        model.addAttribute("fileStructure", fileStructureJson);
+        model.addAttribute("projectId", projectId);
+
+        // Добавляем текущего пользователя, если есть
+        model.addAttribute("client", client);
+
+        return "readOnlyProjectView";
     }
 
+    // Endpoint для получения содержимого файла
+    @GetMapping("/view/{id}/file-content")
+    @ResponseBody
+    public ResponseEntity<String> getFileContentReadOnly(@PathVariable("id") int projectId, @RequestParam("path") String path, Authentication authentication) {
+        Optional<Project> projectOpt = projectService.findById(projectId);
+        if (projectOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Проект не найден.");
+        }
+
+        Project project = projectOpt.get();
+
+        // Проверяем, является ли проект публичным или пользователь имеет доступ
+        Client client = null;
+        boolean hasAccess = false;
+        if (authentication != null && authentication.isAuthenticated() && !authentication.getName().equals("anonymousUser")) {
+            client = clientService.findByUsername(authentication.getName()).orElse(null);
+            if (client != null) {
+                if (project.getAccessLevel() == AccessLevel.PUBLIC) {
+                    hasAccess = true;
+                } else {
+                    // Проверяем, является ли пользователь владельцем или коллабораторами
+                    hasAccess = projectService.canEditProject(project, client);
+                }
+            }
+        } else {
+            // Если пользователь не авторизован, доступ только к публичным проектам
+            if (project.getAccessLevel() == AccessLevel.PUBLIC) {
+                hasAccess = true;
+            }
+        }
+
+        if (!hasAccess) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Нет доступа к этому проекту.");
+        }
+
+        // Получаем содержимое файла из MinIO
+        try {
+            byte[] contentBytes = minioService.getFileContentAsBytes("projects/" + projectId + "/" + path);
+            String content = new String(contentBytes, StandardCharsets.UTF_8);
+            return ResponseEntity.ok(content);
+        } catch (Exception e) {
+            logger.error("Ошибка при получении содержимого файла: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось получить содержимое файла.");
+        }
+    }
 
 }

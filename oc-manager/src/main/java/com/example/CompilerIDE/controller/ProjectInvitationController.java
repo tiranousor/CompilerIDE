@@ -55,56 +55,49 @@ public class ProjectInvitationController {
     }
 
     @PostMapping("/accept/{id}")
-    @ResponseBody
-    public String acceptInvitation(@PathVariable("id") Integer invitationId, Authentication authentication) {
-        Client receiver = clientService.findByUsername(authentication.getName()).orElse(null);
-        if (receiver == null) {
-            return "User not found.";
-        }
+    public String acceptInvitation(@PathVariable("id") Integer invitationId, Authentication authentication, RedirectAttributes redirectAttributes) {
+        Client receiver = clientService.findByUsername(authentication.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         try {
             projectInvitationService.acceptInvitation(invitationId, receiver);
-            logger.info("Приглашение ID={} принято пользователем {}", invitationId, receiver.getUsername());
-
-            // Логирование принятия приглашения
+            logger.info("Invitation ID={} accepted by user {}", invitationId, receiver.getUsername());
             Optional<ProjectInvitation> invitationOpt = projectInvitationService.findById(invitationId);
             invitationOpt.ifPresent(invitation -> {
                 Project project = invitation.getProject();
                 projectAccessLogService.logAccess(receiver, project, "accept_invitation");
             });
 
-            return "success";
+            redirectAttributes.addFlashAttribute("success", "Приглашение принято.");
         } catch (Exception e) {
-            logger.error("Ошибка при принятии приглашения ID={}: {}", invitationId, e.getMessage());
-            return e.getMessage();
+            logger.error("Error accepting invitation ID={}: {}", invitationId, e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Ошибка при принятии приглашения: " + e.getMessage());
         }
+
+        return "redirect:/userProfile";
     }
 
-
     @PostMapping("/reject/{id}")
-    @ResponseBody
-    public String rejectInvitation(@PathVariable("id") Integer invitationId, Authentication authentication) {
-        Client receiver = clientService.findByUsername(authentication.getName()).orElse(null);
-        if (receiver == null) {
-            return "User not found.";
-        }
+    public String rejectInvitation(@PathVariable("id") Integer invitationId, Authentication authentication, RedirectAttributes redirectAttributes) {
+        Client receiver = clientService.findByUsername(authentication.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         try {
             projectInvitationService.rejectInvitation(invitationId, receiver);
-            logger.info("Приглашение ID={} отклонено пользователем {}", invitationId, receiver.getUsername());
-
-            // Логирование отклонения приглашения
+            logger.info("Invitation ID={} rejected by user {}", invitationId, receiver.getUsername());
             Optional<ProjectInvitation> invitationOpt = projectInvitationService.findById(invitationId);
             invitationOpt.ifPresent(invitation -> {
                 Project project = invitation.getProject();
                 projectAccessLogService.logAccess(receiver, project, "reject_invitation");
             });
 
-            return "success";
+            redirectAttributes.addFlashAttribute("success", "Приглашение отклонено.");
         } catch (Exception e) {
-            logger.error("Ошибка при отклонении приглашения ID={}: {}", invitationId, e.getMessage());
-            return e.getMessage();
+            logger.error("Error rejecting invitation ID={}: {}", invitationId, e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Ошибка при отклонении приглашения: " + e.getMessage());
         }
+
+        return "redirect:/userProfile";
     }
 
     @GetMapping("/projects/{projectId}/invite")

@@ -266,10 +266,6 @@
     transition: transform 0.3s;
 }
 
-.collaborator-avatar:hover {
-    transform: scale(1.1);
-}
-
 .collaborator-username {
     margin-top: 5px;
     font-size: 14px;
@@ -292,7 +288,20 @@
      line-height: 1;
 }
 
+    .collaborator-item.creator .collaborator-avatar {
+        border: 4px solid #28a745;
+    }
 
+    .badge-creator {
+        margin-top: 5px;
+        display: inline-block;
+        background-color: #28a745;
+        color: white;
+        padding: 2px 8px;
+        font-size: 12px;
+        border-radius: 12px;
+        font-weight: bold;
+    }
     </style>
 </head>
 
@@ -383,15 +392,13 @@
                             <h3>Коллаборации</h3>
                             <div class="collaborators-list">
                                 <th:block th:each="team : ${project.projectTeams}">
-                                    <th:if="${team.role == T(com.example.CompilerIDE.providers.ProjectTeam.Role).COLLABORATOR}">
-                                    <div class="collaborator-item">
+                                    <div class="collaborator-item" th:classappend="${team.role == T(com.example.CompilerIDE.providers.ProjectTeam.Role).CREATOR} ? 'creator' : ''">
                                         <a th:href="@{/userProfile/{id}(id=${team.client.id})}">
                                             <img th:src="${team.client.avatarUrl != null} ? ${team.client.avatarUrl} : '/noAvatar.png'"
                                                  alt="Collaborator Avatar" class="collaborator-avatar">
                                         </a>
                                         <span th:text="${team.client.username}" class="collaborator-username"></span>
                                     </div>
-                                    </th:if>
                                 </th:block>
                             </div>
                         </div>
@@ -409,8 +416,10 @@
                         <div class="d-flex flex-items-center flex-justify-between">
                             <strong class="f4" style="color: #000000;">
                                 <span th:text="${team.project.name}">Название Проекта</span>
-                                <span class="badge" th:text="${team.project.language}">Language</span>
+
+                                <img th:src="'/' + ${team.project.language} + '.jpg'" alt="" class="badge-icon">
                             </strong>
+
                             <div class="d-flex gap-2">
                                 <button class="btn btn-sm btn-green btn-open"><i class='bx bx-folder-open'></i></button>
                                 <button class="btn btn-sm btn-info btn-info-project"><i class='bx bx-info-circle'></i></button>
@@ -419,22 +428,22 @@
                         <div class="project-details mt-2" style="display: none;">
                             <p><strong>Имя проекта:</strong> <span th:text="${team.project.name}"></span></p>
                             <p><strong>Описание:</strong> <span th:text="${team.project.readMe}"></span></p>
-                            <!-- Удалено отображение языка -->
-                            <!-- Нет кнопок "Пригласить" -->
-                            <!-- Отображение аватаров коллабораторов -->
-                            <!--                            <div class="collaborators-section mt-3">-->
-                            <!--                                <h3>Коллаборации</h3>-->
-                            <!--                                <div class="collaborators-list">-->
-                            <!--                                    <th:block th:each="collab : ${team.project.projectTeams}">-->
-                            <!--                                        <th:block th:if="${collab.role == 'COLLABORATOR'}">-->
-                            <!--                                            <a th:href="@{/userProfile/{id}(id=${collab.client.id})}">-->
-                            <!--                                                <img th:src="${collab.client.avatarUrl != null ? collab.client.avatarUrl : '/noAvatar.png'}"-->
-                            <!--                                                     alt="Avatar" class="collaborator-avatar">-->
-                            <!--                                            </a>-->
-                            <!--                                        </th:block>-->
-                            <!--                                    </th:block>-->
-                            <!--                                </div>-->
-                            <!--                            </div>-->
+
+                            <div class="collaborators-section mt-3">
+                                <h3>Коллаборации</h3>
+                                <div class="collaborators-list">
+                                    <th:block th:each="teamMember : ${team.project.projectTeams}">
+                                        <div class="collaborator-item" th:classappend="${teamMember.role == T(com.example.CompilerIDE.providers.ProjectTeam.Role).CREATOR} ? 'creator' : ''">
+                                            <a th:href="@{/userProfile/{id}(id=${teamMember.client.id})}">
+                                                <img th:src="${teamMember.client.avatarUrl != null ? teamMember.client.avatarUrl : '/noAvatar.png'}"
+                                                     alt="Collaborator Avatar" class="collaborator-avatar">
+                                            </a>
+                                            <span th:text="${teamMember.client.username}" class="collaborator-username"></span>
+                                        </div>
+                                    </th:block>
+                                </div>
+                            </div>
+
                         </div>
                     </li>
                 </th:block>

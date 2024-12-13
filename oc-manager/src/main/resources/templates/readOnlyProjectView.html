@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="projectId" th:content="${projectId}">
+    <meta name="fileStructure" th:content="${fileStructure}">
+    <meta name="projectLanguage" th:content="${language}">
+    <link rel="icon" href="/favicon.png" type="image/png">
+    <title th:text="${projectId}"></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        #container {
+            display: flex;
+            height: 100%;
+            background-color: #282c34;
+        }
+
+        #sidebar {
+            width: 300px;
+            background: #21252b;
+            color: #ffffff;
+            overflow: hidden;
+            transition: width 0.3s ease;
+        }
+
+        #jstree {
+            overflow: auto;
+            height: calc(100% - 60px);
+            padding: 20px;
+            border-right: 1px solid #333;
+        }
+
+        #editor-container {
+            position: relative;
+            height: 100%;
+            flex-grow: 1;
+            transition: width 0.3s ease;
+        }
+
+        #editor {
+            width: 100%;
+            height: 100%;
+        }
+
+        .code-explorer-heading {
+            text-align: center;
+            background: #333;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.1em;
+            border-bottom: 1px solid #444;
+        }
+    </style>
+</head>
+<body>
+<div id="container">
+    <div id="sidebar">
+        <div id="jstree" data-file-structure="${fileStructure}" data-project-name="${projectName}"></div>
+    </div>
+    <div id="editor-container">
+        <div id="editor"></div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+<script>
+    $(function() {
+        const initializeJsTree = () => {
+            const fileStructureJson = document.querySelector('meta[name="fileStructure"]').getAttribute('content');
+            const projectName = $('#jstree').data('project-name');
+            let fileTreeData = [];
+
+            if (fileStructureJson) {
+                try {
+                    fileTreeData = JSON.parse(fileStructureJson);
+                } catch (e) {
+                    console.error("Ошибка при парсинге JSON для fileStructure:", e);
+                }
+            }
+
+            if (!fileTreeData || fileTreeData.length === 0) {
+                fileTreeData = [{
+                    id: "root",
+                    text: projectName || "Проект",
+                    type: "folder",
+                    children: [],
+                    state: { opened: true }
+                }];
+            }
+
+            $('#jstree').jstree({
+                core: {
+                    data: fileTreeData,
+                    themes: { icons: true },
+                },
+                plugins: ['wholerow', 'types'],
+                types: {
+                    folder: { icon: 'jstree-folder' },
+                    file: { icon: 'jstree-file' }
+                }
+            }).on('select_node.jstree', function(e, data) {
+                const node = data.node;
+                if (node.type === 'file') {
+                    const projectId = document.querySelector('meta[name="projectId"]').getAttribute('content');
+                    const filePath = node.id;
+                    fetch(`/projects/view/${projectId}/file-content?path=${encodeURIComponent(filePath)}`)
+                        .then(response => response.text())
+                        .then(content => {
+                            monaco.editor.getModels()[0].setValue(content);
+                        })
+                        .catch(error => console.error('Ошибка загрузки файла:', error));
+                }
+            });
+        };
+
+        const initializeEditor = () => {
+            require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs' }});
+            require(['vs/editor/editor.main'], function() {
+                monaco.editor.create(document.getElementById('editor'), {
+                    value: '',
+                    language: 'plaintext',
+                    theme: 'vs-dark',
+                    readOnly: true
+                });
+            });
+        };
+
+        initializeJsTree();
+        initializeEditor();
+    });
+</script>
+</body>
+</html>

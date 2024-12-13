@@ -160,11 +160,11 @@
                 <div class="invitation-actions">
                     <form th:action="@{/invitations/accept/{id}(id=${invitation.id})}" method="post" style="margin: 0;">
                         <input type="hidden" name="_csrf" th:value="${_csrf.token}">
-                        <button type="submit" class="btn-accept"> <i class='bx bx-check accept-icon' title="Принять"></i></button>
+                        <button type="submit" class="btn-accept" title="Принять"><i class='bx bx-check accept-icon'></i></button>
                     </form>
                     <form th:action="@{/invitations/reject/{id}(id=${invitation.id})}" method="post" style="margin: 0;">
                         <input type="hidden" name="_csrf" th:value="${_csrf.token}">
-                        <button type="submit" class="btn-reject"><i class='bx bx-x reject-icon' title="Отклонить"></i></button>
+                        <button type="submit" class="btn-reject" title="Отклонить"><i class='bx bx-x reject-icon'></i></button>
                     </form>
                 </div>
             </li>

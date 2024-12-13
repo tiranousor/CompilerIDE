@@ -17,7 +17,7 @@
         }
 
         body {
-            background: #000000;
+            background: #8EC5FC;
             color: #FFEA00;
             display: flex;
             align-items: center;
@@ -139,33 +139,6 @@
 <p class="description">
     Добро пожаловать в наш компилятор! Мы предоставляем удобный и мощный инструмент для написания, тестирования и компиляции вашего кода. Независимо от того, являетесь ли вы студентом, профессионалом или любителем программирования — наш инструмент упрощает работу с кодом, позволяя вам сосредоточиться на создании великих вещей.
 </p>
-<button class="theme-toggle" onclick="toggleTheme()">Поменять тему</button>
-<script>
-    function toggleTheme() {
-        const body = document.body;
-        const isDark = body.style.backgroundColor === 'rgb(0, 0, 0)';
 
-        if (isDark) {
-            body.style.backgroundColor = '#8EC5FC';
-            body.style.color = '#000000';
-        } else {
-            body.style.backgroundColor = '#000000';
-            body.style.color = '#FFEA00';
-        }
-
-        const buttons = document.querySelectorAll('.btn, .theme-toggle');
-        buttons.forEach(button => {
-            if (isDark) {
-                button.style.backgroundColor = 'transparent';
-                button.style.color = '#000000';
-                button.style.borderColor = 'rgba(0, 0, 0, 0.8)';
-            } else {
-                button.style.backgroundColor = 'transparent';
-                button.style.color = '#FFEA00';
-                button.style.borderColor = 'rgba(255, 234, 0, 0.8)';
-            }
-        });
-    }
-</script>
 </body>
 </html>

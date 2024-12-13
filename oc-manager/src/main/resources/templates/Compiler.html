@@ -206,6 +206,44 @@
             background: #282c34;
             box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
         }
+/* Светлая тема */
+body.light-mode {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+#container.light-mode {
+    background-color: #f4f4f4;
+}
+
+#sidebar.light-mode {
+    background: #eaeaea;
+    color: #000000;
+    border-right: 1px solid #ccc;
+}
+
+#jstree.light-mode {
+    border-right: 1px solid #ccc;
+}
+
+#editor.light-mode {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+.icon-panel.light-mode button {
+    color: #000;
+}
+
+.icon-panel.light-mode button:hover {
+    color: #0366d6;
+}
+
+#compile-output.light-mode {
+    background: #f6f6f6;
+    color: #333;
+    border-top: 1px solid #ccc;
+}
 
     </style>
 </head>
@@ -227,7 +265,11 @@
         <button id="select-main-class-button" title="Выберите исполняемый файл">
             <i class="fas fa-file-code"></i>
         </button>
-
+        <div id="theme-toggle" class="icon-panel">
+            <button id="theme-button" title="Toggle Theme">
+                <i class="fas fa-adjust"></i>
+            </button>
+        </div>
     </div>
     <div id="sidebar">
         <!--        <div id="jstree"></div>-->
@@ -303,6 +345,31 @@
             fetchClassesWithMain();
         });
     };
+
+
+     const themeButton = document.getElementById('theme-button');
+    const body = document.body;
+
+    const applyTheme = (theme) => {
+        if (theme === 'light') {
+            body.classList.add('light-mode');
+        } else {
+            body.classList.remove('light-mode');
+        }
+        localStorage.setItem('theme', theme); // Сохранить тему
+    };
+
+    // Проверить сохранённую тему
+    const savedTheme = localStorage.getItem('theme') || 'dark'; // По умолчанию тёмная
+    applyTheme(savedTheme);
+
+    // Обработчик переключения темы
+    themeButton.addEventListener('click', () => {
+        const currentTheme = body.classList.contains('light-mode') ? 'dark' : 'light';
+        applyTheme(currentTheme);
+    });
+
+
     const ensureMainClassName = (mainClassName, projectLanguage) => {
         const languageExtensionMap = {
             'java': '.java',
@@ -1109,9 +1176,13 @@
                 editor = monaco.editor.create(document.getElementById('editor'), {
                     value: '',
                     language: 'plaintext',
-                    theme: 'vs-dark',
+                    theme: localStorage.getItem('theme') === 'light' ? 'vs' : 'vs-dark',
                     automaticLayout: true
                 });
+                document.getElementById('theme-button').addEventListener('click', () => {
+        const newTheme = body.classList.contains('light-mode') ? 'vs' : 'vs-dark';
+        monaco.editor.setTheme(newTheme);
+    });
                 editor.onDidChangeModelContent(function() {
                     if (isUndoing) {
                         return;

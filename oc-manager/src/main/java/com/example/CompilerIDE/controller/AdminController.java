@@ -79,7 +79,9 @@ public class AdminController {
     }
 
     @GetMapping("/status")
-    public String getWorkerStatus(Model model) {
+    public String getWorkerStatus(Model model,Authentication authentication) {
+        Client client = clientService.findByUsername(authentication.getName()).orElse(null);
+        model.addAttribute("client", client);
         Map<String, Boolean> workerStatus = workerStatusService.getWorkerStatus();
         model.addAttribute("workerStatus", workerStatus);
         return "admin/status";
@@ -165,7 +167,6 @@ public class AdminController {
         return "admin/unban_requests";
     }
 
-    @Secured("ROLE_ADMIN")
     @PostMapping("/unbanUser/{id}")
     public String unbanUserRequest(@PathVariable("id") Long id) {
         UnbanRequest unbanRequest = unbanRequestRepository.findById(id)
@@ -178,7 +179,41 @@ public class AdminController {
 
         return "redirect:/admin/unbanRequests";
     }
-    @Secured("ROLE_ADMIN")
+
+    @PostMapping("/unbanRequests/approve")
+    @ResponseBody
+    public ResponseEntity<?> approveUnbanRequests(@RequestBody Map<String, List<Long>> payload) {
+        List<Long> requestIds = payload.get("requestIds");
+        System.out.println("Received requestIds for approval: " + requestIds);
+        try {
+            userActivityService.approveUnbanRequests(requestIds);
+            System.out.println("Successfully approved unban requests: " + requestIds);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            System.err.println("Error in approveUnbanRequests: " + e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Unexpected error in approveUnbanRequests: " + e.getMessage());
+            return ResponseEntity.status(500).body("Unexpected error: " + e.getMessage());
+        }
+    }
+    @PostMapping("/unbanRequests/decline")
+    @ResponseBody
+    public ResponseEntity<?> declineUnbanRequests(@RequestBody Map<String, List<Long>> payload) {
+        List<Long> requestIds = payload.get("requestIds");
+        System.out.println("Received requestIds for declination: " + requestIds);
+        try {
+            userActivityService.declineUnbanRequests(requestIds);
+            System.out.println("Successfully declined unban requests: " + requestIds);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            System.err.println("Error in declineUnbanRequests: " + e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Unexpected error in declineUnbanRequests: " + e.getMessage());
+            return ResponseEntity.status(500).body("Unexpected error: " + e.getMessage());
+        }
+    }
     @PostMapping("/users/addAdmins")
     @ResponseBody
     public ResponseEntity<?> addAdmins(@RequestBody Map<String, List<Long>> payload) {
@@ -235,12 +270,13 @@ public class AdminController {
         model.addAttribute("activeUsersLastWeek", userActivityService.countActiveUsersInLastDays(7));
         model.addAttribute("activeUsersLastMonth", userActivityService.countActiveUsersInLastDays(30));
 //        model.addAttribute("topUsers", userActivityService.getTopUsersByOnlineTime(10));
-
+        List<UserActivityService.WeeklyDistribution> weeklyDistribution = userActivityService.getWeeklyDistribution();
+        model.addAttribute("weeklyDistribution", weeklyDistribution);
         String formattedTime = formatDuration(totalOnlineTime);
         model.addAttribute("totalOnlineTime", formattedTime);
         model.addAttribute("totalUsers", totalUsers);
         model.addAttribute("totalProjects", totalProjects);
-        List<Map.Entry<Client, Long>> topUsersByOnlineTime = userActivityService.getTopUsersByOnlineTime(10);
+        List<Map.Entry<Client, Long>> topUsersByOnlineTime = userActivityService.getTopUsersByOnlineTime(3);
         List<ActivityData> topUsers = topUsersByOnlineTime.stream()
                 .map(entry -> new ActivityData(entry.getKey().getUsername(), entry.getValue(), entry.getKey().getAvatarUrl()))
                 .collect(Collectors.toList());
@@ -284,5 +320,17 @@ public class AdminController {
         return String.format("%02dh:%02dm:%02ds", hours, minutes, seconds);
     }
 
-
+    @GetMapping("/projects_list")
+    public String listAllProjects( Model model, Authentication authentication) {
+        List<Project> allProjects = projectService.findAllProjects();
+        model.addAttribute("projects", allProjects);
+        model.addAttribute("newProjectsToday", projectService.countNewProjectsInLastDays(1));
+        model.addAttribute("newProjectsThisWeek", projectService.countNewProjectsInLastDays(7));
+        model.addAttribute("newProjectsThisMonth", projectService.countNewProjectsInLastDays(30));
+        Client client = clientService.findByUsername(authentication.getName()).orElse(null);
+        long totalProjects = userActivityService.countTotalProjects();
+        model.addAttribute("totalProjects", totalProjects);
+        model.addAttribute("client", client);
+        return "admin/projects_list";
+    }
 }

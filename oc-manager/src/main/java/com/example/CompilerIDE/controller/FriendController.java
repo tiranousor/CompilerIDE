@@ -205,6 +205,7 @@ public class FriendController {
             return "error";
         }
 
+
         List<Project> friendsProjects = projectService.findByClient(friend);
         List<ProjectInfo> projectsWithRoles = friendsProjects.stream().map(project -> {
             boolean isOwner = projectTeamService.findByClient(currentUser).equals(currentUser.getId());

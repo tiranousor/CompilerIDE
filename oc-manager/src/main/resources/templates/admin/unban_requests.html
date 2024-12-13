@@ -304,6 +304,101 @@
         overflow: visible;
         text-overflow: unset;
     }
+ .controls-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .controls-buttons button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #fff;
+            transition: background-color 0.3s;
+        }
+
+              .approve-selected-btn {
+            background-color: #6f42c1;
+        }
+
+        .approve-selected-btn:hover {
+            background-color: #5a32a3;
+        }
+
+        .decline-selected-btn {
+            background-color: #dc3545;
+        }
+
+        .decline-selected-btn:hover {
+            background-color: #c82333;
+        }
+                .approve-icon {
+            color: #28a745;
+        }
+
+        .decline-icon {
+            color: #dc3545;
+        }
+        .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 20px;
+            width: 20px;
+            background-color: #eee;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .custom-checkbox {
+            position: relative;
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .custom-checkbox input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+            cursor: pointer;
+        }
+
+
+      .custom-checkbox input:checked ~ .checkmark {
+            background-color: #6f42c1;
+            border-color: #6f42c1;
+        }
+
+        .checkmark::after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+
+        .custom-checkbox input:checked ~ .checkmark::after {
+            display: block;
+        }
+
+        .checkmark::after {
+            left: 7px;
+            top: 3px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
 
     </style>
 </head>
@@ -319,7 +414,7 @@
         <a href="/admin/users" class="list-group-item">
             <i class="fas fa-users"></i> <span class="sidebar-text"></span>
         </a>
-        <a href="/admin/projects" class="list-group-item">
+        <a href="/admin/projects_list" class="list-group-item">
             <i class="fas fa-folder-open"></i> <span class="sidebar-text"></span>
         </a>
         <a href="/admin/unbanRequests" class="list-group-item  active">
@@ -350,8 +445,18 @@
         </div>
         <div class="main-container">
             <div class="container">
-                <ul class="user-list">
+                <div class="controls-row">
+                    <div class="controls-buttons">
+                        <button type="button" class="approve-selected-btn" onclick="approveSelectedRequests()"><i class="bx bx-check"></i></button>
+                        <button type="button" class="decline-selected-btn" onclick="declineSelectedRequests()"><i class="bx bx-x"></i></button>
+                    </div>
+                </div>
+                <ul class="user-list"  th:fragment="userList">
                     <li th:each="request : ${unbanRequests}" class="user-item">
+                        <label class="custom-checkbox">
+                            <input type="checkbox" class="request-select-checkbox" th:value="${request.id}">
+                            <span class="checkmark"></span>
+                        </label>
                         <div class="user-avatar" th:text="${request.client.username.substring(0, 1).toUpperCase()}"></div>
                         <div class="user-info">
                             <p class="user-name" th:text="${request.client.username}"></p>
@@ -379,5 +484,85 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const csrfToken = /*[[${_csrf.token}]]*/ '';
+    const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
+
+    // Функция для одобрения выбранных запросов на разблокировку
+    function approveSelectedRequests() {
+        const selectedCheckboxes = document.querySelectorAll('.request-select-checkbox:checked');
+        if (selectedCheckboxes.length === 0) {
+            alert('Выберите хотя бы один запрос для одобрения.');
+            return;
+        }
+
+        const requestIds = Array.from(selectedCheckboxes).map(checkbox => Number(checkbox.value));
+
+        console.log("Selected requestIds for approval:", requestIds); // Для отладки
+
+        fetch('/admin/unbanRequests/approve', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
+            body: JSON.stringify({ requestIds: requestIds })
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Выбранные запросы успешно одобрены.');
+                location.reload();
+            } else {
+                return response.text().then(text => { throw new Error(text) });
+            }
+        })
+        .catch(error => {
+            console.error('Error approving requests:', error);
+            alert('Произошла ошибка: ' + error.message);
+        });
+    }
+
+    // Функция для отклонения выбранных запросов на разблокировку
+    function declineSelectedRequests() {
+        const selectedCheckboxes = document.querySelectorAll('.request-select-checkbox:checked');
+        if (selectedCheckboxes.length === 0) {
+            alert('Выберите хотя бы один запрос для отклонения.');
+            return;
+        }
+
+        const requestIds = Array.from(selectedCheckboxes).map(checkbox => Number(checkbox.value));
+
+        console.log("Selected requestIds for declination:", requestIds); // Для отладки
+
+        fetch('/admin/unbanRequests/decline', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
+            body: JSON.stringify({ requestIds: requestIds })
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Выбранные запросы успешно отклонены.');
+                location.reload();
+            } else {
+                return response.text().then(text => { throw new Error(text) });
+            }
+        })
+        .catch(error => {
+            console.error('Error declining requests:', error);
+            alert('Произошла ошибка: ' + error.message);
+        });
+    }
+
+    // Функция для раскрытия полного сообщения при клике
+    function toggleMessage(element) {
+        element.classList.toggle('expanded-message');
+    }
+    /*]]>*/
+</script>
 </body>
 </html>

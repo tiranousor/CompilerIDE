@@ -32,8 +32,6 @@ public class Client implements Serializable {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
-
-    // Связь с таблицей login_timestamps
     @OneToMany(mappedBy = "client", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<LoginTimestamp> loginTimes = new ArrayList<>();
 
@@ -81,12 +79,7 @@ public class Client implements Serializable {
     private Set<Client> friends = new HashSet<>();
     @OneToMany(mappedBy = "client", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<ProjectTeam> projectTeams;
-//    @Column(name = "backgroundColor")
-//    @Pattern(regexp = "^#([A-Fa-f0-9]{6})$", message = "Недопустимый цвет фона")
-//    private String backgroundColor;
-//    @Column(name = "mainColor")
-//    @Pattern(regexp = "^#([A-Fa-f0-9]{6})$", message = "Недопустимый цвет фона")
-//    private String mainColor;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

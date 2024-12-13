@@ -3,15 +3,17 @@ package com.example.CompilerIDE.services;
 import com.example.CompilerIDE.providers.Client;
 import com.example.CompilerIDE.providers.DailyStats;
 import com.example.CompilerIDE.providers.LoginTimestamp;
-import com.example.CompilerIDE.repositories.ClientRepository;
-import com.example.CompilerIDE.repositories.DailyStatsRepository;
-import com.example.CompilerIDE.repositories.LoginTimestampRepository;
-import com.example.CompilerIDE.repositories.ProjectRepository;
+import com.example.CompilerIDE.providers.UnbanRequest;
+import com.example.CompilerIDE.repositories.*;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +34,9 @@ public class UserActivityService {
     @Autowired
     private DailyStatsRepository dailyStatsRepository;
 
-    // Метод для подсчета зарегистрированных пользователей
+    @Autowired
+    private UnbanRequestRepository unbanRequestRepository;
+
     public long countRegisteredUsers() {
         return clientRepository.count(); // Подсчитываем всех пользователей в базе данных
     }
@@ -199,6 +203,67 @@ public class UserActivityService {
         });
         clientRepository.saveAll(users);
         System.out.println("Successfully banned users: " + users.stream().map(Client::getUsername).collect(Collectors.toList()));
+    }
+    public List<WeeklyDistribution> getWeeklyDistribution() {
+        List<WeeklyDistribution> distributionList = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+        for (int i = 6; i >= 0; i--) {
+            LocalDate date = today.minusDays(i);
+            DayOfWeek dayOfWeek = date.getDayOfWeek();
+            String dayName = dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.forLanguageTag("ru"));
+            String formattedDate = date.format(formatter);
+
+            long projectCount = projectRepository.countByCreatedAtBetween(date.atStartOfDay(), date.plusDays(1).atStartOfDay());
+            long userCount = clientRepository.countByCreatedAtBetween(date.atStartOfDay(), date.plusDays(1).atStartOfDay());
+
+            distributionList.add(new WeeklyDistribution(dayName, formattedDate, projectCount, userCount));
+        }
+
+        return distributionList;
+    }
+    @Transactional
+    public void approveUnbanRequests(List<Long> requestIds) {
+        List<UnbanRequest> requests = unbanRequestRepository.findAllById(requestIds);
+        if (requests.size() != requestIds.size()) {
+            throw new IllegalArgumentException("Некоторые запросы не найдены.");
+        }
+
+        for (UnbanRequest request : requests) {
+            Client user = request.getClient();
+            user.setRole("ROLE_USER");
+            clientRepository.save(user);
+            unbanRequestRepository.delete(request);
+            System.out.println("Одобрено разблокировка пользователя: " + user.getUsername());
+        }
+    }
+    @Transactional
+    public void declineUnbanRequests(List<Long> requestIds) {
+        List<UnbanRequest> requests = unbanRequestRepository.findAllById(requestIds);
+        if (requests.size() != requestIds.size()) {
+            throw new IllegalArgumentException("Некоторые запросы не найдены.");
+        }
+
+        for (UnbanRequest request : requests) {
+            unbanRequestRepository.delete(request);
+            System.out.println("Отклонено разблокировка пользователя: " + request.getClient().getUsername());
+        }
+    }
+    @Data
+    public static class WeeklyDistribution {
+        private String dayName;
+        private String date;
+        private long projectCount;
+        private long userCount;
+
+        public WeeklyDistribution(String dayName, String date, long projectCount, long userCount) {
+            this.dayName = dayName;
+            this.date = date;
+            this.projectCount = projectCount;
+            this.userCount = userCount;
+        }
+
     }
 
 }

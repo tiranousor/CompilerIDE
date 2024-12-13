@@ -249,7 +249,6 @@ public class WorkerController {
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i].trim();
             if (line.startsWith("File")) {
-                // Пример: File "/tmp/3/pyt.py", line 1
                 int fileStartIndex = line.indexOf("\"") + 1;
                 int fileEndIndex = line.indexOf("\", line ");
                 if (fileStartIndex != -1 && fileEndIndex != -1) {

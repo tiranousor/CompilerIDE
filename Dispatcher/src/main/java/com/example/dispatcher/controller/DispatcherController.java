@@ -143,7 +143,6 @@ public class DispatcherController {
 
                 final String workerUrlForLambda = freeWorkerUrl;
 
-                // Отправляем задачу на воркер и получаем результат асинхронно
                 CompletableFuture.runAsync(() -> {
                     try {
                         ResponseEntity<Map<String, Object>> response = restTemplate.exchange(

@@ -203,10 +203,7 @@
         position: relative;
     }
 
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-    }
+
 
     .stat-card i {
         font-size: 36px;
@@ -227,7 +224,6 @@
         font-weight: bold;
         text-align: center;
     }
-
     .small-card {
         display: flex;
         align-items: center;
@@ -242,20 +238,22 @@
         text-align: center;
     }
 
-    .small-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
 
+        .small-card-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 48%;
+        }
     .small-card i {
-        font-size: 24px;
+        font-size: 22px;
         color: #6f42c1;
-        margin-bottom: 10px;
+        margin-bottom: 5px;
     }
 
     .small-card h3 {
         margin: 0;
-        font-size: 22px;
+        font-size: 20px;
         font-weight: bold;
         color: #24292e;
     }
@@ -265,6 +263,10 @@
         color: #6c757d;
         margin-top: 5px;
     }
+     .chart-bar {
+            background-color: rgba(155, 89, 182, 0.6);
+            border-color: rgba(155, 89, 182, 1);
+        }
 
     .chart-card {
         background-color: #ffffff;
@@ -275,7 +277,6 @@
         flex-direction: column;
         align-items: center;
         margin-bottom: 20px;
-        flex: 1 1 300px;
     }
 
     .chart-card h5 {
@@ -284,6 +285,10 @@
         color: #6c757d;
         text-align: center;
     }
+    .chart-card.half-width {
+       flex: 0 0 48%;
+    }
+
     .stat-card:nth-child(1) i {
         color: #e74c3c; /* Красный */
     }
@@ -335,37 +340,6 @@
     .chart-card:nth-child(3) i {
         color: #f39c12; /* Ярко-желтый */
     }
-<!--       .stat-card i:nth-child(1) {-->
-<!--           color: #ff6f61;-->
-<!--       }-->
-<!--       .stat-card i:nth-child(2) {-->
-<!--           color: #4db8ff;-->
-<!--       }-->
-<!--       .stat-card i:nth-child(3) {-->
-<!--           color: #ffc107;-->
-<!--       }-->
-<!--       .stat-card i:nth-child(4) {-->
-<!--           color: #28a745;-->
-<!--       }-->
-
-<!--       .small-card i:nth-child(1) {-->
-<!--           color: #dc3545;-->
-<!--       }-->
-<!--       .small-card i:nth-child(2) {-->
-<!--           color: #007bff;-->
-<!--       }-->
-<!--       .small-card i:nth-child(3) {-->
-<!--           color: #17a2b8;-->
-<!--       }-->
-<!--       .small-card i:nth-child(4) {-->
-<!--           color: #fd7e14;-->
-<!--       }-->
-<!--       .small-card i:nth-child(5) {-->
-<!--           color: #6610f2;-->
-<!--       }-->
-<!--       .small-card i:nth-child(6) {-->
-<!--           color: #20c997;-->
-<!--       }-->
 
     .container-fluid {
         padding: 0 20px;
@@ -386,6 +360,98 @@
         border-radius: 50%;
         margin-right: 10px;
     }
+         .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex: 0 0 30%;
+        }
+                .flex-layout {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+             .top-users-container {
+            background-color: #ffffff;
+            padding: 20px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .top-users-container h5 {
+            margin-bottom: 20px;
+            font-size: 20px;
+            color: #6f42c1;
+            text-align: center;
+        }
+
+        .top-user-card {
+            display: flex;
+            align-items: center;
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .top-user-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .top-user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #6f42c1;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+
+        .top-user-info {
+            flex-grow: 1;
+        }
+
+        .top-user-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            color: #24292e;
+        }
+
+        .top-user-time {
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .stats-row, .flex-layout {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .chart-card.half-width {
+            flex: 1 1 100%;
+        }
+
+        @media (min-width: 768px) {
+            .chart-card.half-width {
+                flex: 0 0 48%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -400,7 +466,7 @@
         <a href="/admin/users" class="list-group-item">
             <i class="fas fa-users"></i> <span class="sidebar-text"></span>
         </a>
-        <a href="/admin/projects" class="list-group-item">
+        <a href="/admin/projects_list" class="list-group-item">
             <i class="fas fa-folder-open"></i> <span class="sidebar-text"></span>
         </a>
         <a href="/admin/unbanRequests" class="list-group-item">
@@ -437,13 +503,11 @@
                     <i class="fas fa-project-diagram"></i>
                     <h5>Всего проектов</h5>
                     <h3 th:text="${totalProjects}">0</h3>
-                    <canvas id="totalProjectsChart" height="100"></canvas>
                 </div>
                 <div class="stat-card">
                     <i class="fas fa-users"></i>
                     <h5>Всего пользователей</h5>
                     <h3 th:text="${totalUsers}">0</h3>
-                    <canvas id="totalUsersChart" height="100"></canvas>
                 </div>
                 <div class="stat-card">
                     <i class="fas fa-user-lock"></i>
@@ -456,101 +520,84 @@
                     <h3 id="onlineTime" th:text="${totalOnlineTime}">00h:00m:00s</h3>
                 </div>
             </div>
-            <div class="chart-card">
-                <h5>Еженедельная активность</h5>
-                <canvas id="weeklyActivityChart" height="100"></canvas>
-            </div>
-            <!-- Маленькие карточки для новых проектов и пользователей -->
+<!--            <div class="chart-card" >-->
+<!--                <h5>Еженедельная активность</h5>-->
+<!--                <canvas id="weeklyActivityChart" height="100"></canvas>-->
+<!--            </div>-->
             <div class="stats-row">
-                <div class="small-card">
-                    <i class="fas fa-calendar-day"></i>
-                    <h3 th:text="${newProjectsToday}">0</h3>
-                    <span>Новых проектов сегодня</span>
+                <div class="chart-card half-width">
+                    <h5>Распределение по дням недели</h5>
+                    <canvas id="weeklyDistributionChart" height="100"></canvas>
                 </div>
-                <div class="small-card">
-                    <i class="fas fa-calendar-week"></i>
-                    <h3 th:text="${newProjectsThisWeek}">0</h3>
-                    <span>Новых проектов за неделю</span>
-                </div>
-                <div class="small-card">
-                    <i class="fas fa-calendar-alt"></i>
-                    <h3 th:text="${newProjectsThisMonth}">0</h3>
-                    <span>Новых проектов за месяц</span>
-                </div>
-                <div class="small-card">
-                    <i class="fas fa-user-plus"></i>
-                    <h3 th:text="${newUsersLastDay}">0</h3>
-                    <span>Новых пользователей сегодня</span>
-                </div>
-                <div class="small-card">
-                    <i class="fas fa-user-clock"></i>
-                    <h3 th:text="${newUsersLastWeek}">0</h3>
-                    <span>Новых пользователей за неделю</span>
-                </div>
-                <div class="small-card">
-                    <i class="fas fa-user-friends"></i>
-                    <h3 th:text="${newUsersLastMonth}">0</h3>
-                    <span>Новых пользователей за месяц</span>
+
+                <div class="small-card-container" style="flex: 0 0 48%;">
+                    <div class="small-card">
+                        <i class="fas fa-calendar-day"></i>
+                        <h3>2</h3>
+                        <span>Новых проектов сегодня</span>
+                    </div>
+                    <div class="small-card">
+                        <i class="fas fa-calendar-week"></i>
+                        <h3>2</h3>
+                        <span>Новых проектов за неделю</span>
+                    </div>
+                    <div class="small-card">
+                        <i class="fas fa-calendar-alt"></i>
+                        <h3>2</h3>
+                        <span>Новых проектов за месяц</span>
+                    </div>
+                    <div class="small-card">
+                        <i class="fas fa-user-plus"></i>
+                        <h3>2</h3>
+                        <span>Новых пользователей сегодня</span>
+                    </div>
+                    <div class="small-card">
+                        <i class="fas fa-user-clock"></i>
+                        <h3>2</h3>
+                        <span>Новых пользователей за неделю</span>
+                    </div>
+                    <div class="small-card">
+                        <i class="fas fa-user-friends"></i>
+                        <h3>2</h3>
+                        <span>Новых пользователей за месяц</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Активные пользователи -->
-            <div class="stats-row">
-                <div class="small-card">
-                    <i class="fas fa-user-clock"></i>
-                    <h3 th:text="${activeUsersLastDay}">0</h3>
-                    <span>Активных пользователей сегодня</span>
+            <div class="flex-layout">
+                <div class="left-column">
+                    <div class="small-card">
+                        <i class="fas fa-user-clock"></i>
+                        <h3 th:text="${activeUsersLastDay}">0</h3>
+                        <span>Активных пользователей сегодня</span>
+                    </div>
+                    <div class="small-card">
+                        <i class="fas fa-user-clock"></i>
+                        <h3 th:text="${activeUsersLastWeek}">0</h3>
+                        <span>Активных пользователей за неделю</span>
+                    </div>
+                    <div class="small-card">
+                        <i class="fas fa-user-clock"></i>
+                        <h3 th:text="${activeUsersLastMonth}">0</h3>
+                        <span>Активных пользователей за месяц</span>
+                    </div>
                 </div>
-                <div class="small-card">
-                    <i class="fas fa-user-clock"></i>
-                    <h3 th:text="${activeUsersLastWeek}">0</h3>
-                    <span>Активных пользователей за неделю</span>
-                </div>
-                <div class="small-card">
-                    <i class="fas fa-user-clock"></i>
-                    <h3 th:text="${activeUsersLastMonth}">0</h3>
-                    <span>Активных пользователей за месяц</span>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <h5>Топ пользователей за всё время</h5>
-                <table class="table table-striped">
-                    <thead>
-                    <tr>
-                        <th>№</th>
-                        <th>Пользователь</th>
-                        <th>Время онлайн</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="entry, iterStat : ${topUsers}">
-                        <td th:text="${iterStat.index + 1}">1</td>
-                        <td class="table-avatar">
-                            <img th:src="${entry.avatarUrl}" alt="Avatar" class="admin-avatar">
-                            <span th:text="${entry.username}">Username</span>
-                        </td>
-                        <td th:text="${entry.formattedOnlineTime}">00h:00m:00s</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
 
 
-            <div class="stats-row">
-                <div class="chart-card">
-                    <h5>Активные пользователи</h5>
-                    <canvas id="usersChart" height="100"></canvas>
-                </div>
-                <div class="chart-card">
-                    <h5>Активные проекты</h5>
-                    <canvas id="projectsChart" height="100"></canvas>
-                </div>
-                <div class="chart-card">
-                    <h5>Распределение проектов по языкам</h5>
-                    <canvas id="languageChart" height="100"></canvas>
+            <div class="chart-card" style=" flex:  68% 0 0;">
+                <div class="top-users-container">
+                    <h5>Топ 3 активных пользователя</h5>
+                    <div th:each="user : ${topUsers}" class="top-user-card">
+                        <div class="top-user-avatar" th:text="${user.username.substring(0, 1).toUpperCase()}"></div>
+                        <div class="top-user-info">
+                            <p class="top-user-name" th:text="${user.username}">Username</p>
+                            <p class="top-user-time" th:text="${user.formattedOnlineTime}">00h:00m:00s</p>
+                        </div>
+                    </div>
                 </div>
             </div>
+            </div>
+
         </div>
     </div>
 </div>
@@ -560,12 +607,10 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     document.addEventListener("DOMContentLoaded", function () {
-        // Данные для графиков из модели (данные можно передавать из контроллера как JSON)
-        const labels = /*[[${activityLabels}]]*/ []; // Метки оси X, такие как даты
-        const totalProjectsData = /*[[${activityProjectCounts}]]*/ []; // Количество проектов за период
-        const totalUsersData = /*[[${activityUserCounts}]]*/ []; // Количество пользователей за период
+        const labels = /*[[${activityLabels}]]*/ [];
+        const totalProjectsData = /*[[${activityProjectCounts}]]*/ [];
+        const totalUsersData = /*[[${activityUserCounts}]]*/ [];
 
-        // График "Всего проектов"
         if (labels.length > 0 && totalProjectsData.length > 0) {
             const totalProjectsCtx = document.getElementById('totalProjectsChart').getContext('2d');
             new Chart(totalProjectsCtx, {
@@ -603,8 +648,6 @@
                 }
             });
         }
-
-        // График "Всего пользователей"
         if (labels.length > 0 && totalUsersData.length > 0) {
             const totalUsersCtx = document.getElementById('totalUsersChart').getContext('2d');
             new Chart(totalUsersCtx, {
@@ -767,7 +810,7 @@
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: { position: 'top' },
+                        legend: { display: false  },
                         tooltip: {
                             enabled: true,
                             callbacks: {
@@ -777,28 +820,82 @@
                             }
                         }
                     },
-                    scales: {
-                        x: {
-                            stacked: false,
-                            title: {
-                                display: true,
-                                text: 'Дата'
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Количество'
-                            }
-                        }
+                   scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { display: false }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { display: false },
+                        beginAtZero: true
                     }
+                }
                 }
             });
         }
 
-        // Остальные графики...
 
+
+    });
+    /*]]>*/
+</script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    document.addEventListener("DOMContentLoaded", function () {
+        const weeklyDistribution = /*[[${weeklyDistribution}]]*/ [];
+
+        // Формируем массивы для графика
+        const days = weeklyDistribution.map(entry => entry.dayName);
+        const dates = weeklyDistribution.map(entry => entry.date);
+        const projectCounts = weeklyDistribution.map(entry => entry.projectCount);
+        const userCounts = weeklyDistribution.map(entry => entry.userCount);
+        const ctx = document.getElementById('weeklyDistributionChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: days,
+                datasets: [
+                    {
+                        label: 'Проекты',
+                        data: projectCounts,
+                        backgroundColor: 'rgba(155, 89, 182, 0.6)',
+                        borderColor: 'rgba(155, 89, 182, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Пользователи',
+                        data: userCounts,
+                        backgroundColor: 'rgba(52, 152, 219, 0.6)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                const index = context[0].dataIndex;
+                                return `${days[index]}, ${dates[index]}`;
+                            },
+                            label: function(context) {
+                                const label = context.dataset.label || '';
+                                const value = context.parsed.y;
+                                return `${label}: ${value}`;
+                            }
+                        }
+                    },
+
+                },
+                 scales: {
+                x: { display: false },
+                y: { display: false }
+            }
+            }
+        });
     });
     /*]]>*/
 </script>

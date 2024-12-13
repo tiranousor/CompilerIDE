@@ -3,31 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <title>Мониторинг Проектов</title>
+    <!-- Подключение Bootstrap CSS для стилизации -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         .grafana-iframe {
             width: 100%;
-            height: 800px;
+            height: 600px;
             border: none;
+        }
+        .logs-table {
+            margin-top: 30px;
+        }
+        .logs-table th, .logs-table td {
+            vertical-align: middle !important;
         }
     </style>
     <script>
-        function updateDashboard() {
-            const selectedDashboard = document.getElementById("dashboardSelect").value;
-            const iframe = document.getElementById("grafanaIframe");
-            iframe.src = `http://localhost:3000/d-solo/${selectedDashboard}/monitoring-projects?orgId=1&panelId=1`;
+        let allLogs = []; // Переменная для хранения всех логов
+
+        // Функция для получения логов доступа
+        async function fetchLogs(selectedProjectId) {
+            try {
+                const response = await fetch(`/monitoring/logs/${selectedProjectId}`);
+                if (!response.ok) {
+                    throw new Error('Ошибка при загрузке логов доступа');
+                }
+                const logs = await response.json();
+                return logs;
+            } catch (error) {
+                console.error('Ошибка при загрузке логов доступа:', error);
+                return [];
+            }
         }
+
+        // Функция для отображения логов в таблице
+        function renderLogs(filteredLogs) {
+            const logsTableBody = document.getElementById("logsTableBody");
+            logsTableBody.innerHTML = '';
+
+            if (filteredLogs.length === 0) {
+                logsTableBody.innerHTML = `<tr><td colspan="3" class="text-center">Нет записей логов.</td></tr>`;
+                return;
+            }
+
+            filteredLogs.forEach(log => {
+                const row = document.createElement('tr');
+
+                const userCell = document.createElement('td');
+                userCell.textContent = log.username;
+                row.appendChild(userCell);
+
+                const actionCell = document.createElement('td');
+                actionCell.textContent = log.actionType;
+                row.appendChild(actionCell);
+
+                const timeCell = document.createElement('td');
+                const date = new Date(log.accessTime);
+                timeCell.textContent = date.toLocaleString();
+                row.appendChild(timeCell);
+
+                logsTableBody.appendChild(row);
+            });
+        }
+
+        // Функция для обновления метрик Grafana и загрузки логов
+        async function updateDashboard() {
+            const selectedProjectId = document.getElementById("projectSelect").value;
+            const iframe = document.getElementById("grafanaIframe");
+            iframe.src = `http://localhost:3000/d-solo/ce6eubfcsgyrkb/monitoring-proektov?orgId=1&var-project_id=${encodeURIComponent(selectedProjectId)}&panelId=1`;
+
+            // Показать индикатор загрузки логов
+            const logsTableBody = document.getElementById("logsTableBody");
+            logsTableBody.innerHTML = `<tr><td colspan="3" class="text-center">Загрузка...</td></tr>`;
+
+            // Получить все логи
+            allLogs = await fetchLogs(selectedProjectId);
+
+            // Применить фильтр и отобразить логи
+            const showOwnerLogs = document.getElementById("showOwnerLogs").checked;
+            const filteredLogs = showOwnerLogs ? allLogs : allLogs.filter(log => !log.owner); // Исправлено здесь
+            console.log("showOwnerLogs:", showOwnerLogs); // Для отладки
+            console.log("filteredLogs:", filteredLogs); // Для отладки
+            renderLogs(filteredLogs);
+        }
+
+// Функция для фильтрации логов без перезагрузки метрик
+        function filterLogs() {
+            const showOwnerLogs = document.getElementById("showOwnerLogs").checked;
+            const filteredLogs = showOwnerLogs ? allLogs : allLogs.filter(log => !log.owner); // Исправлено здесь
+            console.log("showOwnerLogs:", showOwnerLogs); // Для отладки
+            console.log("filteredLogs:", filteredLogs); // Для отладки
+            renderLogs(filteredLogs);
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener("DOMContentLoaded", function() {
+            const projectSelect = document.getElementById("projectSelect");
+            if (projectSelect) {
+                updateDashboard();
+            }
+
+            // Обработчик изменения состояния чекбокса
+            const showOwnerLogsCheckbox = document.getElementById("showOwnerLogs");
+            if (showOwnerLogsCheckbox) {
+                showOwnerLogsCheckbox.addEventListener('change', function() {
+                    filterLogs();
+                });
+            }
+        });
     </script>
 </head>
 <body>
-<div class="monitoring-container">
-    <h1>Мониторинг Проектов</h1>
-    <label for="dashboardSelect">Выберите Дашборд:</label>
-    <select id="dashboardSelect" onchange="updateDashboard()">
-        <th:block th:each="entry : ${projectDashboards.entrySet()}">
-            <option th:value="${entry.value}" th:text="${entry.key}">Project Name</option>
-        </th:block>
-    </select>
-    <iframe src="http://localhost:3000/d/de6askgqns3k0f/monitoring-projects?orgId=1" class="grafana-iframe"></iframe>
+<div class="container mt-5">
+    <h1 class="mb-4">Мониторинг Проектов</h1>
+
+    <!-- Проверяем, есть ли проекты для отображения -->
+    <div th:if="${!#lists.isEmpty(projectDTOs)}">
+        <div class="form-group">
+            <label for="projectSelect"><strong>Выберите Проект:</strong></label>
+            <select id="projectSelect" class="form-control" onchange="updateDashboard()">
+                <th:block th:each="project, iterStat : ${projectDTOs}">
+                    <option th:value="${project.id}" th:text="${project.name}"
+                            th:selected="${iterStat.index == 0}">Project Name</option>
+                </th:block>
+            </select>
+        </div>
+
+        <!-- Grafana iframe -->
+        <div class="embed-responsive embed-responsive-16by9">
+            <iframe id="grafanaIframe"
+                    src=""
+                    class="grafana-iframe embed-responsive-item"
+                    allowfullscreen></iframe>
+        </div>
+        <!-- Чекбокс для отображения/скрытия логов владельца проекта -->
+        <div class="form-group form-check">
+            <input type="checkbox" class="form-check-input" id="showOwnerLogs" checked>
+            <label class="form-check-label" for="showOwnerLogs">Показывать логи владельца проекта</label>
+        </div>
+
+        <!-- Таблица логов доступа -->
+        <div class="logs-table">
+            <h3 class="mt-5">Логи Доступа к Проекту</h3>
+            <table class="table table-striped table-bordered">
+                <thead class="thead-dark">
+                <tr>
+                    <th>Пользователь</th>
+                    <th>Тип Действия</th>
+                    <th>Время Доступа</th>
+                </tr>
+                </thead>
+                <tbody id="logsTableBody">
+                <tr>
+                    <td colspan="3" class="text-center">Выберите проект для отображения логов.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Сообщение, если нет доступных проектов -->
+    <div th:if="${#lists.isEmpty(projectDTOs)}">
+        <div class="alert alert-info" role="alert">
+            У вас нет доступных проектов для мониторинга.
+        </div>
+    </div>
 </div>
+
+<!-- Подключение Bootstrap JS и зависимостей без атрибутов integrity и crossorigin -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

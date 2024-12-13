@@ -34,11 +34,13 @@ public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
             Client user = clientRepository.findByUsername(username)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-            // Найти последнюю запись входа для пользователя
             LoginTimestamp lastLogin = loginTimestampRepository.findFirstByClientAndLogoutTimeIsNullOrderByLoginTimeDesc(user);
             if (lastLogin != null) {
                 lastLogin.setLogoutTime(LocalDateTime.now());
                 loginTimestampRepository.save(lastLogin);
+                System.out.println("LogoutTime set for user: " + username + " at " + lastLogin.getLogoutTime());
+            } else {
+                System.out.println("No active login found for user: " + username);
             }
         }
         response.sendRedirect("/login");

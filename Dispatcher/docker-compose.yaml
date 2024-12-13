@@ -181,10 +181,12 @@ services:
     restart: always
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
     extra_hosts:
       - "host.docker.internal:host-gateway"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
 
   grafana:
     image: grafana/grafana:latest
@@ -193,8 +195,11 @@ services:
       - "3000:3000"
     volumes:
       - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/provisioning/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
     networks:
-      - app-network
+        - app-network
     restart: always
     depends_on:
       - prometheus
@@ -204,7 +209,6 @@ services:
       GF_SECURITY_ALLOW_EMBEDDING: "true"
       GF_SECURITY_X_FRAME_OPTIONS: "allowall"
 
-
 networks:
   app-network:
     driver: bridge
@@ -212,3 +216,5 @@ networks:
 volumes:
   minio-data:
   grafana-data:
+  prometheus-data:
+  cadvisor-data:

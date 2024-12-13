@@ -640,7 +640,7 @@
         <a href="/admin/users" class="list-group-item active">
             <i class="fas fa-users"></i> <span class="sidebar-text"></span>
         </a>
-        <a href="/admin/projects" class="list-group-item">
+        <a href="/admin/projects_list" class="list-group-item">
             <i class="fas fa-folder-open"></i> <span class="sidebar-text"></span>
         </a>
         <a href="/admin/unbanRequests" class="list-group-item">
@@ -741,7 +741,7 @@
                                 <a th:href="@{/admin/users/{id}(id=${user.id})}" title="Посмотреть профиль">
                                     <i class='bx bx-user profile-icon' style="font-size: 20px; color: #0366d6;"></i>
                                 </a>
-                                <form th:action="@{/admin/users/{id}/ban(id=${user.id})}" method="post" style="display: inline;" th:if="${user.role != 'ROLE_BANNED'}">
+                                <form th:action="@{/admin/users/{id}/ban(id=${user.id})}" method="post" style="display: inline;"  th:if="${user.role != 'ROLE_BANNED' && user.username != 'admin'}">
                                     <button type="submit" style="background: none; border: none; cursor: pointer;" title="Заблокировать">
                                         <i class='bx bx-lock ban-icon' style="font-size: 20px; color: #d73a49;"></i>
                                     </button>
@@ -859,7 +859,15 @@
             alert('Невалидные ID пользователей.');
             return;
         }
+        const currentAdminId = /*[[${client.id}]]*/ 0;
 
+            // Удаляем ID текущего администратора из списка, если он там есть
+            const filteredUserIds = userIds.filter(id => id !== currentAdminId);
+
+            if (filteredUserIds.length === 0) {
+                alert('Вы не можете забанить самого себя.');
+                return;
+            }
         console.log("Selected userIds for banning:", userIds); // Для отладки
 
         fetch('/admin/users/ban', {
