@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Профиль Друга</title>
+    <title th:text="${friend.username}" ></title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
     <link rel="icon" href="/favicon.png" type="image/png">
@@ -276,15 +276,16 @@
         <div class="mt-3">
             <p>Друзья: <span th:text="${friend.friends.size()}">0</span></p>
         </div>
+
     </div>
 
     <div class="projects-container">
         <div class="d-flex flex-items-center flex-justify-between" style="border: none;">
-            <h2>Проекты Друга</h2>
+            <h1>Проекты</h1>
         </div>
         <ul class="list-style-none mt-3">
             <th:block th:each="projectInfo : ${projectsWithRoles}">
-                <li class="Box-row project-item p-3 mb-3" style="border: 1px solid #d1d5da; border-radius: 6px;" th:data-project-id="${projectInfo.project.id}">
+                <li th:if="${projectInfo.isOwner || projectInfo.isCollaborator || projectInfo.project.accessLevel == T(com.example.CompilerIDE.providers.AccessLevel).PUBLIC}"class="Box-row project-item p-3 mb-3" style="border: 1px solid #d1d5da; border-radius: 6px;" th:data-project-id="${projectInfo.project.id}">
                     <div class="d-flex flex-items-center flex-justify-between">
                         <strong class="f4" style="color: #000000;" th:text="${projectInfo.project.name}"></strong>
                         <div class="d-flex gap-2">
@@ -311,7 +312,7 @@
                             <div class="collaborators-list">
                                 <th:block th:each="team : ${projectInfo.project.projectTeams}">
                                     <div class="collaborator-item" th:classappend="${team.role == T(com.example.CompilerIDE.providers.ProjectTeam.Role).CREATOR} ? 'creator' : ''">
-                                        <a th:href="@{/userProfile/{id}(id=${team.client.id})}">
+                                        <a th:href="@{/friends/{id}(id=${team.client.id})}">
                                             <img th:src="${team.client.avatarUrl != null ? team.client.avatarUrl : '/noAvatar.png'}"
                                                  alt="Collaborator Avatar" class="collaborator-avatar">
                                         </a>

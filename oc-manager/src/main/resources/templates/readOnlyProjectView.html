@@ -6,7 +6,8 @@
     <meta name="fileStructure" th:content="${fileStructure}">
     <meta name="projectLanguage" th:content="${language}">
     <link rel="icon" href="/favicon.png" type="image/png">
-    <title th:text="${projectId}"></title>
+    <title th:text="'Проект: ' + ${projectName}">Project Title</title>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
@@ -25,8 +26,8 @@
 
         #sidebar {
             width: 300px;
-            background: #21252b;
-            color: #ffffff;
+            background: #f6f8fa;
+            color: #333;
             overflow: hidden;
             transition: width 0.3s ease;
         }
@@ -35,7 +36,7 @@
             overflow: auto;
             height: calc(100% - 60px);
             padding: 20px;
-            border-right: 1px solid #333;
+            border-right: 1px solid #d1d5da;
         }
 
         #editor-container {
@@ -128,7 +129,7 @@
                 monaco.editor.create(document.getElementById('editor'), {
                     value: '',
                     language: 'plaintext',
-                    theme: 'vs-dark',
+                    theme: 'vs-light',
                     readOnly: true
                 });
             });

@@ -5,332 +5,178 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/favicon.png" type="image/png">
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap">
     <title>Вход</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'VT323', monospace; /* Apply the VT323 font */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+        }
+
+        html, body {
+            height: 100%;
+            background-color: #ffffff;
+            color: #24292f;
         }
 
         body {
-            background: #8EC5FC;
-            color: #FFC300;
             display: flex;
+            justify-content: flex-start;
             align-items: center;
-            justify-content: center;
             flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
+            padding-top: 40px;
+            line-height: 1.5;
         }
 
-        .container {
-            background-color: rgba(0, 0, 0, 0.9);
-            border: 3px solid #FFC300;
-            border-radius: 25px;
-            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.2);
-            position: relative;
-            overflow: hidden;
-            width: 768px;
-            max-width: 100%;
-            min-height: 550px; /* Increased height */
-            padding: 40px; /* More padding for a spacious look */
-        }
-
-        .container h1 {
-            font-size: 32px; /* Larger font size for headings */
+        .logo {
             margin-bottom: 20px;
         }
 
-        .container h3 {
-            font-size: 24px; /* Larger font size for subheadings */
+        .logo img {
+            width: 48px;
         }
 
-        .container p {
-            font-size: 16px; /* Increased font size for paragraphs */
-            line-height: 24px;
-            margin: 15px 0;
-            color: #FFC300;
-        }
-
-        .container span {
-            font-size: 14px; /* Increased font size for spans */
-            color: #FFC300;
-        }
-
-        .container a {
-            color: #FFC300;
-            font-size: 16px; /* Increased font size for links */
-            text-decoration: none;
-            margin: 15px 0 10px;
-            transition: color 0.3s;
-        }
-
-        .container a:hover {
-            color: #FFD700;
-        }
-
-        .container button {
-            background-color: #FFC300;
-            color: #000000;
-            font-size: 16px; /* Larger font size for buttons */
-            padding: 12px 40px; /* Larger padding for buttons */
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-top: 20px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .container button.hidden {
-            background-color: transparent;
-            border: 2px solid #FFC300;
-            color: #FFC300;
-            padding: 12px 30px; /* Larger padding for hidden buttons */
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        .container button.hidden:hover {
-            background-color: #FFC300;
-            color: #000000;
-        }
-
-        .container form {
-            background-color: rgba(0, 0, 0, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            padding: 30px;
-            height: 100%;
-        }
-
-        .container input {
-            background-color: #333333;
-            border: 2px solid #FFC300;
-            margin: 10px 0;
-            padding: 14px 20px; /* Larger padding for input fields */
-            font-size: 16px; /* Larger font size for input fields */
-            border-radius: 10px;
+        .login-container, .register-container {
+            background-color: #f6f8fa;
+            border: 1px solid #d1d9e0b3;
+            border-radius: 6px;
+            padding: 16px;
+            font-size: 14px;
             width: 100%;
-            outline: none;
-            color: #FFC300;
-            transition: border-color 0.3s;
+            max-width: 288px;
         }
 
-        .container input:focus {
-            border-color: #FFD700;
-        }
-
-        .form-container {
-            position: absolute;
-            top: 0;
-            height: 100%;
-            transition: all 0.6s ease-in-out;
-        }
-
-        .sign-in {
-            left: 0;
-            width: 50%;
-            z-index: 2;
-        }
-
-        .container.active .sign-in {
-            transform: translateX(100%);
-        }
-
-        .sign-up {
-            left: 0;
-            width: 50%;
-            opacity: 0;
-            z-index: 1;
-        }
-
-        .container.active .sign-up {
-            transform: translateX(100%);
-            opacity: 1;
-            z-index: 5;
-            animation: fadeIn 0.6s;
-        }
-
-        @keyframes fadeIn {
-            0%, 49.99% {
-                opacity: 0;
-                z-index: 1;
-            }
-            50%, 100% {
-                opacity: 1;
-                z-index: 5;
-            }
-        }
-
-        .toggle-container {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            width: 50%;
-            height: 100%;
-            overflow: hidden;
-            transition: all 0.6s ease-in-out;
-            border-radius: 20px;
-            z-index: 1000;
-        }
-
-        .container.active .toggle-container {
-            transform: translateX(-100%);
-            border-radius: 20px;
-        }
-
-        .toggle {
-            background-color: #FFC300;
-            height: 100%;
-            color: #000000;
-            position: relative;
-            left: -100%;
-            height: 100%;
-            width: 200%;
-            transform: translateX(0);
-            transition: all 0.6s ease-in-out;
-        }
-
-        .container.active .toggle {
-            transform: translateX(50%);
-        }
-
-        .toggle-panel {
-            position: absolute;
-            width: 50%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            padding: 0 30px;
+        .register-container {
+            margin-top: 15px;
+            background-color: #fff;
             text-align: center;
-            top: 0;
-            transform: translateX(0);
-            transition: all 0.6s ease-in-out;
         }
 
-        .toggle-left {
-            transform: translateX(-200%);
+        h1 {
+            font-size: 24px;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+            text-align: center;
+            margin-bottom:10px;
+            }
+        .form-group {
+            margin-bottom: 16px;
+            line-height: 20px;
         }
 
-        .container.active .toggle-left {
-            transform: translateX(0);
+        label {
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: block;
+            color: #24292f;
         }
 
-        .toggle-right {
-            right: 0;
-            transform: translateX(0);
-        }
-
-        .matrix {
-            position: absolute;
-            top: 0;
-            left: 0;
+        input {
             width: 100%;
-            height: 100%;
-            z-index: 0;
-            overflow: hidden;
-            pointer-events: none;
+            padding: 5px 1px;
+            font-size: 14px;
+            color: #24292f;
+            background-color: #ffffff;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            outline: none;
         }
 
-        .matrix span {
-            position: absolute;
-            top: -10vh;
-            font-size: 24px; /* Larger font size for falling letters */
-            color: #FFC300;
-            opacity: 0.8;
-            animation: fall 10s linear infinite;
-            white-space: pre;
+        input:focus {
+            border-color: #0969da;
         }
 
-        @keyframes fall {
-            0% {
-                top: -10vh;
-                opacity: 0;
-            }
-            20% {
-                opacity: 1;
-            }
-            100% {
-                top: 110vh;
-                opacity: 0;
-            }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 6px;
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            background-color:#1f883d;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: #22863a;
+        }
+
+        .link {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 14px;
+            color: #0969da;
+        }
+
+        .link a {
+            text-decoration: none;
+            color: #0969da;
+        }
+
+        .link a:hover {
+            text-decoration: underline;
+        }
+
+        .alt-login {
+            text-align: center;
+            margin: 16px 0;
+            font-size: 14px;
+            color: #57606a;
+        }
+
+        .alt-login a {
+            color: #0969da;
+            text-decoration: none;
+        }
+
+        .alt-login a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 
 <body>
-<div class="matrix" id="matrixContainer"></div>
+<div class="logo">
+    <img src="/logo.png" alt="Corgi Logo">
+</div>
+<h1>Войти на CompilerIDE</h1>
 
-<div class="container" id="container">
-    <div class="form-container sign-in">
-        <form action="/process_login" method="post">
-            <h1>Войти</h1>
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-            <span style="margin-top:20px;">Войти с помощью Логина и пароля</span>
-            <input type="text" id="username" name="username" placeholder="Введите Логин" required>
-            <input type="password" id="password" name="password" placeholder="Введите Пароль" required>
-            <button type="submit">Войти</button>
-            <div th:if="${param.error}">
-                <p style="color:red;">Неверное имя пользователя или пароль.</p>
-            </div>
-            <a th:href="@{/forgot_password}">Забыли пароль?</a>
-            <div th:if="${param.logout}">
-                <p style="color:green;">Вы успешно вышли из аккаунта.</p>
-            </div>
-            <div th:if="${message != null}">
-                <p style="color:green;">[[${message}]]</p>
-            </div>
-        </form>
-    </div>
-
-    <div class="toggle-container">
-        <div class="toggle">
-            <div class="toggle-panel toggle-right">
-                <h1>Еще</h1>
-                <h3>не зарегистрированы?</h3>
-                <p>Пора исправлять!</p>
-                <a href="/registration">
-                    <button class="hidden" id="register" style="border-radius: 12px; border: 1px solid #000000; color: #000000;">зарегистрироваться</button>
-                </a>
-            </div>
+<div class="login-container">
+    <form action="/process_login" method="POST">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        <div class="form-group">
+            <label for="username">Введите имя пользователя</label>
+            <input type="text" id="username" name="username" placeholder="" required>
         </div>
+        <div class="form-group">
+            <label for="password">Пароль <a th:href="@{/forgot_password}" class="link" style="float: right; font-size: 12px;text-decoration: none; right: 0 !important; margin-top:-0.5px;">Забыли пароль?</a></label>
+            <input type="password" id="password" name="password" placeholder="" required>
+        </div>
+        <button class="btn" type="submit">Войти</button>
+    </form>
+
+</div>
+<div class="register-container">
+    <div class="link">
+        <p style="color: #24292f;margin-bottom:7px;margin-top:-15px;" > Не зарегистрированы?</p>
+        <a href="/registration">Создать аккаунт</a>
     </div>
 </div>
 
 <script>
     const container = document.getElementById('container');
-    const registerBtn = document.getElementById('register');
+const registerBtn = document.getElementById('register');
 
-    registerBtn.addEventListener('click', () => {
-        container.classList.add("active");
-    });
-
-    const matrixContainer = document.getElementById('matrixContainer');
-    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-
-    function createMatrixSpan() {
-        const span = document.createElement('span');
-        span.textContent = characters.charAt(Math.floor(Math.random() * characters.length));
-        span.style.left = Math.random() * 100 + 'vw';
-        span.style.animationDuration = Math.random() * 5 + 5 + 's';
-        span.style.opacity = Math.random() * 0.5 + 0.5;
-        matrixContainer.appendChild(span);
-
-        setTimeout(() => {
-            matrixContainer.removeChild(span);
-        }, 10000);
-    }
-
-    setInterval(createMatrixSpan, 150);
+registerBtn.addEventListener('click', () => {
+    container.classList.add("active");
+});
 </script>
 </body>
 

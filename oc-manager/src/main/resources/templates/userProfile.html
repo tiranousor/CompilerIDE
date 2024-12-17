@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile</title>
+    <title th:text="${client.username}">User Profile</title>
     <link rel="icon" href="/favicon.png" type="image/png">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
@@ -356,7 +356,7 @@
     </div>
     <div class="projects-container">
         <div class="d-flex flex-items-center flex-justify-between" style="border: none;">
-            <h2 class="">Мои Проекты</h2>
+            <h2 class="">Проекты</h2>
             <div class="d-flex">
                 <input type="text" id="projectSearchInput" placeholder="Поиск проектов..." oninput="filterProjects()" class="form-control input-sm" style="border: 1px solid #d1d5da; border-radius: 6px;">
                 <a th:href="@{/projects/userProfile/new}" class="btn-custom ml-3" style="border: none;">
@@ -393,7 +393,8 @@
                             <div class="collaborators-list">
                                 <th:block th:each="team : ${project.projectTeams}">
                                     <div class="collaborator-item" th:classappend="${team.role == T(com.example.CompilerIDE.providers.ProjectTeam.Role).CREATOR} ? 'creator' : ''">
-                                        <a th:href="@{/userProfile/{id}(id=${team.client.id})}">
+
+                                        <a th:href="@{/friends/{id}(id=${team.client.id})}">
                                             <img th:src="${team.client.avatarUrl != null} ? ${team.client.avatarUrl} : '/noAvatar.png'"
                                                  alt="Collaborator Avatar" class="collaborator-avatar">
                                         </a>
@@ -409,7 +410,7 @@
         </ul>
 
         <div class="collaborator-projects-section">
-            <h2 class="section-title">Проекты, в которых вы соавтор</h2>
+            <h2 class="section-title">Соавторские проекты</h2>
             <ul class="list-style-none mt-3">
                 <th:block th:each="team : ${collaboratorProjects}">
                     <li class="Box-row project-item p-3 mb-3" style="border: 1px solid #d1d5da; border-radius: 6px;" th:data-project-id="${team.project.id}">
@@ -434,7 +435,7 @@
                                 <div class="collaborators-list">
                                     <th:block th:each="teamMember : ${team.project.projectTeams}">
                                         <div class="collaborator-item" th:classappend="${teamMember.role == T(com.example.CompilerIDE.providers.ProjectTeam.Role).CREATOR} ? 'creator' : ''">
-                                            <a th:href="@{/userProfile/{id}(id=${teamMember.client.id})}">
+                                            <a th:href="@{/friends/{id}(id=${teamMember.client.id})}">
                                                 <img th:src="${teamMember.client.avatarUrl != null ? teamMember.client.avatarUrl : '/noAvatar.png'}"
                                                      alt="Collaborator Avatar" class="collaborator-avatar">
                                             </a>

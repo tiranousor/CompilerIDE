@@ -8,17 +8,27 @@
     <meta name="fileStructure" th:content="${fileStructure}">
     <meta name="projectLanguage" th:content="${language}">
     <link rel="icon" href="/favicon.png" type="image/png">
-    <title>jsTree и Monaco Editor</title>
+    <title th:text="'Проект: ' + ${projectName}">Project Title</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
+
+
+  * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+<!--            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;-->
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+        }
+
         body, html {
             height: 100%;
             margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow: hidden;
+            background-color: #f6f8fa;
+            color: #24292e;
         }
-
         #container {
             display: flex;
             height: 100%;
@@ -27,15 +37,17 @@
 
         #sidebar {
             width: 300px;
-            background: #21252b;
-            color: #ffffff;
+             background: #ffffff;
+             color: #24292e;
             overflow: hidden;
             transition: width 0.3s ease;
+            border-right: 1px solid #d1d5da;
+
         }
 
         #jstree {
             overflow: auto;
-            height: calc(100% - 60px);
+<!--            height: calc(100% - 60px);-->
             padding: 20px;
             border-right: 1px solid #333;
         }
@@ -44,6 +56,7 @@
             position: relative;
             height: 100%;
             flex-grow: 1;
+             width: calc(100% - 300px);
             transition: width 0.3s ease;
         }
 
@@ -54,13 +67,12 @@
 
         .icon-panel {
             width: 60px;
-            background: #1f1f1f;
-            color: #fff;
+            background-color: #f6f8fa;
             display: flex;
             flex-direction: column;
+            border-right: 1px solid #d1d5da;
             align-items: center;
             padding-top: 15px;
-            border-right: 1px solid #333;
         }
         button:disabled {
             cursor: not-allowed;
@@ -69,7 +81,7 @@
         .icon-panel button {
             background: none;
             border: none;
-            color: #fff;
+            color: #24292e;
             margin: 10px 0;
             cursor: pointer;
             font-size: 24px;
@@ -78,7 +90,8 @@
 
         .icon-panel button:hover {
             transform: scale(1.1);
-            color: #61dafb;
+            color: #28a745;
+
         }
 
         .btn-primary-custom {
@@ -98,14 +111,14 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: #2a2d3e;
+            background: #f6f8fa;
             padding: 15px;
-            color: #fff;
+            color: #333;
             font-family: 'Courier New', Courier, monospace;
             font-size: 0.9em;
             max-height: 200px;
             overflow-y: auto;
-            border-top: 1px solid #333;
+            border-top: 1px solid #d1d5da;
         }
 
         #compile-output h3 {
@@ -128,10 +141,13 @@
             background: rgba(0, 0, 0, 0.8);
             padding: 5px;
             border-radius: 5px;
-            color: white;
+            color: #24292e;
+            border: 1px solid #d1d5da;
             display: flex;
             align-items: center;
             z-index: 1000;
+            background-color: #f6f8fa;
+
         }
 
         #main-class-container label {
@@ -139,9 +155,8 @@
         }
 
         #main-class-input {
-            background: #444;
             border: 1px solid #555;
-            color: white;
+            color: #24292e;
             padding: 2px 5px;
             border-radius: 3px;
         }
@@ -320,28 +335,25 @@ body.light-mode {
         const undoStack = [];
         let pendingCreations = 0;
         let duplicateNameError = false;
-        let isSidebarOpen = false; // Инициализация состояния боковой панели
+        let isSidebarOpen = true;
         let isSaving = false;
 
     const initializeSelectMainClassModal = () => {
         const modal = $('#selectMainClassModal');
         const closeModalBtn = $('#closeModal');
 
-        // Когда пользователь нажимает на кнопку (x), закрываем модальное окно
         closeModalBtn.on('click', function() {
             modal.hide();
         });
 
-        // Когда пользователь кликает вне модального окна, закрываем его
         $(window).on('click', function(event) {
             if ($(event.target).is(modal)) {
                 modal.hide();
             }
         });
 
-        // Обработчик кнопки "Выберите исполняемый файл"
         $('#select-main-class-button').on('click', function(event) {
-            event.stopPropagation(); // Предотвращаем закрытие выпадающего меню при клике
+            event.stopPropagation();
             fetchClassesWithMain();
         });
     };
@@ -359,11 +371,9 @@ body.light-mode {
         localStorage.setItem('theme', theme); // Сохранить тему
     };
 
-    // Проверить сохранённую тему
     const savedTheme = localStorage.getItem('theme') || 'dark'; // По умолчанию тёмная
     applyTheme(savedTheme);
 
-    // Обработчик переключения темы
     themeButton.addEventListener('click', () => {
         const currentTheme = body.classList.contains('light-mode') ? 'dark' : 'light';
         applyTheme(currentTheme);
@@ -374,7 +384,6 @@ body.light-mode {
         const languageExtensionMap = {
             'java': '.java',
             'python': '.py',
-            // Добавьте другие языки и их расширения по мере необходимости
         };
 
         const extension = languageExtensionMap[projectLanguage.toLowerCase()] || '';
@@ -404,7 +413,7 @@ body.light-mode {
 
     const populateClassesList = (mainClasses) => {
         const classesList = $('#classesList');
-        classesList.empty(); // Очистить текущий список
+        classesList.empty();
 
         if (mainClasses.length === 0) {
             classesList.append('<li>Классы с main методом не найдены</li>');
@@ -469,8 +478,6 @@ body.light-mode {
         });
     };
 
-
-    // Обработчик изменения поля ввода имени главного класса
     $('#main-class-input').on('change', function() {
         saveMainClass();
     });
@@ -478,11 +485,11 @@ body.light-mode {
     $('#project-button').on('click', function() {
             if (isSidebarOpen) {
                 $('#sidebar').css('width', '0');
-                $('#editor-container').css('width', 'calc(100% - 50px)'); // Вернем всю ширину для редактора
+                $('#editor-container').css('width', '100%'); // Вернем всю ширину для редактора
                 $(this).removeClass('active');
             } else {
                 $('#sidebar').css('width', '300px'); // Устанавливаем ширину боковой панели
-                $('#editor-container').css('width', 'calc(100% - 350px)'); // Сжимаем редактор, чтобы он не выходил за экран
+                $('#editor-container').css('width', 'calc(100% - 300px)'); // Сжимаем редактор, чтобы он не выходил за экран
                 $(this).addClass('active');
             }
             isSidebarOpen = !isSidebarOpen;

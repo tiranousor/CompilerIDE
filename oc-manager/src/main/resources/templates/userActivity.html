@@ -1,2097 +1,26 @@
-
-<!--<!DOCTYPE html>-->
-<!--<html lang="en" xmlns:th="http://www.thymeleaf.org">-->
-
-<!--<head>-->
-<!--    <meta charset="UTF-8">-->
-<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
-<!--    <title>User Profile</title>-->
-<!--    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">-->
-<!--    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>-->
-<!--    <style th:inline="css">-->
-<!--        :root {-->
-<!--            &#45;&#45;background-color: [[${backgroundColor} ?: '#000000']];-->
-<!--            &#45;&#45;main-color: [[${mainColor} ?: '#FFC300']];-->
-<!--        }-->
-
-<!--        * {-->
-<!--            margin: 0;-->
-<!--            padding: 0;-->
-<!--            box-sizing: border-box;-->
-<!--            font-family: 'VT323', monospace;-->
-<!--        }-->
-
-<!--        body {-->
-<!--            background: #000000;-->
-<!--            color: #FFC300;-->
-<!--            display: flex;-->
-<!--            justify-content: center;-->
-<!--            align-items: center;-->
-<!--            flex-direction: column;-->
-<!--            height: 100vh;-->
-<!--            overflow: hidden;-->
-<!--            position: relative;-->
-<!--        }-->
-
-<!--        .container {-->
-<!--            display: flex;-->
-<!--            gap: 30px;-->
-<!--            align-items: flex-start;-->
-<!--            width: 80%;-->
-<!--            max-width: 1200px;-->
-<!--            height: 90%;-->
-<!--            overflow: hidden;-->
-<!--        }-->
-
-<!--        .projects-container {-->
-<!--            flex-grow: 1;-->
-<!--            background-color: rgba(0, 0, 0, 0.9);-->
-<!--            border: 3px solid #FFC300;-->
-<!--            border-radius: 25px;-->
-<!--            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);-->
-<!--            padding: 25px;-->
-<!--            overflow-y: auto;-->
-<!--            overflow-x: hidden;-->
-<!--            max-height: 100%;-->
-<!--            box-sizing: border-box;-->
-<!--        }-->
-
-<!--        .projects-container::-webkit-scrollbar {-->
-<!--&lt;!&ndash;            margin-top:20px;&ndash;&gt;-->
-<!--&lt;!&ndash;            margin-bottom:20px;&ndash;&gt;-->
-<!--            width: 10px;-->
-<!--        }-->
-
-<!--        .projects-container::-webkit-scrollbar-thumb {-->
-<!--            background: #FFC300;-->
-<!--            border-radius: 5px;-->
-<!--        }-->
-
-<!--        .projects-container::-webkit-scrollbar-thumb:hover {-->
-<!--            background: #FFD700;-->
-<!--        }-->
-
-<!--        .projects-container::-webkit-scrollbar-track {-->
-<!--            background: rgba(0, 0, 0, 0.7);-->
-<!--        }-->
-
-<!--        .projects-header {-->
-<!--            display: flex;-->
-<!--            justify-content: space-between;-->
-<!--            align-items: center;-->
-<!--            margin-bottom: 20px;-->
-<!--        }-->
-
-<!--        .projects-header h2 {-->
-<!--            font-size: 24px;-->
-<!--            color: #FFFFFF;-->
-<!--        }-->
-
-<!--        .project-name {-->
-<!--            font-size: 20px;-->
-<!--            color: #FFFFFF;-->
-<!--        }-->
-
-<!--        .add-btn {-->
-<!--            background-color: transparent;-->
-<!--            text-decoration: none;-->
-<!--            border: none;-->
-<!--            color: #FFC300;-->
-<!--            border-radius: 50%;-->
-<!--            cursor: pointer;-->
-<!--            font-size: 35px;-->
-<!--            transition: box-shadow 0.3s ease-in-out;-->
-<!--        }-->
-
-<!--        .add-btn:hover {-->
-<!--            box-shadow: 0 0 20px rgba(255, 234, 0, 0.4), 0 0 40px rgba(255, 234, 0, 0.2);-->
-<!--        }-->
-
-<!--        .project-list {-->
-<!--            list-style: none;-->
-<!--            padding: 0;-->
-<!--        }-->
-
-<!--        .project-item {-->
-<!--            padding: 20px;-->
-<!--            border-radius: 15px;-->
-<!--            margin-bottom: 15px;-->
-<!--            cursor: pointer;-->
-<!--            border: 3px solid #FFC300;-->
-<!--            border-radius: 25px;-->
-<!--            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.2);-->
-<!--            background-color: rgba(0, 0, 0, 0.8);-->
-<!--            word-wrap: break-word;-->
-<!--            white-space: normal;-->
-<!--            overflow: hidden;-->
-<!--        }-->
-
-<!--        .project-item:hover {-->
-<!--            box-shadow: 0 0 25px rgba(255, 234, 0, 0.8), 0 0 50px rgba(142, 197, 252, 0.5);-->
-<!--            border-color: rgba(255, 234, 0, 0.2);-->
-<!--        }-->
-
-<!--        .project-header {-->
-<!--            display: flex;-->
-<!--            justify-content: space-between;-->
-<!--            align-items: center;-->
-<!--            max-width: 100%;-->
-<!--        }-->
-
-<!--        .project-actions {-->
-<!--            display: flex;-->
-<!--            gap: 10px;-->
-<!--            max-width: calc(100% - 20px);-->
-<!--            flex-wrap: wrap;-->
-<!--        }-->
-
-<!--        .project-actions button {-->
-<!--            background-color: transparent;-->
-<!--            border: 2px solid #FFC300;-->
-<!--            color: #FFC300;-->
-<!--            padding: 5px 10px;-->
-<!--            border-radius: 5px;-->
-<!--            cursor: pointer;-->
-<!--            transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;-->
-<!--        }-->
-
-<!--        .project-actions button:hover {-->
-<!--            background-color: #FFC300;-->
-<!--            color: #000000;-->
-<!--            box-shadow: 0 0 10px rgba(255, 234, 0, 0.6);-->
-<!--        }-->
-
-<!--        .project-details {-->
-<!--            margin-top: 15px;-->
-<!--            background-color: #F7F9FA;-->
-<!--            padding: 20px;-->
-<!--            border-radius: 15px;-->
-<!--            display: none;-->
-<!--            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);-->
-<!--        }-->
-
-<!--        .project-details p {-->
-<!--            margin-bottom: 12px;-->
-<!--            font-size: 15px;-->
-<!--            color: #555;-->
-<!--        }-->
-
-<!--        .project-details-actions {-->
-<!--            display: flex;-->
-<!--            justify-content: center;-->
-<!--            gap: 10px;-->
-<!--            margin-top: 20px;-->
-<!--        }-->
-
-<!--        .project-details-actions .btn-edit,-->
-<!--        .project-details-actions .btn-continue,-->
-<!--        .project-details-actions .btn-delete {-->
-<!--            background-color: #1DB954;-->
-<!--            color: #fff;-->
-<!--            padding: 10px 15px;-->
-<!--            border: none;-->
-<!--            border-radius: 5px;-->
-<!--            cursor: pointer;-->
-<!--            text-decoration: none;-->
-<!--            font-size: 15px;-->
-<!--            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);-->
-<!--        }-->
-
-<!--        .project-details-actions .btn-delete {-->
-<!--            background-color: #FF4D4F;-->
-<!--        }-->
-
-<!--        .back-btn,-->
-<!--        .settings-btn {-->
-<!--            position: absolute;-->
-<!--            top: 20px;-->
-<!--            right: 20px;-->
-<!--            background-color: transparent;-->
-<!--            border: none;-->
-<!--            color: #FFC300;-->
-<!--            font-size: 30px;-->
-<!--            cursor: pointer;-->
-<!--            transition: color 0.3s ease, box-shadow 0.3s;-->
-<!--        }-->
-
-<!--        .back-btn:hover,-->
-<!--        .settings-btn:hover {-->
-<!--            color: #ffffff;-->
-<!--            box-shadow: 0 0 10px rgba(255, 234, 0, 0.6);-->
-<!--        }-->
-
-<!--        .back-btn {-->
-<!--            left: 20px;-->
-<!--        }-->
-
-<!--        .settings-menu {-->
-<!--            position: fixed;-->
-<!--            top: 0;-->
-<!--            right: -300px;-->
-<!--            height: 100%;-->
-<!--            width: 300px;-->
-<!--            background-color: rgba(0, 0, 0, 0.9);-->
-<!--            border: 2px solid #FFC300;-->
-<!--            border-radius: 10px 0 0 10px;-->
-<!--            box-shadow: -2px 0 10px rgba(255, 234, 0, 0.4);-->
-<!--            transition: right 0.4s ease;-->
-<!--            z-index: 100;-->
-<!--            padding: 25px;-->
-<!--            color: #FFC300;-->
-<!--        }-->
-
-<!--        .settings-menu a {-->
-<!--            display: block;-->
-<!--            padding: 12px;-->
-<!--            color: #FFC300;-->
-<!--            text-decoration: none;-->
-<!--            font-weight: 600;-->
-<!--            font-size: 18px;-->
-<!--            border-radius: 8px;-->
-<!--            transition: background-color 0.3s, box-shadow 0.3s;-->
-<!--            box-shadow: none;-->
-<!--        }-->
-
-<!--        .settings-menu a:hover {-->
-<!--            box-shadow: 0 0 15px rgba(255, 234, 0, 0.6);-->
-<!--            background-color: rgba(255, 234, 0, 0.1);-->
-<!--        }-->
-
-<!--        .edit-profile-btn {-->
-<!--            display: block;-->
-<!--            padding: 12px;-->
-<!--            font-size: 18px;-->
-<!--            color: #FFC300;-->
-<!--            background-color: transparent;-->
-<!--            border-radius: 8px;-->
-<!--            cursor: pointer;-->
-<!--            margin-top: 15px;-->
-<!--        }-->
-
-<!--        .edit-profile-btn:hover {-->
-<!--            box-shadow: 0 0 15px rgba(255, 234, 0, 0.6);-->
-<!--            background-color: rgba(255, 234, 0, 0.1);-->
-<!--        }-->
-
-<!--        .overlay {-->
-<!--            position: fixed;-->
-<!--            top: 0;-->
-<!--            left: 0;-->
-<!--            width: 100%;-->
-<!--            height: 100%;-->
-<!--            background-color: rgba(0, 0, 0, 0.5);-->
-<!--            visibility: hidden;-->
-<!--            opacity: 0;-->
-<!--            transition: opacity 0.4s ease, visibility 0.4s ease;-->
-<!--            z-index: 50;-->
-<!--        }-->
-
-<!--        .overlay.active {-->
-<!--            visibility: visible;-->
-<!--            opacity: 1;-->
-<!--        }-->
-
-<!--        .settings-menu.active {-->
-<!--            right: 0;-->
-<!--        }-->
-
-<!--        .matrix {-->
-<!--            position: absolute;-->
-<!--            top: 0;-->
-<!--            left: 0;-->
-<!--            width: 100%;-->
-<!--            height: 100%;-->
-<!--            z-index: -1;-->
-<!--            pointer-events: none;-->
-<!--            overflow: hidden;-->
-<!--        }-->
-
-<!--        .matrix span {-->
-<!--            position: absolute;-->
-<!--            top: -10vh;-->
-<!--            font-size: 18px;-->
-<!--            color: #FFC300;-->
-<!--            opacity: 0.8;-->
-<!--            animation: fall 10s linear infinite;-->
-<!--            white-space: pre;-->
-<!--        }-->
-
-<!--        @keyframes fall {-->
-<!--            0% {-->
-<!--                top: -10vh;-->
-<!--                opacity: 0;-->
-<!--            }-->
-
-<!--            20% {-->
-<!--                opacity: 1;-->
-<!--            }-->
-
-<!--            100% {-->
-<!--                top: 110vh;-->
-<!--                opacity: 0;-->
-<!--            }-->
-<!--        }-->
-
-<!--        .friends-section {-->
-<!--            text-align: center;-->
-<!--            margin-top: 30px;-->
-<!--        }-->
-
-<!--        .friends-list {-->
-<!--            display: flex;-->
-<!--            gap: 10px;-->
-<!--            justify-content: center;-->
-<!--            margin-top: 10px;-->
-<!--        }-->
-
-<!--        .friend-item {-->
-<!--            display: flex;-->
-<!--            flex-direction: column;-->
-<!--            align-items: center;-->
-<!--            width: 60px;-->
-<!--        }-->
-
-<!--        .friend-avatar {-->
-<!--            width: 50px;-->
-<!--            height: 50px;-->
-<!--            border-radius: 50%;-->
-<!--            object-fit: cover;-->
-<!--            margin-bottom: 5px;-->
-<!--            border: 2px solid #FFC300;-->
-<!--        }-->
-
-<!--        .friend-username {-->
-<!--            color: #17A846;-->
-<!--            font-size: 14px;-->
-<!--            text-align: center;-->
-<!--            text-decoration: none;-->
-<!--        }-->
-
-<!--        #notificationsList {-->
-<!--            list-style: none;-->
-<!--            padding: 0;-->
-<!--            width: 100%;-->
-<!--        }-->
-
-<!--        #notificationsList li {-->
-<!--            background-color: #F9FBFC;-->
-<!--            padding: 15px;-->
-<!--            border-radius: 10px;-->
-<!--            margin-bottom: 10px;-->
-<!--            display: flex;-->
-<!--            justify-content: space-between;-->
-<!--            align-items: center;-->
-<!--            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);-->
-<!--        }-->
-
-<!--        .notification-info {-->
-<!--            display: flex;-->
-<!--            flex-direction: column;-->
-<!--        }-->
-
-<!--        .notification-buttons {-->
-<!--            display: flex;-->
-<!--            gap: 10px;-->
-<!--        }-->
-
-<!--        .btn-accept {-->
-<!--            background-color: #1DB954;-->
-<!--            color: #fff;-->
-<!--            border: none;-->
-<!--            padding: 8px 12px;-->
-<!--            border-radius: 5px;-->
-<!--            cursor: pointer;-->
-<!--            transition: background-color 0.3s;-->
-<!--        }-->
-
-<!--        .btn-accept:hover {-->
-<!--            background-color: #17a44c;-->
-<!--        }-->
-
-<!--        .btn-reject {-->
-<!--            background-color: #FF4D4F;-->
-<!--            color: #fff;-->
-<!--            border: none;-->
-<!--            padding: 8px 12px;-->
-<!--            border-radius: 5px;-->
-<!--            cursor: pointer;-->
-<!--            transition: background-color 0.3s;-->
-<!--        }-->
-
-<!--        .btn-reject:hover {-->
-<!--            background-color: #e60000;-->
-<!--        }-->
-
-<!--        .profile-container {-->
-<!--            width: 290px;-->
-<!--            padding: 25px;-->
-<!--            display: flex;-->
-<!--            flex-direction: column;-->
-<!--            align-items: center;-->
-<!--            flex-shrink: 0;-->
-<!--            border: 3px solid #FFC300;-->
-<!--            border-radius: 25px;-->
-<!--            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);-->
-<!--            background-color: rgba(0, 0, 0, 0.9);-->
-<!--        }-->
-
-<!--        .profile-avatar {-->
-<!--            width: 130px;-->
-<!--            height: 130px;-->
-<!--            border-radius: 50%;-->
-<!--            object-fit: cover;-->
-<!--            margin-bottom: 20px;-->
-<!--            box-shadow: 0 0 25px rgba(255, 234, 0, 0.2), 0 0 50px rgba(142, 197, 252, 0.3);-->
-<!--            background-color: #333;-->
-<!--        }-->
-
-<!--        .profile-info {-->
-<!--            text-align: center;-->
-<!--        }-->
-
-<!--        .profile-info p {-->
-<!--            margin-bottom: 10px;-->
-<!--            font-size: 18px;-->
-<!--            color: #FFC300;-->
-<!--        }-->
-
-<!--        .profile-info a {-->
-<!--            color: #17A846;-->
-<!--            font-size: 18px;-->
-<!--            text-decoration: none;-->
-<!--            transition: color 0.3s;-->
-<!--        }-->
-
-<!--        .profile-info a:hover {-->
-<!--            color: #ffffff;-->
-<!--        }-->
-
-<!--        .view-all-friends {-->
-<!--            text-decoration: none;-->
-<!--            color: #1DB954;-->
-<!--            font-weight: 600;-->
-<!--            font-size: 14px;-->
-<!--        }-->
-
-<!--        .view-all-friends:hover {-->
-<!--            text-decoration: underline;-->
-<!--        }-->
-
-<!--        .settings-btn {-->
-<!--            position: absolute;-->
-<!--            top: 20px;-->
-<!--            width: 45px;-->
-<!--            height: 45px;-->
-<!--            display: flex;-->
-<!--            justify-content: center;-->
-<!--            align-items: center;-->
-<!--            border-radius: 50%;-->
-<!--            cursor: pointer;-->
-<!--            right: 20px;-->
-<!--        }-->
-
-<!--        .search-bar {-->
-<!--            margin-left: auto;-->
-<!--            margin-right: 15px;-->
-<!--        }-->
-
-<!--        #projectSearchInput {-->
-<!--            padding: 5px 10px;-->
-<!--            font-size: 16px;-->
-<!--            border: 2px solid #FFC300;-->
-<!--            border-radius: 8px;-->
-<!--            background-color: #000000;-->
-<!--            color: #FFC300;-->
-<!--            outline: none;-->
-<!--            transition: border-color 0.3s;-->
-<!--        }-->
-
-<!--        #projectSearchInput::placeholder {-->
-<!--            color: rgba(255, 195, 0, 0.6);-->
-<!--        }-->
-
-<!--        #projectSearchInput:focus {-->
-<!--            border-color: #FFD700;-->
-<!--            box-shadow: 0 0 10px rgba(255, 195, 0, 0.8);-->
-<!--        }-->
-<!--    </style>-->
-<!--</head>-->
-
-<!--<body>-->
-<!--<input type="hidden" id="csrfToken" name="_csrf" th:value="${_csrf.token}" />-->
-<!--<div class="matrix" id="matrixContainer"></div>-->
-<!--<div class="container">-->
-<!--    <div class="profile-container">-->
-<!--        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="profile-avatar">-->
-<!--        <div class="profile-info">-->
-<!--            <p class="info-item" th:text="${client.username}">Имя пользователя</p>-->
-<!--            <p class="info-item" th:text="${client.email}">example@example.com</p>-->
-<!--            <p class="info-item">-->
-<!--                <a th:href="${client.githubProfile}" target="_blank">GitHub Профиль</a>-->
-<!--            </p>-->
-<!--            <p class="info-item" th:text="${client.about}">О себе</p>-->
-<!--        </div>-->
-<!--        <div class="friends-section">-->
-<!--            <a th:href="@{/friends/list}" class="view-all-friends">Друзья</a>-->
-<!--            <div class="friends-list">-->
-<!--                <th:block th:each="friend, iterStat : ${friends}">-->
-<!--                    <th:block th:if="${iterStat.index < 4}">-->
-<!--                        <div class="friend-item">-->
-<!--                            <a th:href="@{/friends/{id}(id=${friend.id})}">-->
-<!--                                <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar" class="friend-avatar">-->
-<!--                                <span th:text="${friend.username}" class="friend-username">Имя друга</span>-->
-<!--                            </a>-->
-<!--                        </div>-->
-<!--                    </th:block>-->
-<!--                </th:block>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
-<!--    <div class="projects-container">-->
-<!--        <div class="projects-header">-->
-<!--            <h2>Мои Проекты</h2>-->
-<!--            <div class="search-bar">-->
-<!--                <input type="text" id="projectSearchInput" placeholder="Поиск проектов..." oninput="filterProjects()" />-->
-<!--            </div>-->
-<!--            <a th:href="@{/projects/userProfile/new}" class="add-btn">-->
-<!--                <i class='bx bx-plus'></i>-->
-<!--            </a>-->
-<!--        </div>-->
-<!--        <ul class="project-list">-->
-<!--            <th:block th:each="project : ${projects}">-->
-<!--                <li class="project-item" th:data-project-id="${project.id}">-->
-<!--                    <div class="project-header">-->
-<!--                        <span class="project-name" th:text="${project.name}">Project Name</span>-->
-<!--                        <div class="project-actions">-->
-<!--                            <button class="btn-open"><i class='bx bx-folder-open'></i></button>-->
-<!--                            <button class="btn-info"><i class='bx bx-info-circle'></i></button>-->
-<!--                            <form th:action="@{/projects/delete/{id}(id=${project.id})}" method="post" style="display: inline;" onsubmit="return confirm('Вы действительно хотите удалить проект?');">-->
-<!--                                <input type="hidden" name="_csrf" th:value="${_csrf.token}" />-->
-<!--                                <button type="submit" class="btn-delete"><i class='bx bx-trash'></i></button>-->
-<!--                            </form>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                    <div class="project-details" style="display: none;">-->
-<!--                        <p><strong>Имя проекта:</strong> <span th:text="${project.name}">Имя проекта</span></p>-->
-<!--                        <p><strong>ReadMe:</strong> <span th:text="${project.readMe}">ReadMe</span></p>-->
-<!--                        <p><strong>Язык:</strong> <span th:text="${project.language}">Язык</span></p>-->
-<!--                        <div class="project-details-actions">-->
-<!--                            <a th:href="@{/projects/edit/{id}(id=${project.id})}" class="btn-edit">Редактировать</a>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </li>-->
-<!--            </th:block>-->
-<!--        </ul>-->
-<!--    </div>-->
-<!--</div>-->
-<!--<button class="settings-btn">-->
-<!--    <i class='bx bx-cog'></i>-->
-<!--</button>-->
-<!--<div class="settings-menu" id="settingsMenu">-->
-<!--    <a th:href="@{/edit/{id}(id=${client.id})}">Редактировать профиль</a>-->
-<!--    <form th:action="@{/logout}" th:method="POST">-->
-<!--        <input type="submit" value="Выход" class="edit-profile-btn" />-->
-<!--    </form>-->
-<!--</div>-->
-<!--<div class="overlay" id="overlay"></div>-->
-<!--<script>-->
-<!--    const settingsBtn = document.querySelector('.settings-btn');-->
-<!--    const settingsMenu = document.getElementById('settingsMenu');-->
-<!--    const overlay = document.getElementById('overlay');-->
-
-<!--    settingsBtn.addEventListener('click', () => {-->
-<!--        settingsMenu.classList.toggle('active');-->
-<!--        overlay.classList.toggle('active');-->
-<!--    });-->
-
-<!--    overlay.addEventListener('click', () => {-->
-<!--        settingsMenu.classList.remove('active');-->
-<!--        overlay.classList.remove('active');-->
-<!--    });-->
-
-<!--    const infoButtons = document.querySelectorAll('.btn-info');-->
-<!--    infoButtons.forEach(button => {-->
-<!--        button.addEventListener('click', (e) => {-->
-<!--            e.stopPropagation();-->
-<!--            const projectItem = button.closest('.project-item');-->
-<!--            const projectDetails = projectItem.querySelector('.project-details');-->
-<!--            projectDetails.style.display = (projectDetails.style.display === 'none' || projectDetails.style.display === '') ? 'block' : 'none';-->
-<!--        });-->
-<!--    });-->
-
-<!--    document.addEventListener('DOMContentLoaded', function () {-->
-<!--        const openButtons = document.querySelectorAll('.btn-open');-->
-<!--        openButtons.forEach(button => {-->
-<!--            button.addEventListener('click', (e) => {-->
-<!--                e.stopPropagation();-->
-<!--                const projectItem = button.closest('.project-item');-->
-<!--                const projectId = projectItem.getAttribute('data-project-id');-->
-<!--                if (projectId) {-->
-<!--                    window.location.href = `/Compiler/project/${projectId}`;-->
-<!--                } else {-->
-<!--                    console.error("Project ID не найден");-->
-<!--                }-->
-<!--            });-->
-<!--        });-->
-<!--    });-->
-
-<!--    const matrixContainer = document.getElementById('matrixContainer');-->
-<!--    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';-->
-
-<!--    function createMatrixSpan() {-->
-<!--        const span = document.createElement('span');-->
-<!--        span.textContent = characters.charAt(Math.floor(Math.random() * characters.length));-->
-<!--        span.style.left = Math.random() * 100 + 'vw';-->
-<!--        span.style.animationDuration = Math.random() * 5 + 5 + 's';-->
-<!--        span.style.opacity = Math.random() * 0.5 + 0.5;-->
-<!--        matrixContainer.appendChild(span);-->
-<!--        setTimeout(() => {-->
-<!--            matrixContainer.removeChild(span);-->
-<!--        }, 10000);-->
-<!--    }-->
-
-<!--    setInterval(createMatrixSpan, 150);-->
-
-<!--    function filterProjects() {-->
-<!--        const searchInput = document.getElementById('projectSearchInput').value.toLowerCase();-->
-<!--        const projectItems = document.querySelectorAll('.project-item');-->
-<!--        projectItems.forEach(item => {-->
-<!--            const projectName = item.querySelector('.project-name').textContent.toLowerCase();-->
-<!--            if (projectName.includes(searchInput)) {-->
-<!--                item.style.display = '';-->
-<!--            } else {-->
-<!--                item.style.display = 'none';-->
-<!--            }-->
-<!--        });-->
-<!--    }-->
-<!--</script>-->
-<!--</body>-->
-
-<!--</html>-->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!DOCTYPE html>
-<html lang="en" xmlns:sec="http://www.w3.org/1999/xhtml" xmlns:th="http://www.w3.org/1999/xhtml">
-<head>
-    <meta charset="UTF-8">
-    <meta name="projectId" th:content="${projectId}">
-    <meta name="_csrf" th:content="${_csrf.token}" />
-    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
-    <meta name="fileStructure" th:content="${fileStructure}">
-    <link rel="icon" href="/favicon.png" type="image/png">
-    <title>jsTree и Monaco Editor</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <style>
-        body, html {
-            height: 100%;
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
-        }
-
-        #container {
-            display: flex;
-            height: 100%;
-            background-color: #282c34;
-        }
-
-        #sidebar {
-            width: 300px;
-            background: #21252b;
-            color: #ffffff;
-            overflow: hidden;
-            transition: width 0.3s ease;
-        }
-
-        #jstree {
-            overflow: auto;
-            height: calc(100% - 60px);
-            padding: 20px;
-            border-right: 1px solid #333;
-        }
-
-        #editor-container {
-            position: relative;
-            height: 100%;
-            flex-grow: 1;
-            transition: width 0.3s ease;
-        }
-
-        #editor {
-            width: 100%;
-            height: 100%;
-        }
-
-        .icon-panel {
-            width: 60px;
-            background: #1f1f1f;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 15px;
-            border-right: 1px solid #333;
-        }
-
-        .icon-panel button {
-            background: none;
-            border: none;
-            color: #fff;
-            margin: 10px 0;
-            cursor: pointer;
-            font-size: 24px;
-            transition: transform 0.2s, color 0.3s;
-        }
-
-        .icon-panel button:hover {
-            transform: scale(1.1);
-            color: #61dafb;
-        }
-
-        .btn-primary-custom {
-            color: #fff;
-            background-color: #007bff;
-            border-color: #007bff;
-            transition: background-color 0.3s, transform 0.2s;
-        }
-
-        .btn-primary-custom:hover {
-            background-color: #0056b3;
-            transform: scale(1.05);
-        }
-
-        #compile-output {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #2a2d3e;
-            padding: 15px;
-            color: #fff;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.9em;
-            max-height: 200px;
-            overflow-y: auto;
-            border-top: 1px solid #333;
-        }
-
-        #compile-output h3 {
-            font-size: 1.1em;
-            margin-bottom: 10px;
-        }
-
-        .code-explorer-heading {
-            text-align: center;
-            background: #333;
-            padding: 10px;
-            font-weight: bold;
-            font-size: 1.1em;
-            border-bottom: 1px solid #444;
-        }
-
-        .btn-group {
-            display: flex;
-            justify-content: center;
-            padding: 10px;
-            background: #282c34;
-            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Стили для выделения строк с ошибками */
-        .line-decoration-error {
-            background-color: rgba(255, 0, 0, 0.3);
-        }
-        .glyph-margin-error {
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="16" width="16"><circle cx="8" cy="8" r="6" fill="red"/></svg>') no-repeat center center;
-            width: 16px;
-            height: 16px;
-        }
-        #compile-result ul {
-            list-style-type: none;
-            padding-left: 0;
-        }
-        #compile-result li {
-            margin-bottom: 5px;
-        }
-        #compile-result a.compile-error {
-            color: #61dafb;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        #compile-result a.compile-error:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-<div id="container">
-    <div class="icon-panel">
-        <button id="profile-button" title="Profile" data-url="/userProfile">
-            <i class="fas fa-user-circle"></i>
-        </button>
-        <button id="project-button" title="Project Tree">
-            <i class="fas fa-project-diagram"></i>
-        </button>
-        <button id="save-button" title="Save Project">
-            <i class="fas fa-save"></i>
-        </button>
-        <button id="compile-button" title="Compile Code">
-            <i class="fas fa-play"></i>
-        </button>
-    </div>
-    <div id="sidebar">
-        <div id="jstree" data-file-structure="\${fileStructure}" data-project-name="${projectName}"></div>
-    </div>
-    <div id="editor-container">
-        <div id="editor"></div>
-        <div id="compile-output" style="display: none;">
-            <h3>Результат компиляции:</h3>
-            <pre id="compile-result"></pre>
-        </div>
-    </div>
-</div>
-<div id="message"></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
-<script>
-    $(document).ready(function() {
-        $('#profile-button').on('click', function() {
-            const profileUrl = $(this).data('url');
-            window.location.href = profileUrl;
-        });
-
-        $(function() {
-            let editor;
-            let currentFile = null;
-            const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
-            const projectId = document.querySelector('meta[name="projectId"]').content;
-            let isUndoing = false;
-            const undoStack = [];
-            let pendingCreations = 0;
-            let duplicateNameError = false;
-            let isSidebarOpen = false; // Инициализация состояния боковой панели
-            let isSaving = false;
-
-            $('#project-button').on('click', function() {
-                if (isSidebarOpen) {
-                    $('#sidebar').css('width', '0');
-                    $('#editor-container').css('width', 'calc(100% - 50px)'); // Вернем всю ширину для редактора
-                    $(this).removeClass('active');
-                } else {
-                    $('#sidebar').css('width', '300px'); // Устанавливаем ширину боковой панели
-                    $('#editor-container').css('width', 'calc(100% - 350px)'); // Сжимаем редактор, чтобы он не выходил за экран
-                    $(this).addClass('active');
-                }
-                isSidebarOpen = !isSidebarOpen;
-            });
-
-            $('#compile-button').on('click', function() {
-                compileCode();
-            });
-
-            const getLanguageFromFilename = (filename) => {
-                const extension = filename.split('.').pop().toLowerCase();
-                const languageMap = {
-                    'js': 'javascript',
-                    'html': 'html',
-                    'css': 'css',
-                    'json': 'json',
-                    'md': 'markdown',
-                    'py': 'python',
-                    'java': 'java',
-                    'c': 'c',
-                    'cpp': 'cpp',
-                    'ts': 'typescript',
-                };
-                return languageMap[extension] || 'plaintext';
-            };
-
-            const compileCode = () => {
-                saveCurrentFile(); // Сохраняем текущий файл
-                saveProject(false); // Сохраняем проект без отображения сообщения
-
-                if (!currentFile || !currentFile.data || !currentFile.data.content) {
-                    showMessage("Нет открытого файла для компиляции.", "error");
-                    return;
-                }
-
-                const language = getLanguageFromFilename(currentFile.text);
-                const compileRequest = {
-                    project_id: projectId,
-                    language: language
-                };
-
-                $.ajax({
-                    url: '/compile',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    },
-                    data: JSON.stringify(compileRequest),
-                    success: function(response) {
-                        console.log("Результат компиляции:", response);
-                        displayCompileResult(response);
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Ошибка при компиляции:", error);
-                        // Попытка парсинга ответа сервера
-                        try {
-                            const response = JSON.parse(xhr.responseText);
-                            displayCompileResult(response);
-                        } catch (e) {
-                            showMessage("Ошибка при компиляции.", "error");
-                        }
-                    }
-                });
-            };
-
-            // Функция для отображения результата компиляции
-            const displayCompileResult = (result) => {
-                $('#compile-output').show();
-                $('#compile-result').empty(); // Очищаем предыдущие результаты
-
-                if (result.returncode === 0) {
-                    $('#compile-result').append('<h3>Компиляция прошла успешно!</h3>');
-                } else {
-                    $('#compile-result').append('<h3>Результат компиляции:</h3>');
-                    if (Array.isArray(result.stderr)) {
-                        const errorList = $('<ul></ul>');
-                        result.stderr.forEach(error => {
-                            const errorItem = $('<li></li>');
-                            const errorLink = $('<a href="#" class="compile-error"></a>')
-                                .text(`${error.message} (${error.file}:${error.line}:${error.column})`)
-                                .data('line', error.line)
-                                .data('column', error.column);
-                            errorItem.append(errorLink);
-                            errorList.append(errorItem);
-                        });
-                        $('#compile-result').append(errorList);
-                    } else if (typeof result.stderr === 'string') {
-                        $('#compile-result').append(`<pre>${result.stderr}</pre>`);
-                    } else {
-                        $('#compile-result').append('<pre>Неизвестная ошибка компиляции.</pre>');
-                    }
-                }
-            };
-
-            // Добавление обработчика кликов по ошибкам компиляции
-            $(document).on('click', '.compile-error', function(e) {
-                e.preventDefault();
-                const line = $(this).data('line');
-                const column = $(this).data('column') || 1;
-                if (editor && line > 0) {
-                    const position = { lineNumber: line, column: column };
-                    editor.revealPositionInCenter(position);
-                    editor.setPosition(position);
-                    editor.focus();
-
-                    // Добавление выделения строки с ошибкой
-                    if (window.errorDecorations) {
-                        editor.deltaDecorations(window.errorDecorations, []);
-                    }
-                    window.errorDecorations = editor.deltaDecorations([], [{
-                        range: new monaco.Range(line, 1, line, 1),
-                        options: {
-                            isWholeLine: true,
-                            className: 'line-decoration-error',
-                            glyphMarginClassName: 'glyph-margin-error'
-                        }
-                    }]);
-                }
-            });
-
-            const showMessage = (msg, type = 'error') => {
-                const messageDiv = $('#message');
-                messageDiv.text(msg);
-                messageDiv.removeClass('message-success message-error');
-                if (type === 'success') {
-                    messageDiv.addClass('message-success');
-                } else {
-                    messageDiv.addClass('message-error');
-                }
-                messageDiv.fadeIn(500).delay(2000).fadeOut(500);
-            };
-
-            const isValidName = (name) => {
-                if (!name || typeof name !== 'string') {
-                    return false;
-                }
-                const trimmedName = name.trim();
-                if (trimmedName.length === 0) {
-                    return false;
-                }
-                const invalidPatterns = ['/', '\\', '..'];
-                for (const pattern of invalidPatterns) {
-                    if (trimmedName.startsWith(pattern) || trimmedName.includes(pattern)) {
-                        return false;
-                    }
-                }
-                const prohibitedChars = ['<', '>', ':', '"', '|', '?', '*', '\0'];
-                for (const char of prohibitedChars) {
-                    if (trimmedName.includes(char)) {
-                        return false;
-                    }
-                }
-                return true;
-            };
-
-            const saveCurrentFile = () => {
-                if (currentFile && editor) {
-                    const newContent = editor.getValue();
-                    if (currentFile.data.content !== newContent) {
-                        currentFile.data.content = newContent;
-                        console.log(`Содержимое файла "${currentFile.text}" сохранено.`);
-                    }
-                }
-            };
-
-            const clearEditorIfDeleted = (node) => {
-                if (currentFile && node.id === currentFile.id) {
-                    editor.setValue('');
-                    currentFile = null;
-                    console.log(`Файл "${node.text}" удалён. Редактор очищен.`);
-                    return;
-                }
-                if (node.type === 'folder' && node.children && node.children.length > 0) {
-                    const tree = $('#jstree').jstree(true);
-                    node.children.forEach(childId => {
-                        const child = tree.get_node(childId);
-                        clearEditorIfDeleted(child);
-                    });
-                }
-            };
-
-            const checkUniqueName = (node, name, type, excludeId = null) => {
-                const tree = $('#jstree').jstree(true);
-                const childIds = tree.get_node(node.id).children;
-                let isUnique = true;
-                childIds.forEach(function(childId) {
-                    const childNode = tree.get_node(childId);
-                    const childText = childNode.text.trim();
-                    const childType = childNode.type;
-                    if (childText.toLowerCase() === name.trim().toLowerCase() && childType === type) {
-                        if (excludeId && childId === excludeId) {
-                            return;
-                        }
-                        isUnique = false;
-                        return false;
-                    }
-                });
-                return isUnique;
-            };
-
-            const getFullPath = (node) => {
-                const tree = $('#jstree').jstree(true);
-                const path = [];
-                let current = node;
-                while (current && current.id !== "#") {
-                    path.unshift(current.text);
-                    current = tree.get_node(current.parent);
-                }
-                path.shift();
-                return path.join('/');
-            };
-
-            const gatherFiles = (node) => {
-                const tree = $('#jstree').jstree(true);
-                const files = [];
-                node.children.forEach(childId => {
-                    const child = tree.get_node(childId);
-                    const fileObj = {
-                        id: child.id,
-                        text: child.text,
-                        path: getFullPath(child),
-                        type: child.type,
-                        data: child.type === 'file' ? { content: child.data.content || "" } : undefined,
-                        state: child.state,
-                        files: child.type === 'folder' ? gatherFiles(child) : undefined
-                    };
-                    files.push(fileObj);
-                });
-                return files;
-            };
-
-            const mapToBackendFormat = (gatheredFiles) => {
-                return gatheredFiles.map(fileObj => {
-                    const mappedObj = {
-                        path: fileObj.path,
-                        content: fileObj.type === 'file' ? fileObj.data.content : null,
-                        type: fileObj.type === 'folder' ? 'folder' : null
-                    };
-                    if (fileObj.type === 'folder') {
-                        mappedObj.files = fileObj.files && fileObj.files.length > 0 ? mapToBackendFormat(fileObj.files) : [];
-                    }
-                    return mappedObj;
-                });
-            };
-
-            const getProjectJSON = () => {
-                const tree = $('#jstree').jstree(true);
-                const root = tree.get_node("root");
-                const gatheredFiles = gatherFiles(root);
-                const mappedFiles = mapToBackendFormat(gatheredFiles);
-                const project = {
-                    files: mappedFiles
-                };
-                return project;
-            };
-
-            const saveProject = (showSuccessMessage = true) => {
-                if (isSaving) {
-                    console.log("Сохранение уже выполняется, пропуск текущего цикла автосохранения.");
-                    return;
-                }
-                isSaving = true;
-                saveCurrentFile();
-                const projectJSON = getProjectJSON();
-                console.log("Сформированный JSON проекта:", JSON.stringify(projectJSON, null, 2));
-                if (!projectJSON.files || projectJSON.files.length === 0) {
-                    console.log("Проект пустой, сохранение не требуется.");
-                    isSaving = false;
-                    return;
-                }
-                $.ajax({
-                    url: `/projects/${projectId}/save`,
-                    type: 'POST',
-                    contentType: 'application/json',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    },
-                    data: JSON.stringify(projectJSON),
-                    success: function(response) {
-                        console.log("Проект успешно сохранён!");
-                        if (showSuccessMessage) {
-                            showMessage("Проект успешно сохранён!", "success");
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Ошибка при сохранении проекта:", error);
-                        showMessage("Ошибка при сохранении проекта.", "error");
-                    },
-                    complete: function() {
-                        isSaving = false;
-                    }
-                });
-            };
-
-            const createNodeRecursively = (parent, nodeData, position) => {
-                const tree = $('#jstree').jstree(true);
-                position = (typeof position === 'number' && position < 0) ? 'last' : position;
-                pendingCreations++;
-                console.log(`Восстанавливаем узел: ${nodeData.text}, Тип: ${nodeData.type}, ID: ${nodeData.id}`);
-                tree.create_node(parent, {
-                    id: nodeData.id,
-                    text: nodeData.text,
-                    type: nodeData.type,
-                    data: nodeData.type === 'file' ? { content: nodeData.data.content || "" } : {},
-                    state: nodeData.state
-                }, position, function(new_node) {
-                    console.log(`Узел "${new_node.text}" восстановлен.`);
-                    if (nodeData.files && nodeData.files.length > 0) {
-                        nodeData.files.forEach(child => {
-                            createNodeRecursively(new_node.id, child, 'last');
-                        });
-                    }
-                    pendingCreations--;
-                    if (pendingCreations === 0) {
-                        isUndoing = false;
-                        console.log("Восстановление всех узлов завершено.");
-                    }
-                });
-            };
-
-            const loadFile = (node) => {
-                if (node.type === 'file') {
-                    const content = node.data && node.data.content ? node.data.content : "";
-                    const language = getLanguageFromFilename(node.text);
-                    if (editor) {
-                        isUndoing = true;
-                        const currentModel = editor.getModel();
-                        if (currentModel) {
-                            monaco.editor.setModelLanguage(currentModel, language);
-                            editor.setValue(content);
-                        }
-                        isUndoing = false;
-                        console.log(`Файл "${node.text}" загружен в редактор с языком "${language}".`);
-                    }
-                    currentFile = node;
-                }
-            };
-
-            const undo = () => {
-                if (undoStack.length === 0) {
-                    console.log("Undo Stack пуст.");
-                    return;
-                }
-                const lastAction = undoStack.pop();
-                console.log("Undoing Action:", lastAction);
-                isUndoing = true;
-                const tree = $('#jstree').jstree(true);
-                switch(lastAction.action) {
-                    case 'delete':
-                        tree.delete_node(lastAction.node);
-                        break;
-                    case 'create':
-                        createNodeRecursively(lastAction.parent, lastAction.node, lastAction.position);
-                        break;
-                    case 'rename':
-                        tree.rename_node(lastAction.node, lastAction.old_text);
-                        break;
-                    case 'move':
-                        tree.move_node(lastAction.node, lastAction.old_parent, lastAction.old_position);
-                        break;
-                    default:
-                        console.warn('Неизвестное действие для отмены:', lastAction.action);
-                }
-            };
-
-            const handleRename = (data) => {
-                console.log(`handleRename вызван для узла: ${data.node.id}, Тип: ${data.node.type}, Старое имя: ${data.old}, Новое имя: ${data.text}`);
-                if (!isUndoing) {
-                    if (data.node.id === "root") {
-                        showMessage("Нельзя переименовывать корневую папку!");
-                        const tree = $('#jstree').jstree(true);
-                        tree.rename_node(data.node, data.old);
-                        return;
-                    }
-                    if (!isValidName(data.text)) {
-                        showMessage("Недопустимое имя.");
-                        const tree = $('#jstree').jstree(true);
-                        tree.rename_node(data.node, data.old);
-                        return;
-                    }
-                    const parent = data.node.parent;
-                    const tree = $('#jstree').jstree(true);
-                    const siblings = tree.get_node(parent).children;
-                    let isUnique = true;
-                    siblings.forEach(function(childId) {
-                        const childNode = tree.get_node(childId);
-                        const childText = childNode.text.trim();
-                        const childType = childNode.type;
-                        if (childText.toLowerCase() === data.text.trim().toLowerCase() && childType === data.node.type && childId !== data.node.id) {
-                            isUnique = false;
-                            return false;
-                        }
-                    });
-                    if (!isUnique) {
-                        showMessage("Узел с таким именем уже существует в этой папке.");
-                        tree.rename_node(data.node, data.old);
-                        return;
-                    }
-                    undoStack.push({
-                        action: 'rename',
-                        node: data.node.id,
-                        old_text: data.old,
-                        new_text: data.text
-                    });
-                    console.log("Action Recorded to Undo Stack:", { action: 'rename', node: data.node.id, old_text: data.old, new_text: data.text });
-                }
-                if (currentFile && data.node.id === currentFile.id && currentFile.type === 'file') {
-                    const newLanguage = getLanguageFromFilename(data.text);
-                    monaco.editor.setModelLanguage(editor.getModel(), newLanguage);
-                    console.log(`Язык синтаксиса обновлён на "${newLanguage}" для файла "${data.text}".`);
-                }
-            };
-
-            const isMoveNameUnique = (targetNode, node) => {
-                const tree = $('#jstree').jstree(true);
-                const childIds = tree.get_node(targetNode.id).children;
-                let isUnique = true;
-                childIds.forEach(function(childId) {
-                    const childNode = tree.get_node(childId);
-                    const childText = childNode.text.trim();
-                    const childType = childNode.type;
-                    if (childText.toLowerCase() === node.text.trim().toLowerCase() && childType === node.type) {
-                        if (childId === node.id) {
-                            return;
-                        }
-                        isUnique = false;
-                        return false;
-                    }
-                });
-                return isUnique;
-            };
-
-            const initializeJsTree = () => {
-                const fileStructureJson = document.querySelector('meta[name="fileStructure"]').getAttribute('content');
-                const projectName = $('#jstree').data('project-name');
-                let fileTreeData = [];
-                if (fileStructureJson) {
-                    try {
-                        fileTreeData = JSON.parse(fileStructureJson);
-                    } catch (e) {
-                        console.error("Ошибка при парсинге JSON для fileStructure:", e);
-                    }
-                }
-                if (!fileTreeData || fileTreeData.length === 0) {
-                    fileTreeData = [{
-                        id: "root",
-                        text: projectName || "Проект",
-                        type: "folder",
-                        children: [],
-                        state: { opened: true }
-                    }];
-                }
-                $('#jstree').jstree({
-                    core: {
-                        check_callback: function (operation, node, parent, position, more) {
-                            const tree = $('#jstree').jstree(true);
-                            if (operation === "move_node") {
-                                const movingNode = node;
-                                const targetParentNode = tree.get_node(parent);
-                                if (movingNode.id === "root") {
-                                    return false;
-                                }
-                                if (targetParentNode.type !== "folder") {
-                                    return false;
-                                }
-                                if (parent === "#") {
-                                    return false;
-                                }
-                                if (!isMoveNameUnique(targetParentNode, movingNode)) {
-                                    return false;
-                                }
-                            }
-                            return true;
-                        },
-                        data: fileTreeData
-                    },
-                    plugins: ['contextmenu', 'dnd', 'types'],
-                    types: {
-                        folder: { icon: 'jstree-folder' },
-                        file: { icon: 'jstree-file' }
-                    },
-                    contextmenu: {
-                        items: function(node) {
-                            const tree = $("#jstree").jstree(true);
-                            const menuItems = {};
-                            if (node.type !== 'folder') {
-                                menuItems.Rename = {
-                                    separator_before: false,
-                                    separator_after: false,
-                                    label: "Переименовать",
-                                    action: function () { tree.edit(node); }
-                                };
-                                menuItems.Remove = {
-                                    separator_before: false,
-                                    separator_after: false,
-                                    label: "Удалить",
-                                    action: function () {
-                                        if (node.id === "root") {
-                                            return;
-                                        }
-                                        const parent = node.parent;
-                                        const parentNode = tree.get_node(parent);
-                                        const position = parentNode.children.indexOf(node.id) !== -1 ? parentNode.children.indexOf(node.id) : 'last';
-                                        if (!isUndoing) {
-                                            const fullNodeData = {
-                                                id: node.id,
-                                                text: node.text,
-                                                type: node.type,
-                                                data: node.type === 'file' ? { content: node.data.content || "" } : undefined,
-                                                state: node.state,
-                                                files: node.type === 'folder' ? gatherFiles(node) : undefined
-                                            };
-                                            undoStack.push({
-                                                action: 'create',
-                                                node: fullNodeData,
-                                                parent: parent,
-                                                position: position
-                                            });
-                                            console.log("Action Recorded to Undo Stack:", { action: 'create', node: fullNodeData, parent: parent, position: position });
-                                        }
-                                        clearEditorIfDeleted(node);
-                                        tree.delete_node(node);
-                                    }
-                                };
-                            } else {
-                                menuItems.Create = {
-                                    separator_before: false,
-                                    separator_after: false,
-                                    label: "Создать",
-                                    action: false,
-                                    submenu: {
-                                        CreateFile: {
-                                            label: "Файл",
-                                            action: function () {
-                                                const newFileName = prompt("Введите имя нового файла:", "Новый файл.js");
-                                                if (!newFileName) {
-                                                    return;
-                                                }
-                                                if (!isValidName(newFileName)) {
-                                                    showMessage("Недопустимое имя файла.");
-                                                    return;
-                                                }
-                                                if (!checkUniqueName(node, newFileName, 'file')) {
-                                                    showMessage("Файл с таким именем уже существует в этой папке.");
-                                                    return;
-                                                }
-                                                const newId = 'file_' + Date.now();
-                                                tree.create_node(node, {
-                                                    id: newId,
-                                                    text: newFileName,
-                                                    type: "file",
-                                                    data: { content: "" },
-                                                    state: { opened: true }
-                                                }, "last", function(new_node) {
-                                                    setTimeout(function() {
-                                                        tree.select_node(new_node);
-                                                    }, 0);
-                                                });
-                                            }
-                                        },
-                                        CreateFolder: {
-                                            label: "Папка",
-                                            action: function () {
-                                                const newFolderName = prompt("Введите имя новой папки:", "Новая папка");
-                                                if (!newFolderName) {
-                                                    return;
-                                                }
-                                                if (!isValidName(newFolderName)) {
-                                                    showMessage("Недопустимое имя папки.");
-                                                    return;
-                                                }
-                                                if (!checkUniqueName(node, newFolderName, 'folder')) {
-                                                    showMessage("Папка с таким именем уже существует в этой папке.");
-                                                    return;
-                                                }
-                                                const newId = 'folder_' + Date.now();
-                                                tree.create_node(node, {
-                                                    id: newId,
-                                                    text: newFolderName,
-                                                    type: "folder",
-                                                    state: { opened: true }
-                                                }, "last", function(new_node) {
-                                                    setTimeout(function() {
-                                                        tree.select_node(new_node);
-                                                    }, 0);
-                                                });
-                                            }
-                                        }
-                                    }
-                                };
-                                if (node.id !== "root") {
-                                    menuItems.Rename = {
-                                        separator_before: false,
-                                        separator_after: false,
-                                        label: "Переименовать",
-                                        action: function () {
-                                            tree.edit(node);
-                                        }
-                                    };
-                                    menuItems.Remove = {
-                                        separator_before: false,
-                                        separator_after: false,
-                                        label: "Удалить",
-                                        action: function () {
-                                            if (node.id === "root") {
-                                                return;
-                                            }
-                                            const parent = node.parent;
-                                            const parentNode = tree.get_node(parent);
-                                            const position = parentNode.children.indexOf(node.id) !== -1 ? parentNode.children.indexOf(node.id) : 'last';
-                                            if (!isUndoing) {
-                                                const fullNodeData = {
-                                                    id: node.id,
-                                                    text: node.text,
-                                                    type: node.type,
-                                                    data: node.type === 'file' ? { content: node.data.content || "" } : undefined,
-                                                    state: node.state,
-                                                    files: node.type === 'folder' ? gatherFiles(node) : undefined
-                                                };
-                                                undoStack.push({
-                                                    action: 'create',
-                                                    node: fullNodeData,
-                                                    parent: parent,
-                                                    position: position
-                                                });
-                                                console.log("Action Recorded to Undo Stack:", { action: 'create', node: fullNodeData, parent: parent, position: position });
-                                            }
-                                            clearEditorIfDeleted(node);
-                                            tree.delete_node(node);
-                                        }
-                                    };
-                                }
-                            }
-                            return menuItems;
-                        }
-                    }
-                })
-                .on('create_node.jstree', function (e, data) {
-                    if (data.node.type === 'file' && !isUndoing) {
-                        data.node.data = { "content": "" };
-                    }
-                    if (!isUndoing) {
-                        undoStack.push({
-                            action: 'delete',
-                            node: data.node.id
-                        });
-                        console.log("Action Recorded to Undo Stack:", { action: 'delete', node: data.node.id });
-                    }
-                })
-                .on('rename_node.jstree', function (e, data) {
-                    handleRename(data);
-                })
-                .on('delete_node.jstree', function (e, data) {
-                    clearEditorIfDeleted(data.node);
-                })
-                .on('move_node.jstree', function (e, data) {
-                    if (!isUndoing) {
-                        undoStack.push({
-                            action: 'move',
-                            node: data.node.id,
-                            old_parent: data.old_parent,
-                            old_position: data.old_position
-                        });
-                        console.log("Action Recorded to Undo Stack:", { action: 'move', node: data.node.id, old_parent: data.old_parent, old_position: data.old_position });
-                    }
-                })
-                .on('dnd_stop.vakata', function (e, data) {
-                    if (duplicateNameError) {
-                        showMessage("В целевой папке уже существует узел с таким именем.");
-                        duplicateNameError = false;
-                    }
-                })
-                .on('select_node.jstree', function (e, data) {
-                    saveCurrentFile();
-                    if (data.node.type === 'file') {
-                        loadFile(data.node);
-                    }
-                });
-                $(document).on('keydown', function(e) {
-                    if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
-                        e.preventDefault();
-                        console.log("Ctrl+Z нажато");
-                        undo();
-                    }
-                });
-                $('#save-button').on('click', function() {
-                    saveProject();
-                });
-                require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs' }});
-                require(['vs/editor/editor.main'], function() {
-                    editor = monaco.editor.create(document.getElementById('editor'), {
-                        value: '',
-                        language: 'plaintext',
-                        theme: 'vs-dark',
-                        automaticLayout: true
-                    });
-                    editor.onDidChangeModelContent(function() {
-                        if (isUndoing) {
-                            return;
-                        }
-                        if (currentFile) {
-                            currentFile.data.content = editor.getValue();
-                            console.log(`Содержимое файла "${currentFile.text}" обновлено.`);
-                        }
-                    });
-                });
-            };
-
-            initializeJsTree();
-
-            setInterval(function() {
-                console.log("Автосохранение проекта...");
-                saveProject(false);
-            }, 15000);
-        });
-</script>
-</body>
-</html>
-
-
-
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
-<head>
-    <meta charset="UTF-8">
-    <title>User List</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Roboto', sans-serif;
-        }
 
-        body {
-            color: #24292e;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 20px;
-            min-height: 100vh;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            background-color: #f6f8fa;
-            border-bottom: 1px solid #d1d5da;
-            width: 100%;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 900;
-            box-sizing: border-box;
-        }
-
-        .header .user-info {
-            display: flex;
-            align-items: center;
-        }
-
-        .header .user-info span {
-            font-size: 24px;
-            font-weight: 700;
-            color: #24292e;
-        }
-
-        .header .actions {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .header .actions a {
-            display: flex;
-            align-items: center;
-            color: #24292e;
-            text-decoration: none;
-            font-size: 24px;
-            transition: color 0.3s ease;
-        }
-
-        .header .actions a:hover {
-            color: #0366d6;
-        }
-
-        .container {
-            width: 90%;
-            max-width: 1000px;
-            padding: 20px;
-            margin-top: 80px;
-            background-color: #f6f8fa;
-            border: 1px solid #d1d5da;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 32px;
-            color: #24292e;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .input-group {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-            justify-content: center;
-            gap: 15px;
-        }
-
-        .form-control {
-            background-color: #f6f8fa;
-            border: 1px solid #d1d5da;
-            color: #24292e;
-            border-radius: 50px;
-            padding: 10px;
-            outline: none;
-            font-size: 18px;
-            width: 70%;
-        }
-
-        .form-control::placeholder {
-            color: #888;
-        }
-
-        .btn {
-            border-radius: 50px;
-            padding: 8px 20px;
-            font-size: 16px;
-            transition: all 0.3s;
-            background-color: #28a745;
-            color: #ffffff;
-            border: none;
-        }
-
-        .btn:hover {
-            background-color: #218838;
-            color: #ffffff;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            background-color: #ffffff;
-        }
-
-        th, td {
-            padding: 12px 15px;
-            text-align: center; /* Center align headers and rows */
-            border-bottom: 1px solid #d1d5da;
-            color: #24292e;
-        }
-
-        th {
-            font-size: 20px;
-        }
-
-        td {
-            font-size: 18px;
-        }
-
-        .btn-icon {
-            font-size: 20px;
-            border: none;
-            background: none;
-            cursor: pointer;
-            transition: color 0.3s;
-            padding: 5px;
-        }
-
-        .btn-icon:hover {
-            color: #0056b3;
-        }
-
-        .icon-profile {
-            color: #0366d6;
-        }
-
-        .icon-ban {
-            color: #d73a49;
-        }
-
-        .icon-unban {
-            color: #28a745;
-        }
-    </style>
-</head>
-<body>
-<div class="header">
-    <div class="user-info">
-        <span th:text="${username}">User Name</span>
-    </div>
-    <div class="actions">
-        <form th:action="@{/logout}" th:method="POST" style="margin: 0;">
-            <button type="submit" class="logout-icon" title="Logout" style="border: none; background: none;"><i class='bx bx-log-out'></i></button>
-        </form>
-    </div>
-</div>
-
-<div class="container">
-    <h1>Все пользователи</h1>
-    <form th:action="@{/admin/users/search}" method="get">
-        <div class="input-group">
-            <input type="text" name="username" class="form-control" placeholder="Введите имя пользователя" th:value="${username}">
-            <button class="btn" type="submit">Поиск</button>
-        </div>
-    </form>
-
-    <table class="table">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Имя пользователя</th>
-            <th>Email</th>
-            <th>Роль</th>
-            <th>Заблокирован</th>
-            <th>Действия</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="user : ${users}">
-            <td th:text="${user.id}">1</td>
-            <td th:text="${user.username}">John</td>
-            <td th:text="${user.email}">john@example.com</td>
-            <td th:text="${user.role}">ROLE_USER</td>
-            <td th:text="${user.role == 'ROLE_BANNED' ? 'Да' : 'Нет'}">Нет</td>
-            <td>
-                <a th:href="@{/admin/users/{id}(id=${user.id})}" class="btn-icon icon-profile"><i class='bx bx-user'></i></a>
-                <form th:action="@{/admin/users/{id}/ban(id=${user.id})}" method="post" style="display: inline;">
-                    <button type="submit" class="btn-icon icon-ban" th:if="${user.role != 'ROLE_BANNED'}"><i class='bx bx-lock-alt'></i></button>
-                </form>
-                <form th:action="@{/admin/users/{id}/unban(id=${user.id})}" method="post" style="display: inline;">
-                    <button type="submit" class="btn-icon icon-unban" th:if="${user.role == 'ROLE_BANNED'}"><i class='bx bx-lock-open-alt'></i></button>
-                </form>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-</div>
-</body>
-</html>
-
-
-
-
-<!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
-<head>
-    <meta charset="UTF-8">
-    <title>Редактировать Проект</title>
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    <style>
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap:wght@300;400;500;600;700&display=swap');
-
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-                font-family: 'VT323', monospace;
-            }
-
-            body {
-                background: #000000;
-                color: #FFC300;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                flex-direction: column;
-                height: 100vh;
-                overflow: hidden;
-                position: relative;
-            }
-
-            .container {
-                background-color: rgba(0, 0, 0, 0.9);
-                border: 3px solid #FFC300;
-                border-radius: 25px;
-                box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
-                width: 600px;
-                max-width: 100%;
-                padding: 30px;
-            }
-
-            .container h2 {
-                text-align: center;
-                margin-bottom: 20px;
-                font-size: 28px;
-                color: #FFC300;
-            }
-
-            .container form {
-                display: flex;
-                flex-direction: column;
-            }
-
-            .container input,
-            .container select,
-            .container textarea {
-                background-color: #333;
-                border: 2px solid #FFC300;
-                color: #FFC300;
-                margin: 10px 0;
-                padding: 10px;
-                font-size: 16px;
-                width: 100%;
-                border-radius: 8px;
-                outline: none;
-                transition: border-color 0.3s, box-shadow 0.3s;
-            }
-
-            .container input:focus,
-            .container select:focus,
-            .container textarea:focus {
-                border-color: #17A846;
-                box-shadow: 0 0 10px rgba(23, 168, 70, 0.6);
-            }
-
-            .container button {
-                background-color: #1DB954;
-                color: #fff;
-                font-size: 16px;
-                padding: 10px;
-                border: none;
-                border-radius: 8px;
-                font-weight: 600;
-                text-transform: uppercase;
-                margin-top: 15px;
-                cursor: pointer;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-                transition: background-color 0.3s, box-shadow 0.3s;
-            }
-
-            .container button:hover {
-                background-color: #17A846;
-                box-shadow: 0 0 15px rgba(23, 168, 70, 0.6);
-            }
-
-            .form-input {
-                margin-bottom: 15px;
-            }
-
-            .form-input label {
-                font-size: 16px;
-                color: #FFC300;
-                margin-bottom: 5px;
-                display: block;
-            }
-
-            .form-error {
-                color: #FF4D4F;
-                font-size: 14px;
-                margin-top: -5px;
-            }
-                    .matrix {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                z-index: -1;
-                pointer-events: none;
-                overflow: hidden;
-            }
-
-            .matrix span {
-                position: absolute;
-                top: -10vh;
-                font-size: 18px;
-                color: #FFC300;
-                opacity: 0.8;
-                animation: fall 10s linear infinite;
-                white-space: pre;
-            }
-
-            @keyframes fall {
-                0% {
-                    top: -10vh;
-                    opacity: 0;
-                }
-
-                20% {
-                    opacity: 1;
-                }
-
-                100% {
-                    top: 110vh;
-                    opacity: 0;
-                }
-            }
-    </style>
-</head>
-
-<body>
-
-<div class="matrix" id="matrixContainer"></div>
-
-<div class="container">
-    <h2>Редактировать проект</h2>
-    <form th:action="@{/projects/edit/{id}(id=${project.id})}" method="post" th:object="${project}">
-        <div class="form-input">
-            <label for="name">Название проекта:</label>
-            <input type="text" class="form-control" id="name" name="name" th:field="*{name}" required>
-            <div class="form-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Ошибка в названии проекта</div>
-        </div>
-        <div class="form-input">
-            <label for="language">Язык программирования:</label>
-            <select class="form-control" id="language" name="language" required th:field="*{language}">
-                <option value="">Выберите язык</option>
-                <option value="Java" th:selected="${project.language == 'Java'}">Java</option>
-                <option value="Python" th:selected="${project.language == 'Python'}">Python</option>
-                <option value="C++" th:selected="${project.language == 'C++'}">C++</option>
-            </select>
-            <div class="form-error" th:if="${#fields.hasErrors('language')}" th:errors="*{language}">Ошибка в языке программирования</div>
-        </div>
-        <div class="form-input">
-            <label for="readMe">Read Me:</label>
-            <textarea class="form-control" id="readMe" name="readMe" th:field="*{readMe}" rows="4"></textarea>
-            <div class="form-error" th:if="${#fields.hasErrors('readMe')}" th:errors="*{readMe}">Ошибка в поле Read Me</div>
-        </div>
-
-        <!-- Поле Уровень доступа -->
-        <div class="form-input">
-            <label for="accessLevel">Доступ:</label>
-            <select class="form-control" id="accessLevel" name="accessLevel" required th:field="*{accessLevel}">
-                <option value="">Выберите доступ</option>
-                <option value="PUBLIC" th:selected="${project.accessLevel == 'PUBLIC'}">Публичный</option>
-                <option value="PRIVATE" th:selected="${project.accessLevel == 'PRIVATE'}">Приватный</option>
-            </select>
-            <div class="form-error" th:if="${#fields.hasErrors('accessLevel')}" th:errors="*{accessLevel}">Ошибка в доступе</div>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
-    </form>
-</div>
-
-<script>
-    // Matrix Animation
-    const matrixContainer = document.getElementById('matrixContainer');
-    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-
-    function createMatrixSpan() {
-        const span = document.createElement('span');
-        span.textContent = characters.charAt(Math.floor(Math.random() * characters.length));
-        span.style.left = Math.random() * 100 + 'vw';
-        span.style.animationDuration = Math.random() * 5 + 5 + 's';
-        span.style.opacity = Math.random() * 0.5 + 0.5;
-        matrixContainer.appendChild(span);
-        setTimeout(() => {
-            matrixContainer.removeChild(span);
-        }, 10000);
-    }
-
-    setInterval(createMatrixSpan, 150);
-</script>
-</body>
-</html>
-
-
-
-<!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Новый Проект</title>
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="icon" href="/favicon.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <title>Вход</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap:wght@300;400;500;600;700&display=swap');
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'VT323', monospace;
+            font-family: 'VT323', monospace; /* Apply the VT323 font */
         }
 
         body {
-            background: #000000;
+            background: #8EC5FC;
             color: #FFC300;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
@@ -2102,97 +31,220 @@
             background-color: rgba(0, 0, 0, 0.9);
             border: 3px solid #FFC300;
             border-radius: 25px;
-            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.4);
-            width: 600px;
+            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            width: 768px;
             max-width: 100%;
-            padding: 30px;
+            min-height: 550px; /* Increased height */
+            padding: 40px; /* More padding for a spacious look */
         }
 
-        .container h2 {
-            text-align: center;
+        .container h1 {
+            font-size: 32px; /* Larger font size for headings */
             margin-bottom: 20px;
-            font-size: 28px;
+        }
+
+        .container h3 {
+            font-size: 24px; /* Larger font size for subheadings */
+        }
+
+        .container p {
+            font-size: 16px; /* Increased font size for paragraphs */
+            line-height: 24px;
+            margin: 15px 0;
             color: #FFC300;
         }
 
-        .container form {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .container input,
-        .container select,
-        .container textarea {
-            background-color: #333;
-            border: 2px solid #FFC300;
+        .container span {
+            font-size: 14px; /* Increased font size for spans */
             color: #FFC300;
-            margin: 10px 0;
-            padding: 10px;
-            font-size: 16px;
-            width: 100%;
-            border-radius: 8px;
-            outline: none;
-            transition: border-color 0.3s, box-shadow 0.3s;
         }
 
-        .container input:focus,
-        .container select:focus,
-        .container textarea:focus {
-            border-color: #17A846;
-            box-shadow: 0 0 10px rgba(23, 168, 70, 0.6);
+        .container a {
+            color: #FFC300;
+            font-size: 16px; /* Increased font size for links */
+            text-decoration: none;
+            margin: 15px 0 10px;
+            transition: color 0.3s;
+        }
+
+        .container a:hover {
+            color: #FFD700;
         }
 
         .container button {
-            background-color: #1DB954;
-            color: #fff;
-            font-size: 16px;
-            padding: 10px;
+            background-color: #FFC300;
+            color: #000000;
+            font-size: 16px; /* Larger font size for buttons */
+            padding: 12px 40px; /* Larger padding for buttons */
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-weight: 600;
             text-transform: uppercase;
-            margin-top: 15px;
+            margin-top: 20px;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            transition: background-color 0.3s, box-shadow 0.3s;
+            transition: background-color 0.3s ease;
         }
 
-        .container button:hover {
-            background-color: #17A846;
-            box-shadow: 0 0 15px rgba(23, 168, 70, 0.6);
-        }
-
-        .form-input {
-            margin-bottom: 15px;
-        }
-
-        .form-input label {
-            font-size: 16px;
+        .container button.hidden {
+            background-color: transparent;
+            border: 2px solid #FFC300;
             color: #FFC300;
-            margin-bottom: 5px;
-            display: block;
+            padding: 12px 30px; /* Larger padding for hidden buttons */
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        .form-error {
-            color: #FF4D4F;
-            font-size: 14px;
-            margin-top: -5px;
+        .container button.hidden:hover {
+            background-color: #FFC300;
+            color: #000000;
         }
-                .matrix {
+
+        .container form {
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 30px;
+            height: 100%;
+        }
+
+        .container input {
+            background-color: #333333;
+            border: 2px solid #FFC300;
+            margin: 10px 0;
+            padding: 14px 20px; /* Larger padding for input fields */
+            font-size: 16px; /* Larger font size for input fields */
+            border-radius: 10px;
+            width: 100%;
+            outline: none;
+            color: #FFC300;
+            transition: border-color 0.3s;
+        }
+
+        .container input:focus {
+            border-color: #FFD700;
+        }
+
+        .form-container {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            transition: all 0.6s ease-in-out;
+        }
+
+        .sign-in {
+            left: 0;
+            width: 50%;
+            z-index: 2;
+        }
+
+        .container.active .sign-in {
+            transform: translateX(100%);
+        }
+
+        .sign-up {
+            left: 0;
+            width: 50%;
+            opacity: 0;
+            z-index: 1;
+        }
+
+        .container.active .sign-up {
+            transform: translateX(100%);
+            opacity: 1;
+            z-index: 5;
+            animation: fadeIn 0.6s;
+        }
+
+        @keyframes fadeIn {
+            0%, 49.99% {
+                opacity: 0;
+                z-index: 1;
+            }
+            50%, 100% {
+                opacity: 1;
+                z-index: 5;
+            }
+        }
+
+        .toggle-container {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 50%;
+            height: 100%;
+            overflow: hidden;
+            transition: all 0.6s ease-in-out;
+            border-radius: 20px;
+            z-index: 1000;
+        }
+
+        .container.active .toggle-container {
+            transform: translateX(-100%);
+            border-radius: 20px;
+        }
+
+        .toggle {
+            background-color: #FFC300;
+            height: 100%;
+            color: #000000;
+            position: relative;
+            left: -100%;
+            height: 100%;
+            width: 200%;
+            transform: translateX(0);
+            transition: all 0.6s ease-in-out;
+        }
+
+        .container.active .toggle {
+            transform: translateX(50%);
+        }
+
+        .toggle-panel {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 0 30px;
+            text-align: center;
+            top: 0;
+            transform: translateX(0);
+            transition: all 0.6s ease-in-out;
+        }
+
+        .toggle-left {
+            transform: translateX(-200%);
+        }
+
+        .container.active .toggle-left {
+            transform: translateX(0);
+        }
+
+        .toggle-right {
+            right: 0;
+            transform: translateX(0);
+        }
+
+        .matrix {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1;
-            pointer-events: none;
+            z-index: 0;
             overflow: hidden;
+            pointer-events: none;
         }
 
         .matrix span {
             position: absolute;
             top: -10vh;
-            font-size: 18px;
+            font-size: 24px; /* Larger font size for falling letters */
             color: #FFC300;
             opacity: 0.8;
             animation: fall 10s linear infinite;
@@ -2204,11 +256,9 @@
                 top: -10vh;
                 opacity: 0;
             }
-
             20% {
                 opacity: 1;
             }
-
             100% {
                 top: 110vh;
                 opacity: 0;
@@ -2220,50 +270,49 @@
 <body>
 <div class="matrix" id="matrixContainer"></div>
 
-<div class="container">
-    <h2>Добавить новый проект</h2>
-    <form th:action="@{/projects/userProfile/new}" method="post" th:object="${project}">
-        <div class="form-input">
-            <label for="name">Название проекта:</label>
-            <input type="text" class="form-control" id="name" name="name" th:field="*{name}" placeholder="Автоматически заполнится при вводе Git URL">
-            <div class="form-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
-        </div>
-        <div class="form-input">
-            <label for="language">Язык программирования:</label>
-            <select class="form-control" id="language" name="language" required th:field="*{language}">
-                <option value="">Выберите язык</option>
-                <option value="Java" th:selected="${project.language == 'Java'}">Java</option>
-                <option value="Python" th:selected="${project.language == 'Python'}">Python</option>
-                <option value="C++" th:selected="${project.language == 'C++'}">C++</option>
-            </select>
-            <div class="form-error" th:if="${#fields.hasErrors('language')}" th:errors="*{language}"></div>
-        </div>
-        <div class="form-input">
-            <label for="readMe">Read Me:</label>
-            <textarea class="form-control" id="readMe" name="readMe" th:field="*{readMe}" rows="3"></textarea>
-        </div>
-        <div class="form-input">
-            <label for="refGit">Ссылка на Git-репозиторий:</label>
-            <input type="url" class="form-control" id="refGit" name="refGit" th:field="*{refGit}" placeholder="https://github.com/username/repository.git">
-            <div class="form-error" th:if="${#fields.hasErrors('refGit')}" th:errors="*{refGit}"></div>
-        </div>
-        <button type="submit" class="btn-primary">Создать</button>
+<div class="container" id="container">
+    <div class="form-container sign-in">
+        <form action="/process_login" method="post">
+            <h1>Войти</h1>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <span style="margin-top:20px;">Войти с помощью Логина и пароля</span>
+            <input type="text" id="username" name="username" placeholder="Введите Логин" required>
+            <input type="password" id="password" name="password" placeholder="Введите Пароль" required>
+            <button type="submit">Войти</button>
+            <div th:if="${param.error}">
+                <p style="color:red;">Неверное имя пользователя или пароль.</p>
+            </div>
+            <a th:href="@{/forgot_password}">Забыли пароль?</a>
+            <div th:if="${param.logout}">
+                <p style="color:green;">Вы успешно вышли из аккаунта.</p>
+            </div>
+            <div th:if="${message != null}">
+                <p style="color:green;">[[${message}]]</p>
+            </div>
+        </form>
+    </div>
 
-        <!-- Поле Уровень доступа -->
-        <div class="form-input">
-            <label for="accessLevel">Доступ:</label>
-            <select class="form-control" id="accessLevel" name="accessLevel" required th:field="*{accessLevel}">
-                <option value="">Выберите доступ</option>
-                <option value="PUBLIC" th:selected="${project.accessLevel == 'PUBLIC'}">Публичный</option>
-                <option value="PRIVATE" th:selected="${project.accessLevel == 'PRIVATE'}">Приватный</option>
-            </select>
-            <div class="form-error" th:if="${#fields.hasErrors('accessLevel')}" th:errors="*{accessLevel}">Ошибка в доступе</div>
+    <div class="toggle-container">
+        <div class="toggle">
+            <div class="toggle-panel toggle-right">
+                <h1>Еще</h1>
+                <h3>не зарегистрированы?</h3>
+                <p>Пора исправлять!</p>
+                <a href="/registration">
+                    <button class="hidden" id="register" style="border-radius: 12px; border: 1px solid #000000; color: #000000;">зарегистрироваться</button>
+                </a>
+            </div>
         </div>
-
-        <button type="submit" class="btn btn-primary">Создать</button>
-    </form>
+    </div>
 </div>
+
 <script>
+    const container = document.getElementById('container');
+    const registerBtn = document.getElementById('register');
+
+    registerBtn.addEventListener('click', () => {
+        container.classList.add("active");
+    });
 
     const matrixContainer = document.getElementById('matrixContainer');
     const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -2275,1700 +324,383 @@
         span.style.animationDuration = Math.random() * 5 + 5 + 's';
         span.style.opacity = Math.random() * 0.5 + 0.5;
         matrixContainer.appendChild(span);
+
         setTimeout(() => {
             matrixContainer.removeChild(span);
         }, 10000);
     }
 
     setInterval(createMatrixSpan, 150);
-   document.addEventListener('DOMContentLoaded', function () {
-    const refGitInput = document.getElementById('refGit');
-    const nameInput = document.getElementById('name');
-
-    refGitInput.addEventListener('input', function () {
-        const gitUrl = refGitInput.value;
-
-        // Регулярное выражение для извлечения имени репозитория
-        const regex = /\/([^\/]+?)(?:\.git)?$/;
-        const match = gitUrl.match(regex);
-
-        if (match && match[1]) {
-            const repoName = match[1];
-            nameInput.value = repoName; // Автоматическое заполнение поля
-        }
-    });
-});
-
 </script>
 </body>
+
 </html>
 
 
-
-
 <!DOCTYPE html>
-<html lang="en" xmlns:sec="http://www.w3.org/1999/xhtml" xmlns:th="http://www.w3.org/1999/xhtml">
-<head>
-    <meta charset="UTF-8">
-    <meta name="projectId" th:content="${projectId}">
-    <meta name="_csrf" th:content="${_csrf.token}" />
-    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
-    <meta name="fileStructure" th:content="${fileStructure}">
-    <link rel="icon" href="/favicon.png" type="image/png">
-    <title>jsTree и Monaco Editor</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <style>
-        body, html {
-            height: 100%;
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
-        }
-
-        #container {
-            display: flex;
-            height: 100%;
-            background-color: #282c34;
-            position: relative; /* Для правильного позиционирования разделителя */
-        }
-
-        #sidebar {
-            width: 300px; /* Начальная ширина */
-            background: #21252b;
-            color: #ffffff;
-            overflow: hidden;
-            transition: width 0.3s ease;
-            min-width: 200px; /* Минимальная ширина */
-            max-width: 600px; /* Максимальная ширина */
-        }
-
-        #jstree {
-            overflow: auto;
-            height: calc(100% - 60px);
-            padding: 20px;
-            border-right: 1px solid #333;
-        }
-
-        #resizer {
-            width: 5px;
-            cursor: ew-resize;
-            background-color: #444;
-        }
-
-        #resizer:hover {
-            background-color: #666;
-        }
-
-        #editor-container {
-            position: relative;
-            height: 100%;
-            flex-grow: 1;
-            transition: width 0.3s ease;
-            overflow: hidden;
-        }
-
-        #editor {
-            width: 100%;
-            height: 100%;
-        }
-
-        .icon-panel {
-            width: 60px;
-            background: #1f1f1f;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 15px;
-            border-right: 1px solid #333;
-        }
-        button:disabled {
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        .icon-panel button {
-            background: none;
-            border: none;
-            color: #fff;
-            margin: 10px 0;
-            cursor: pointer;
-            font-size: 24px;
-            transition: transform 0.2s, color 0.3s;
-        }
-
-        .icon-panel button:hover {
-            transform: scale(1.1);
-            color: #61dafb;
-        }
-
-        .btn-primary-custom {
-            color: #fff;
-            background-color: #007bff;
-            border-color: #007bff;
-            transition: background-color 0.3s, transform 0.2s;
-        }
-
-        .btn-primary-custom:hover {
-            background-color: #0056b3;
-            transform: scale(1.05);
-        }
-
-        #compile-output {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #2a2d3e;
-            padding: 15px;
-            color: #fff;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.9em;
-            max-height: 200px;
-            overflow-y: auto;
-            border-top: 1px solid #333;
-        }
-
-        #compile-output h3 {
-            font-size: 1.1em;
-            margin-bottom: 10px;
-        }
-
-        .code-explorer-heading {
-            text-align: center;
-            background: #333;
-            padding: 10px;
-            font-weight: bold;
-            font-size: 1.1em;
-            border-bottom: 1px solid #444;
-        }
-        #main-class-container {
-            position: absolute;
-            top: 10px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 5px;
-            border-radius: 5px;
-            color: white;
-            display: flex;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        #main-class-container label {
-            margin-right: 5px;
-        }
-
-        #main-class-input {
-            background: #444;
-            border: 1px solid #555;
-            color: white;
-            padding: 2px 5px;
-            border-radius: 3px;
-        }
-        #selectMainClassModal {
-            display: none; /* Скрыто по умолчанию */
-            position: fixed; /* Оставаться на месте */
-            z-index: 1001; /* На вершине */
-            left: 0;
-            top: 0;
-            width: 100%; /* Полная ширина */
-            height: 100%; /* Полная высота */
-            overflow: auto; /* Включить прокрутку, если необходимо */
-            background-color: rgba(0,0,0,0.5); /* Черный с прозрачностью */
-        }
-
-        #selectMainClassModalContent {
-            background-color: #fefefe;
-            margin: 10% auto; /* 10% от верхней границы и по центру */
-            padding: 20px;
-            border: 1px solid #888;
-            width: 50%; /* Ширина модального окна */
-            border-radius: 5px;
-        }
-
-        #selectMainClassModalContent h2 {
-            margin-top: 0;
-        }
-
-        #classesList {
-            list-style: none;
-            padding: 0;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        #classesList li {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-            cursor: pointer;
-        }
-
-        #classesList li:hover {
-            background-color: #f1f1f1;
-        }
-
-        #closeModal {
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        /* Добавим стили для новой кнопки */
-        .icon-panel button#select-main-class-button {
-            /* Если необходимо, добавьте индивидуальные стили */
-        }
-
-        .btn-group {
-            display: flex;
-            justify-content: center;
-            padding: 10px;
-            background: #282c34;
-            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Стили для сообщений */
-        #message {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            border-radius: 5px;
-            display: none;
-            z-index: 1002;
-        }
-        .message-success {
-            background-color: #28a745;
-            color: white;
-        }
-        .message-error {
-            background-color: #dc3545;
-            color: white;
-        }
-
-    </style>
-</head>
-<body>
-<div id="container">
-    <div class="icon-panel">
-        <button id="profile-button" title="Profile" data-url="/userProfile">
-            <i class="fas fa-user-circle"></i>
-        </button>
-        <button id="project-button" title="Project Tree">
-            <i class="fas fa-project-diagram"></i>
-        </button>
-        <button id="save-button" title="Save Project">
-            <i class="fas fa-save"></i>
-        </button>
-        <button id="compile-button" title="Compile Code">
-            <i class="fas fa-play"></i>
-        </button>
-        <button id="select-main-class-button" title="Выберите исполняемый файл">
-            <i class="fas fa-file-code"></i>
-        </button>
-
-    </div>
-    <div id="sidebar">
-        <div id="jstree" data-file-structure="${fileStructure}" data-project-name="${projectName}"></div>
-    </div>
-    <!-- Разделитель для ресайзера -->
-    <div id="resizer"></div>
-    <div id="editor-container">
-        <div id="main-class-container">
-            <label for="main-class-input">Main Class:</label>
-            <input type="text" id="main-class-input" name="mainClass" th:value="${mainClass}" />
-        </div>
-        <div id="editor"></div>
-        <div id="compile-output" style="display: none;">
-            <h3>Результат компиляции:</h3>
-            <pre id="compile-result"></pre>
-        </div>
-    </div>
-</div>
-<div id="message"></div>
-<div id="selectMainClassModal">
-    <div id="selectMainClassModalContent">
-        <span id="closeModal">&times;</span>
-        <h2>Выберите исполняемый класс</h2>
-        <ul id="classesList">
-            <!-- Список классов будет динамически заполняться -->
-        </ul>
-    </div>
-</div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
-<script>
-    $(document).ready(function() {
-        $('#profile-button').on('click', function() {
-            const profileUrl = $(this).data('url');
-            window.location.href = profileUrl;
-        });
-
-        $(function() {
-            let editor;
-            let currentFile = null;
-            const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
-            const projectId = document.querySelector('meta[name="projectId"]').content;
-            let isUndoing = false;
-            const undoStack = [];
-            let pendingCreations = 0;
-            let duplicateNameError = false;
-            let isSidebarOpen = true; // Инициализация состояния боковой панели
-            let isSaving = false;
-
-            const initializeSelectMainClassModal = () => {
-                const modal = $('#selectMainClassModal');
-                const closeModalBtn = $('#closeModal');
-
-                // Когда пользователь нажимает на кнопку (x), закрываем модальное окно
-                closeModalBtn.on('click', function() {
-                    modal.hide();
-                });
-
-                // Когда пользователь кликает вне модального окна, закрываем его
-                $(window).on('click', function(event) {
-                    if ($(event.target).is(modal)) {
-                        modal.hide();
-                    }
-                });
-
-                // Обработчик кнопки "Выберите исполняемый файл"
-                $('#select-main-class-button').on('click', function(event) {
-                    event.stopPropagation(); // Предотвращаем закрытие выпадающего меню при клике
-                    fetchClassesWithMain();
-                });
-            };
-            const fetchClassesWithMain = () => {
-                $.ajax({
-                    url: `/projects/${projectId}/classes-with-main`,
-                    type: 'GET',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    },
-                    success: function(mainClasses) {
-                        populateClassesList(mainClasses);
-                        $('#selectMainClassModal').show();
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Ошибка при получении списка классов с main методом:", error);
-                        showMessage("Не удалось загрузить список классов.", "error");
-                    }
-                });
-            };
-
-            const populateClassesList = (mainClasses) => {
-                const classesList = $('#classesList');
-                classesList.empty(); // Очистить текущий список
-
-                if (mainClasses.length === 0) {
-                    classesList.append('<li>Классы с main методом не найдены</li>');
-                } else {
-                    mainClasses.forEach(function(classItem) {
-                        const path = classItem.path; // Например, "space/Space1.java"
-                        // Преобразуем путь в полностью квалифицированное имя класса
-                        const mainClassName = path.replace(/\//g, '.').replace(/\.java$/, '');
-                        classesList.append(`<li data-class-name="${mainClassName}">${path}</li>`);
-                    });
-                }
-
-                // Добавить обработчики клика по элементам списка
-                $('#classesList li').on('click', function() {
-                    const selectedClass = $(this).data('class-name');
-                    if (selectedClass) {
-                        setMainClass(selectedClass);
-                        $('#selectMainClassModal').hide();
-                    }
-                });
-            };
-
-
-            const setMainClass = (mainClassName) => {
-                console.log("Установка mainClassName:", mainClassName);
-                $.ajax({
-                    url: `/projects/${projectId}/mainClass`,
-                    type: 'POST',
-                    contentType: 'application/json',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    },
-                    data: JSON.stringify({ mainClass: mainClassName }),
-                    success: function(response) {
-                        console.log("mainClassName успешно установлен:", response);
-                        showMessage("Главный класс успешно установлен.", "success");
-                        // Обновить поле ввода main-class-input
-                        $('#main-class-input').val(mainClassName);
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Ошибка при установке mainClassName:", error);
-                        showMessage("Ошибка при установке главного класса.", "error");
-                    }
-                });
-            };
-
-            // Обработчик изменения поля ввода имени главного класса
-            $('#main-class-input').on('change', function() {
-                saveMainClass();
-            });
-
-            $('#project-button').on('click', function() {
-                if (isSidebarOpen) {
-                    $('#sidebar').css('width', '0');
-                    $('#resizer').hide();
-                    $('#editor-container').css('flex-grow', '1');
-                    $(this).removeClass('active');
-                } else {
-                    $('#sidebar').css('width', '300px'); // Устанавливаем ширину боковой панели
-                    $('#resizer').show();
-                    $('#editor-container').css('flex-grow', '1');
-                    $(this).addClass('active');
-                }
-                isSidebarOpen = !isSidebarOpen;
-            });
-            $('#compile-button').on('click', function() {
-                compileCode();
-            });
-            const getLanguageFromFilename = (filename) => {
-                const extension = filename.split('.').pop().toLowerCase();
-                const languageMap = {
-                    'js': 'javascript',
-                    'html': 'html',
-                    'css': 'css',
-                    'json': 'json',
-                    'md': 'markdown',
-                    'py': 'python',
-                    'java': 'java',
-                    'c': 'c',
-                    'cpp': 'cpp',
-                    'ts': 'typescript',
-                };
-                return languageMap[extension] || 'plaintext';
-            };
-            const compileCode = () => {
-                // Получаем кнопку компиляции
-                const compileButton = $('#compile-button');
-
-                // Отключаем кнопку
-                compileButton.prop('disabled', true);
-                compileButton.css('opacity', '0.6'); // Визуальное обозначение отключения
-
-                // Начинаем процесс сохранения проекта
-                saveProject(false)
-                    .then(function() {
-                        // Проверяем, был ли проект успешно сохранён
-                        if (!currentFile) {
-                            showMessage("Нет открытого файла для компиляции.", "error");
-                            // Включаем кнопку обратно
-                            compileButton.prop('disabled', false);
-                            compileButton.css('opacity', '1');
-                            return;
-                        }
-
-                        const language = getLanguageFromFilename(currentFile.text);
-
-                        const mainClassInput = document.getElementById('main-class-input');
-                        let mainClassName = mainClassInput.value.trim();
-                        if (!mainClassName) {
-                            showMessage("Введите название класса для компиляции.", "error");
-                            // Включаем кнопку обратно
-                            compileButton.prop('disabled', false);
-                            compileButton.css('opacity', '1');
-                            return;
-                        }
-
-                        const compileRequest = {
-                            project_id: Number(projectId), // Преобразуем в число, если требуется
-                            language: language,
-                            mainClassName: mainClassName
-                        };
-
-                        console.log("Отправка compileRequest:", compileRequest);
-
-                        // Отправляем запрос на компиляцию
-                        $.ajax({
-                            url: '/compile',
-                            type: 'POST',
-                            contentType: 'application/json',
-                            headers: {
-                                [csrfHeader]: csrfToken
-                            },
-                            data: JSON.stringify(compileRequest),
-                        })
-                        .done(function(response) {
-                            console.log("Результат компиляции:", response);
-                            displayCompileResult(response);
-                            showMessage("Компиляция завершена успешно.", "success");
-                        })
-                        .fail(function(xhr, status, error) {
-                            console.error("Ошибка при компиляции:", error);
-                            showMessage("Ошибка при компиляции.", "error");
-                        })
-                        .always(function() {
-                            // Включаем кнопку обратно после завершения запроса
-                            compileButton.prop('disabled', false);
-                            compileButton.css('opacity', '1');
-                        });
-                    })
-                    .fail(function() {
-                        // Если сохранение проекта не удалось, включаем кнопку обратно
-                        compileButton.prop('disabled', false);
-                        compileButton.css('opacity', '1');
-                        showMessage("Не удалось сохранить проект перед компиляцией.", "error");
-                    });
-            };
-
-            // Функция для отображения результата компиляции
-            const displayCompileResult = (result) => {
-                $('#compile-output').show();
-                const output = `
-stdout:
-${result.stdout || 'Нет вывода'}
-
-stderr:
-${result.stderr || 'Нет ошибок'}
-
-returncode: ${result.returncode}
-                `;
-                $('#compile-result').text(output);
-            };
-
-            const showMessage = (msg, type = 'error') => {
-                const messageDiv = $('#message');
-                messageDiv.text(msg);
-                messageDiv.removeClass('message-success message-error');
-                if (type === 'success') {
-                    messageDiv.addClass('message-success');
-                } else {
-                    messageDiv.addClass('message-error');
-                }
-                messageDiv.fadeIn(500).delay(2000).fadeOut(500);
-            };
-            const isValidName = (name) => {
-                if (!name || typeof name !== 'string') {
-                    return false;
-                }
-                const trimmedName = name.trim();
-                if (trimmedName.length === 0) {
-                    return false;
-                }
-                const invalidPatterns = ['/', '\\', '..'];
-                for (const pattern of invalidPatterns) {
-                    if (trimmedName.startsWith(pattern) || trimmedName.includes(pattern)) {
-                        return false;
-                    }
-                }
-                const prohibitedChars = ['<', '>', ':', '"', '|', '?', '*', '\0'];
-                for (const char of prohibitedChars) {
-                    if (trimmedName.includes(char)) {
-                        return false;
-                    }
-                }
-                return true;
-            };
-            const saveCurrentFile = () => {
-                if (currentFile && editor) {
-                    const newContent = editor.getValue();
-                    if (currentFile.data.content !== newContent) {
-                        currentFile.data.content = newContent;
-                        console.log(`Содержимое файла "${currentFile.text}" сохранено.`);
-                    }
-                }
-            };
-            const clearEditorIfDeleted = (node) => {
-                if (currentFile && node.id === currentFile.id) {
-                    editor.setValue('');
-                    currentFile = null;
-                    console.log(`Файл "${node.text}" удалён. Редактор очищен.`);
-                    return;
-                }
-                if (node.type === 'folder' && node.children && node.children.length > 0) {
-                    const tree = $('#jstree').jstree(true);
-                    node.children.forEach(childId => {
-                        const child = tree.get_node(childId);
-                        clearEditorIfDeleted(child);
-                    });
-                }
-            };
-            const checkUniqueName = (node, name, type, excludeId = null) => {
-                const tree = $('#jstree').jstree(true);
-                const childIds = tree.get_node(node.id).children;
-                let isUnique = true;
-                childIds.forEach(function(childId) {
-                    const childNode = tree.get_node(childId);
-                    const childText = childNode.text.trim();
-                    const childType = childNode.type;
-                    if (childText.toLowerCase() === name.trim().toLowerCase() && childType === type) {
-                        if (excludeId && childId === excludeId) {
-                            return;
-                        }
-                        isUnique = false;
-                        return false;
-                    }
-                });
-                return isUnique;
-            };
-            const getFullPath = (node) => {
-                const tree = $('#jstree').jstree(true);
-                const path = [];
-                let current = node;
-                while (current && current.id !== "#") {
-                    path.unshift(current.text);
-                    current = tree.get_node(current.parent);
-                }
-                path.shift();
-                return path.join('/');
-            };
-            const gatherFiles = (node) => {
-                const tree = $('#jstree').jstree(true);
-                const files = [];
-                node.children.forEach(childId => {
-                    const child = tree.get_node(childId);
-                    const fileObj = {
-                        id: child.id,
-                        text: child.text,
-                        path: getFullPath(child),
-                        type: child.type,
-                        data: child.type === 'file' ? { content: child.data.content || "" } : undefined,
-                        state: child.state,
-                        files: child.type === 'folder' ? gatherFiles(child) : undefined
-                    };
-                    files.push(fileObj);
-                });
-                return files;
-            };
-            const mapToBackendFormat = (gatheredFiles) => {
-                return gatheredFiles.map(fileObj => {
-                    const mappedObj = {
-                        path: fileObj.path,
-                        content: fileObj.type === 'file' ? fileObj.data.content : null,
-                        type: fileObj.type === 'folder' ? 'folder' : null
-                    };
-                    if (fileObj.type === 'folder') {
-                        mappedObj.files = fileObj.files && fileObj.files.length > 0 ? mapToBackendFormat(fileObj.files) : [];
-                    }
-                    return mappedObj;
-                });
-            };
-            const getProjectJSON = () => {
-                const tree = $('#jstree').jstree(true);
-                const root = tree.get_node("root");
-                const gatheredFiles = gatherFiles(root);
-                const mappedFiles = mapToBackendFormat(gatheredFiles);
-                const project = {
-                    files: mappedFiles
-                };
-                return project;
-            };
-            const saveProject = (showSuccessMessage = true) => {
-                if (isSaving) {
-                    console.log("Сохранение уже выполняется, пропуск текущего цикла автосохранения.");
-                    return $.Deferred().resolve().promise(); // Возвращаем уже выполненный промис
-                }
-                isSaving = true;
-                saveCurrentFile();
-                const projectJSON = getProjectJSON();
-                console.log("Сформированный JSON проекта:", JSON.stringify(projectJSON, null, 2));
-                if (!projectJSON.files || projectJSON.files.length === 0) {
-                    console.log("Проект пустой, сохранение не требуется.");
-                    isSaving = false;
-                    return $.Deferred().resolve().promise();
-                }
-                return $.ajax({
-                    url: `/projects/${projectId}/save`,
-                    type: 'POST',
-                    contentType: 'application/json',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    },
-                    data: JSON.stringify(projectJSON),
-                })
-                .done(function(response) {
-                    console.log("Проект успешно сохранён!");
-                    if (showSuccessMessage) {
-                        showMessage("Проект успешно сохранён!", "success");
-                    }
-                })
-                .fail(function(xhr, status, error) {
-                    console.error("Ошибка при сохранении проекта:", error);
-                    showMessage("Ошибка при сохранении проекта.", "error");
-                })
-                .always(function() {
-                    isSaving = false;
-                });
-            };
-
-            const createNodeRecursively = (parent, nodeData, position) => {
-                const tree = $('#jstree').jstree(true);
-                position = (typeof position === 'number' && position < 0) ? 'last' : position;
-                pendingCreations++;
-                console.log(`Восстанавливаем узел: ${nodeData.text}, Тип: ${nodeData.type}, ID: ${nodeData.id}`);
-                tree.create_node(parent, {
-                    id: nodeData.id,
-                    text: nodeData.text,
-                    type: nodeData.type,
-                    data: nodeData.type === 'file' ? { content: nodeData.data.content || "" } : {},
-                    state: nodeData.state
-                }, position, function(new_node) {
-                    console.log(`Узел "${new_node.text}" восстановлен.`);
-                    if (nodeData.files && nodeData.files.length > 0) {
-                        nodeData.files.forEach(child => {
-                            createNodeRecursively(new_node.id, child, 'last');
-                        });
-                    }
-                    pendingCreations--;
-                    if (pendingCreations === 0) {
-                        isUndoing = false;
-                        console.log("Восстановление всех узлов завершено.");
-                    }
-                });
-            };
-            const loadFile = (node) => {
-                if (node.type === 'file') {
-                    const content = node.data && node.data.content ? node.data.content : "";
-                    const language = getLanguageFromFilename(node.text);
-                    if (editor) {
-                        isUndoing = true;
-                        const currentModel = editor.getModel();
-                        if (currentModel) {
-                            monaco.editor.setModelLanguage(currentModel, language);
-                            editor.setValue(content);
-                        }
-                        isUndoing = false;
-                        console.log(`Файл "${node.text}" загружен в редактор с языком "${language}".`);
-                    }
-                    currentFile = node;
-                }
-            };
-            const undo = () => {
-                if (undoStack.length === 0) {
-                    console.log("Undo Stack пуст.");
-                    return;
-                }
-                const lastAction = undoStack.pop();
-                console.log("Undoing Action:", lastAction);
-                isUndoing = true;
-                const tree = $('#jstree').jstree(true);
-                switch(lastAction.action) {
-                    case 'delete':
-                        tree.delete_node(lastAction.node);
-                        break;
-                    case 'create':
-                        createNodeRecursively(lastAction.parent, lastAction.node, lastAction.position);
-                        break;
-                    case 'rename':
-                        tree.rename_node(lastAction.node, lastAction.old_text);
-                        break;
-                    case 'move':
-                        tree.move_node(lastAction.node, lastAction.old_parent, lastAction.old_position);
-                        break;
-                    default:
-                        console.warn('Неизвестное действие для отмены:', lastAction.action);
-                }
-            };
-            const handleRename = (data) => {
-                console.log(`handleRename вызван для узла: ${data.node.id}, Тип: ${data.node.type}, Старое имя: ${data.old}, Новое имя: ${data.text}`);
-                if (!isUndoing) {
-                    if (data.node.id === "root") {
-                        showMessage("Нельзя переименовывать корневую папку!");
-                        const tree = $('#jstree').jstree(true);
-                        tree.rename_node(data.node, data.old);
-                        return;
-                    }
-                    if (!isValidName(data.text)) {
-                        showMessage("Недопустимое имя.");
-                        const tree = $('#jstree').jstree(true);
-                        tree.rename_node(data.node, data.old);
-                        return;
-                    }
-                    const parent = data.node.parent;
-                    const tree = $('#jstree').jstree(true);
-                    const siblings = tree.get_node(parent).children;
-                    let isUnique = true;
-                    siblings.forEach(function(childId) {
-                        const childNode = tree.get_node(childId);
-                        const childText = childNode.text.trim();
-                        const childType = childNode.type;
-                        if (childText.toLowerCase() === data.text.trim().toLowerCase() && childType === data.node.type && childId !== data.node.id) {
-                            isUnique = false;
-                            return false;
-                        }
-                    });
-                    if (!isUnique) {
-                        showMessage("Узел с таким именем уже существует в этой папке.");
-                        tree.rename_node(data.node, data.old);
-                        return;
-                    }
-                    undoStack.push({
-                        action: 'rename',
-                        node: data.node.id,
-                        old_text: data.old,
-                        new_text: data.text
-                    });
-                    console.log("Action Recorded to Undo Stack:", { action: 'rename', node: data.node.id, old_text: data.old, new_text: data.text });
-                }
-                if (currentFile && data.node.id === currentFile.id && currentFile.type === 'file') {
-                    const newLanguage = getLanguageFromFilename(data.text);
-                    monaco.editor.setModelLanguage(editor.getModel(), newLanguage);
-                    console.log(`Язык синтаксиса обновлён на "${newLanguage}" для файла "${data.text}".`);
-                }
-            };
-            const isMoveNameUnique = (targetNode, node) => {
-                const tree = $('#jstree').jstree(true);
-                const childIds = tree.get_node(targetNode.id).children;
-                let isUnique = true;
-                childIds.forEach(function(childId) {
-                    const childNode = tree.get_node(childId);
-                    const childText = childNode.text.trim();
-                    const childType = childNode.type;
-                    if (childText.toLowerCase() === node.text.trim().toLowerCase() && childType === node.type) {
-                        if (childId === node.id) {
-                            return;
-                        }
-                        isUnique = false;
-                        return false;
-                    }
-                });
-                return isUnique;
-            };
-            const initializeJsTree = () => {
-                const fileStructureJson = document.querySelector('meta[name="fileStructure"]').getAttribute('content');
-                const projectName = $('#jstree').data('project-name');
-                let fileTreeData = [];
-                if (fileStructureJson) {
-                    try {
-                        fileTreeData = JSON.parse(fileStructureJson);
-                    } catch (e) {
-                        console.error("Ошибка при парсинге JSON для fileStructure:", e);
-                    }
-                }
-                if (!fileTreeData || fileTreeData.length === 0) {
-                    fileTreeData = [{
-                        id: "root",
-                        text: projectName || "Проект",
-                        type: "folder",
-                        children: [],
-                        state: { opened: true }
-                    }];
-                }
-                $('#jstree').jstree({
-                    core: {
-                        check_callback: function (operation, node, parent, position, more) {
-                            const tree = $('#jstree').jstree(true);
-                            if (operation === "move_node") {
-                                const movingNode = node;
-                                const targetParentNode = tree.get_node(parent);
-                                if (movingNode.id === "root") {
-                                    return false;
-                                }
-                                if (targetParentNode.type !== "folder") {
-                                    return false;
-                                }
-                                if (parent === "#") {
-                                    return false;
-                                }
-                                if (!isMoveNameUnique(targetParentNode, movingNode)) {
-                                    return false;
-                                }
-                            }
-                            return true;
-                        },
-                        data: fileTreeData
-                    },
-                    plugins: ['contextmenu', 'dnd', 'types'],
-                    types: {
-                        folder: { icon: 'jstree-folder' },
-                        file: { icon: 'jstree-file' }
-                    },
-                    contextmenu: {
-                        items: function(node) {
-                            const tree = $("#jstree").jstree(true);
-                            const menuItems = {};
-                            if (node.type !== 'folder') {
-                                menuItems.Rename = {
-                                    separator_before: false,
-                                    separator_after: false,
-                                    label: "Переименовать",
-                                    action: function () { tree.edit(node); }
-                                };
-                                menuItems.Remove = {
-                                    separator_before: false,
-                                    separator_after: false,
-                                    label: "Удалить",
-                                    action: function () {
-                                        if (node.id === "root") {
-                                            return;
-                                        }
-                                        const parent = node.parent;
-                                        const parentNode = tree.get_node(parent);
-                                        const position = parentNode.children.indexOf(node.id) !== -1 ? parentNode.children.indexOf(node.id) : 'last';
-                                        if (!isUndoing) {
-                                            const fullNodeData = {
-                                                id: node.id,
-                                                text: node.text,
-                                                type: node.type,
-                                                data: node.type === 'file' ? { content: node.data.content || "" } : undefined,
-                                                state: node.state,
-                                                files: node.type === 'folder' ? gatherFiles(node) : undefined
-                                            };
-                                            undoStack.push({
-                                                action: 'create',
-                                                node: fullNodeData,
-                                                parent: parent,
-                                                position: position
-                                            });
-                                            console.log("Action Recorded to Undo Stack:", { action: 'create', node: fullNodeData, parent: parent, position: position });
-                                        }
-                                        clearEditorIfDeleted(node);
-                                        tree.delete_node(node);
-                                    }
-                                };
-                            } else {
-                                menuItems.Create = {
-                                    separator_before: false,
-                                    separator_after: false,
-                                    label: "Создать",
-                                    action: false,
-                                    submenu: {
-                                        CreateFile: {
-                                            label: "Файл",
-                                            action: function () {
-                                                const newFileName = prompt("Введите имя нового файла:", "Новый файл.js");
-                                                if (!newFileName) {
-                                                    return;
-                                                }
-                                                if (!isValidName(newFileName)) {
-                                                    showMessage("Недопустимое имя файла.");
-                                                    return;
-                                                }
-                                                if (!checkUniqueName(node, newFileName, 'file')) {
-                                                    showMessage("Файл с таким именем уже существует в этой папке.");
-                                                    return;
-                                                }
-                                                const newId = 'file_' + Date.now();
-                                                tree.create_node(node, {
-                                                    id: newId,
-                                                    text: newFileName,
-                                                    type: "file",
-                                                    data: { content: "" },
-                                                    state: { opened: true }
-                                                }, "last", function(new_node) {
-                                                    setTimeout(function() {
-                                                        tree.select_node(new_node);
-                                                    }, 0);
-                                                });
-                                            }
-                                        },
-                                        CreateFolder: {
-                                            label: "Папка",
-                                            action: function () {
-                                                const newFolderName = prompt("Введите имя новой папки:", "Новая папка");
-                                                if (!newFolderName) {
-                                                    return;
-                                                }
-                                                if (!isValidName(newFolderName)) {
-                                                    showMessage("Недопустимое имя папки.");
-                                                    return;
-                                                }
-                                                if (!checkUniqueName(node, newFolderName, 'folder')) {
-                                                    showMessage("Папка с таким именем уже существует в этой папке.");
-                                                    return;
-                                                }
-                                                const newId = 'folder_' + Date.now();
-                                                tree.create_node(node, {
-                                                    id: newId,
-                                                    text: newFolderName,
-                                                    type: "folder",
-                                                    state: { opened: true }
-                                                }, "last", function(new_node) {
-                                                    setTimeout(function() {
-                                                        tree.select_node(new_node);
-                                                    }, 0);
-                                                });
-                                            }
-                                        }
-                                    }
-                                };
-                                if (node.id !== "root") {
-                                    menuItems.Rename = {
-                                        separator_before: false,
-                                        separator_after: false,
-                                        label: "Переименовать",
-                                        action: function () {
-                                            tree.edit(node);
-                                        }
-                                    };
-                                    menuItems.Remove = {
-                                        separator_before: false,
-                                        separator_after: false,
-                                        label: "Удалить",
-                                        action: function () {
-                                            if (node.id === "root") {
-                                                return;
-                                            }
-                                            const parent = node.parent;
-                                            const parentNode = tree.get_node(parent);
-                                            const position = parentNode.children.indexOf(node.id) !== -1 ? parentNode.children.indexOf(node.id) : 'last';
-                                            if (!isUndoing) {
-                                                const fullNodeData = {
-                                                    id: node.id,
-                                                    text: node.text,
-                                                    type: node.type,
-                                                    data: node.type === 'file' ? { content: node.data.content || "" } : undefined,
-                                                    state: node.state,
-                                                    files: node.type === 'folder' ? gatherFiles(node) : undefined
-                                                };
-                                                undoStack.push({
-                                                    action: 'create',
-                                                    node: fullNodeData,
-                                                    parent: parent,
-                                                    position: position
-                                                });
-                                                console.log("Action Recorded to Undo Stack:", { action: 'create', node: fullNodeData, parent: parent, position: position });
-                                            }
-                                            clearEditorIfDeleted(node);
-                                            tree.delete_node(node);
-                                        }
-                                    };
-                                }
-                            }
-                            return menuItems;
-                        }
-                    }
-                })
-                .on('create_node.jstree', function (e, data) {
-                    if (data.node.type === 'file' && !isUndoing) {
-                        data.node.data = { "content": "" };
-                    }
-                    if (!isUndoing) {
-                        undoStack.push({
-                            action: 'delete',
-                            node: data.node.id
-                        });
-                        console.log("Action Recorded to Undo Stack:", { action: 'delete', node: data.node.id });
-                    }
-                })
-                .on('rename_node.jstree', function (e, data) {
-                    handleRename(data);
-                })
-                .on('delete_node.jstree', function (e, data) {
-                    clearEditorIfDeleted(data.node);
-                })
-                .on('move_node.jstree', function (e, data) {
-                    if (!isUndoing) {
-                        undoStack.push({
-                            action: 'move',
-                            node: data.node.id,
-                            old_parent: data.old_parent,
-                            old_position: data.old_position
-                        });
-                        console.log("Action Recorded to Undo Stack:", { action: 'move', node: data.node.id, old_parent: data.old_parent, old_position: data.old_position });
-                    }
-                })
-                .on('dnd_stop.vakata', function (e, data) {
-                    if (duplicateNameError) {
-                        showMessage("В целевой папке уже существует узел с таким именем.");
-                        duplicateNameError = false;
-                    }
-                })
-                .on('select_node.jstree', function (e, data) {
-                    saveCurrentFile();
-                    if (data.node.type === 'file') {
-                        loadFile(data.node);
-                    }
-                });
-                $(document).on('keydown', function(e) {
-                    if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
-                        e.preventDefault();
-                        console.log("Ctrl+Z нажато");
-                        undo();
-                    }
-                });
-                $('#save-button').on('click', function() {
-                    saveProject();
-                });
-                require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs' }});
-                require(['vs/editor/editor.main'], function() {
-                    editor = monaco.editor.create(document.getElementById('editor'), {
-                        value: '',
-                        language: 'plaintext',
-                        theme: 'vs-dark',
-                        automaticLayout: true
-                    });
-                    editor.onDidChangeModelContent(function() {
-                        if (isUndoing) {
-                            return;
-                        }
-                        if (currentFile) {
-                            currentFile.data.content = editor.getValue();
-                            console.log(`Содержимое файла "${currentFile.text}" обновлено.`);
-                        }
-                    });
-                });
-            };
-            initializeSelectMainClassModal();
-            initializeJsTree();
-            setInterval(function() {
-                console.log("Автосохранение проекта...");
-                saveProject(false);
-            }, 15000);
-        });
-
-        // Добавляем логику для ресайзера
-        const resizer = document.getElementById('resizer');
-        const sidebar = document.getElementById('sidebar');
-        const editorContainer = document.getElementById('editor-container');
-        let isResizing = false;
-
-        resizer.addEventListener('mousedown', function(e) {
-            isResizing = true;
-            document.body.style.cursor = 'ew-resize';
-        });
-
-        document.addEventListener('mousemove', function(e) {
-            if (!isResizing) return;
-
-            // Вычисляем новую ширину боковой панели
-            let newWidth = e.clientX - sidebar.getBoundingClientRect().left;
-
-            // Устанавливаем минимальную и максимальную ширину
-            const minWidth = 200; // Минимальная ширина боковой панели
-            const maxWidth = 600; // Максимальная ширина боковой панели
-
-            if (newWidth < minWidth) {
-                newWidth = minWidth;
-            } else if (newWidth > maxWidth) {
-                newWidth = maxWidth;
-            }
-
-            sidebar.style.width = newWidth + 'px';
-        });
-
-        document.addEventListener('mouseup', function(e) {
-            if (isResizing) {
-                isResizing = false;
-                document.body.style.cursor = 'default';
-            }
-        });
-
-        // Опционально: Обработка касания для мобильных устройств
-        resizer.addEventListener('touchstart', function(e) {
-            isResizing = true;
-            document.body.style.cursor = 'ew-resize';
-        });
-
-        document.addEventListener('touchmove', function(e) {
-            if (!isResizing) return;
-            const touch = e.touches[0];
-            let newWidth = touch.clientX - sidebar.getBoundingClientRect().left;
-
-            const minWidth = 200;
-            const maxWidth = 600;
-
-            if (newWidth < minWidth) {
-                newWidth = minWidth;
-            } else if (newWidth > maxWidth) {
-                newWidth = maxWidth;
-            }
-
-            sidebar.style.width = newWidth + 'px';
-        });
-
-        document.addEventListener('touchend', function(e) {
-            if (isResizing) {
-                isResizing = false;
-                document.body.style.cursor = 'default';
-            }
-        });
-
-</script>
-</body>
-</html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile</title>
     <link rel="icon" href="/favicon.png" type="image/png">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
-    <style th:inline="css">
-        /* Ваши стили */
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <title>Регистрация</title>
+    <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-            font-size: inherit !important;
+            font-family: 'VT323', monospace; /* Apply the VT323 font */
         }
 
-        .profile-avatar {
-            width: 220px;
-            height: 220px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 20px;
-            box-shadow: 0 0 25px rgba(40, 167, 69, 0.1), 0 0 50px rgba(40, 167, 69, 0.2);
-        }
-
-        .friend-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            box-shadow: 0 0 25px rgba(40, 167, 69, 0.1), 0 0 50px rgba(40, 167, 69, 0.2);
-            object-fit: cover;
-        }
-
-        .btn-custom {
-            background: none;
-            color: #0366d6;
-            text-decoration: underline;
-            cursor: pointer;
-            padding: 0;
-            font-size: 1em;
-        }
-
-        .btn-custom:hover {
-            color: #0056b3;
-        }
-
-        .header {
+        body {
+            background: #8EC5FC;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 5px 20px;
-            background-color: #f6f8fa;
-            border-bottom: 1px solid #d1d5da;
-            width: 100%;
-            position: fixed;
+            justify-content: center;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            color: #FFC300;
+        }
+
+        .container {
+            background-color: rgba(0, 0, 0, 0.9);
+            border: 3px solid #FFC300;
+            border-radius: 25px;
+            box-shadow: 0 6px 15px rgba(255, 234, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            width: 768px;
+            max-width: 100%;
+            min-height: 480px;
+            padding: 20px;
+        }
+  .container h1 {
+            font-size: 32px; /* Larger font size for headings */
+            margin-bottom: 20px;
+        }
+
+        .container h3 {
+            font-size: 24px; /* Larger font size for subheadings */
+        }
+ .container p {
+            font-size: 16px; /* Increased font size for paragraphs */
+            line-height: 24px;
+            margin: 15px 0;
+            color: #FFC300;
+        }
+        .matrix {
+            position: absolute;
             top: 0;
             left: 0;
-            z-index: 900;
-            box-sizing: border-box;
-        }
-
-        .header .user-info {
-            display: flex;
-            align-items: center;
-        }
-
-        .header .user-info img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-
-        .header .actions {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .header .actions a {
-            display: flex;
-            align-items: center;
-            color: #24292e;
-            text-decoration: none;
-            font-size: 24px;
-            transition: color 0.3s ease;
-        }
-
-        .header .actions a:hover {
-            color: #0366d6;
-        }
-
-        .header .actions .logout-icon {
-            color: #24292e;
-            cursor: pointer;
-            font-size: 24px;
-            transition: color 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-        }
-
-        .header .actions .logout-icon:hover {
-            color: #d73a49;
-        }
-
-        .Box {
-            box-shadow: none;
-            border: none;
-        }
-
-        .main-container {
-            margin-top: 80px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 0 20px;
-            box-sizing: border-box;
             width: 100%;
-            gap: 40px;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
         }
 
-        .profile-info-container {
-            width: 35%;
-            max-width: 400px;
-            padding: 20px;
-            background-color: #ffffff;
-            text-align: center;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        .matrix span {
+            position: absolute;
+            top: -10vh;
+            font-size: 24px;
+            color: #FFC300;
+            opacity: 0.8;
+            animation: fall 10s linear infinite;
+            white-space: pre;
         }
 
-        .projects-container {
-            width: 60%;
-            padding: 20px;
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        @keyframes fall {
+            0% {
+                top: -10vh;
+                opacity: 0;
+            }
+            20% {
+                opacity: 1;
+            }
+            100% {
+                top: 110vh;
+                opacity: 0;
+            }
         }
 
-        .btn-link {
-            background: none;
-            color: #0366d6;
-            text-decoration: underline;
-            cursor: pointer;
-            padding: 0;
-            font-size: 1em;
-        }
 
-        .profile-info-container .profile-avatar {
-            align-self: center;
-        }
-
-        .friends-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-            align-items: center;
-            margin-top: 20px;
-        }
-
-        .friend-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-
-        .friend-username {
-            margin-top: 8px;
-            font-size: 14px;
-            color: #24292e;
+        .container a {
+            color: #FFC300;
+            font-size: 13px;
             text-decoration: none;
+            margin: 15px 0 10px;
+            transition: color 0.3s;
         }
 
-        .friend-username:hover {
-            color: #0366d6;
+        .container a:hover {
+            color: #17A846;
         }
 
-        .d-flex.gap-2 > button {
-            margin-right: 15px;
-        }
-
-        .btn-green {
-            background-color: #28a745;
-            color: #ffffff;
+        .container button {
+            background-color: #FFC300;
+            color: #000000;
+            font-size: 16px;
+            padding: 10px 40px;
             border: none;
-            border-radius: 6px;
-            padding: 5px 10px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background-color 0.3s, box-shadow 0.3s;
-        }
-
-        .btn-green:hover {
-            background-color: #218838;
-            box-shadow: 0 0 10px rgba(33, 136, 56, 0.3);
-        }
-
-        .btn-edit-green {
-            background-color: #28a745;
-            color: #ffffff;
-            border: none;
-            border-radius: 6px;
-            padding: 10px 20px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background-color 0.3s, box-shadow 0.3s;
-            text-align: center;
-            display: block;
-            margin: 0 auto;
-        }
-
-        .btn-edit-green:hover {
-            background-color: #218838;
-            box-shadow: 0 0 10px rgba(33, 136, 56, 0.3);
-        }
-.badge-java {
-    background-color: #b07219; /* Оранжевый для Java */
-}
-
-.badge-python {
-    background-color: #306998; /* Синий для Python */
-}
-
-.badge-default {
-    background-color: #6c757d; /* Серый по умолчанию */
-}
-
-        .badge {
-            display: inline-block;
-            padding: 5px 10px;
-            background-color: #6c757d; /* Серый цвет, можно изменить */
-            color: #ffffff;
             border-radius: 12px;
-            font-size: 12px;
-            margin-left: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        .collaborators-list a {
-            display: inline-block;
-            margin-right: 10px;
+        .container button:hover {
+            background-color: #FFC300;
         }
 
-        .collaborators-list img.collaborator-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 5px;
-            object-fit: cover;
-            border: 1px solid #ccc;
+        .container button.hidden {
+            background-color: transparent;
+            border: 2px solid #FFC300;
+            color: #FFC300;
+            padding: 10px 30px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container button.hidden:hover {
+            background-color: #FFC300;
+            color: #000000;
+        }
+
+        .container form {
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 30px;
+            height: 100%;
+        }
+
+        .container input {
+            background-color: #1E1E1E;
+            border: 2px solid #FFC300;
+            margin: 10px 0;
+            padding: 14px 20px;
+            font-size: 16px;
+            border-radius: 10px;
+            width: 100%;
+            outline: none;
+            color: #FFC300;
+            transition: border-color 0.3s;
+        }
+
+        .container input:focus {
+            border-color: #FFC300;
+        }
+
+        .form-container {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            transition: all 0.6s ease-in-out;
+        }
+
+        .sign-in {
+            left: 0;
+            width: 50%;
+            z-index: 1;
+            opacity: 0;
+        }
+
+        .container.active .sign-in {
+            transform: translateX(100%);
+        }
+
+        .sign-up {
+            right: 0;
+            width: 50%;
+            z-index: 2;
+        }
+
+        .container.active .sign-up {
+            transform: translateX(-100%);
+            opacity: 1;
+            z-index: 5;
+            animation: move 0.6s;
+        }
+
+        @keyframes fadeIn {
+            0%, 49.99% {
+                opacity: 0;
+                z-index: 1;
+            }
+            50%, 100% {
+                opacity: 1;
+                z-index: 5;
+            }
+        }
+
+        .toggle-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 100%;
+            overflow: hidden;
+            transition: all 0.6s ease-in-out;
+            border-radius: 20px;
+            z-index: 1000;
+        }
+
+        .container.active .toggle-container {
+            transform: translateX(100%);
+            border-radius: 20px;
+        }
+
+        .toggle {
+            background-color: #FFC300;
+            height: 100%;
+            color: #000000;
+            position: relative;
+            left: 0;
+            height: 100%;
+            width: 200%;
+            transform: translateX(0);
+            transition: all 0.6s ease-in-out;
+        }
+
+        .container.active .toggle {
+            transform: translateX(-50%);
+        }
+
+        .toggle-panel {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 0 30px;
+            text-align: center;
+            top: 0;
+            transform: translateX(0);
+            transition: all 0.6s ease-in-out;
+        }
+
+        .toggle-left {
+            left: 0;
+            transform: translateX(0);
+        }
+
+        .container.active .toggle-left {
+            transform: translateX(100%);
+        }
+
+        .form-error {
+            color: red;
+            white-space: nowrap;
+            padding-bottom: 10px;
+        }
+
+        .error {
+            border-color: red;
+        }
+
+        .toggle-right {
+            right: 0;
+            transform: translateX(200%);
+        }
+
+        .container.active .toggle-right {
+            transform: translateX(0);
         }
 
     </style>
 </head>
 
-<body class="Box p-3">
-<div class="header">
-    <div class="user-info">
-        <a th:href="@{/userProfile/{id}(id=${client.id})}" style="display: flex; align-items: center; text-decoration: none;">
-            <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar">
-            <span class="username" th:text="${client.username}" style="margin-left: 10px; color: inherit;"></span>
-        </a>
-    </div>
-    <div class="actions">
-        <a th:href="@{/edit/{id}(id=${client.id})}"><i class='bx bx-user'></i></a>
-        <form th:action="@{/logout}" th:method="POST" style="margin: 0;">
-            <button type="submit" class="logout-icon" title="Logout" style="border: none; background: none;"><i class='bx bx-log-out'></i></button>
+<body>
+<div class="matrix" id="matrixContainer"></div>
+
+<div class="container" id="container">
+
+
+
+    <div class="form-container sign-up">
+        <form action="/process_registration" method="post" th:object="${client}">
+            <h1 style="text-align: center;">Создать аккаунт</h1>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <span style="margin-top:20px;">Зарегистрироваться с помощью логина</span>
+            <input type="text" th:field="*{username}" placeholder="Имя пользователя" th:classappend="${#fields.hasErrors('username')} ? 'error' : ''"/>
+            <div th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+
+            <!-- Поле email -->
+            <input type="email" th:field="*{email}" placeholder="Email" th:classappend="${#fields.hasErrors('email')} ? 'error' : ''"/>
+            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+
+            <!-- Поле пароля -->
+            <input type="password" th:field="*{password}" placeholder="Пароль" th:classappend="${#fields.hasErrors('password')} ? 'error' : ''"/>
+            <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+            <button>зарегистрироваться</button>
         </form>
     </div>
-</div>
-<input type="hidden" id="csrfToken" name="_csrf" th:value="${_csrf.token}" />
-<div class="main-container clearfix gutter-lg">
-    <!-- Левая панель: Информация о пользователе -->
-    <div class="profile-info-container d-flex flex-column align-items-center">
-        <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="profile-avatar">
-        <div class="profile-info text-center mt-2">
-            <h2 th:text="${client.username}">
-                User Name
-                <span class="badge" th:text="${client.language}">Language</span>
-            </h2>
-            <p class="color-fg-muted" th:text="${client.email}">user@example.com</p>
-            <a th:href="${client.githubProfile}" class="Link--primary" target="_blank">GitHub Профиль</a>
-            <p class="color-fg-default mt-3" th:text="${client.about}">About me</p>
-        </div>
-        <div>
-            <a th:href="@{/invitations/received}">Полученные приглашения</a>
-        </div>
-        <div class="mt-3">
-            <a th:href="@{/friends/list}" class="btn-link">Друзья</a>
-        </div>
-        <div class="friends-list">
-            <th:block th:each="friend, iterStat : ${friends}">
-                <div class="friend-item">
-                    <a th:href="@{/userProfile/{id}(id=${friend.id})}">
-                        <img th:src="${friend.avatarUrl != null ? friend.avatarUrl : '/noAvatar.png'}" alt="Friend Avatar" class="friend-avatar">
-                    </a>
-                    <span th:text="${friend.username}" class="friend-username"></span>
-                </div>
-            </th:block>
-        </div>
-    </div>
 
-    <!-- Правая панель: Список проектов -->
-    <div class="projects-container">
-        <!-- Заголовок и форма поиска -->
-        <div class="d-flex flex-items-center flex-justify-between" style="border: none;">
-            <h2 class="">Мои Проекты</h2>
-            <div class="d-flex">
-                <input type="text" id="projectSearchInput" placeholder="Поиск проектов..." oninput="filterProjects()" class="form-control input-sm" style="border: 1px solid #d1d5da; border-radius: 6px;">
-                <a th:href="@{/projects/userProfile/new}" class="btn-custom ml-3" style="border: none;">
-                    <i class='bx bx-plus'></i>
-                </a>
+    <div class="toggle-container">
+        <div class="toggle">
+            <div class="toggle-panel toggle-left">
+                <h1>Добро пожаловать<br></h1>
+                <p><span style="color: black;">Войти с помощью логина и пароля</span></p>
+                <a href="/login">
+                    <button class="hidden" id="login" style="border-radius: 12px; border: 1px solid black; color: black;">войти</button></a>
             </div>
-        </div>
-
-        <!-- Список собственных проектов -->
-        <ul class="list-style-none mt-3">
-            <th:block th:each="project : ${projects}">
-                <li class="Box-row project-item p-3 mb-3" style="border: 1px solid #d1d5da; border-radius: 6px;" th:data-project-id="${project.id}">
-                    <div class="d-flex flex-items-center flex-justify-between">
-                        <strong class="f4" style="color: #000000;">
-                            <span th:text="${project.name}">Название Проекта</span>
-                            <span class="badge" th:text="${project.language}"
-                                  th:classappend="${project.language} == 'Java' ? 'badge-java' :
-                    (${project.language} == 'Python' ? 'badge-python' : 'badge-default')}">
-    Language
-</span>
-
-                        </strong>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-green btn-open"><i class='bx bx-folder-open'></i></button>
-                            <button class="btn btn-sm btn-info btn-info-project"><i class='bx bx-info-circle'></i></button>
-                            <form th:action="@{/projects/delete/{id}(id=${project.id})}" method="post" style="display: inline;" onsubmit="return confirm('Вы действительно хотите удалить проект?');">
-                                <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
-                                <button type="submit" class="btn btn-sm btn-danger"><i class='bx bx-trash'></i></button>
-                            </form>
-                        </div>
-                    </div>
-                    <div class="project-details mt-2" style="display: none;">
-                        <p><strong>Имя проекта:</strong> <span th:text="${project.name}"></span></p>
-                        <p><strong>Описание:</strong> <span th:text="${project.readMe}"></span></p>
-                        <!-- Удалено отображение языка -->
-                        <!-- Добавлены кнопки "Редактировать" и "Пригласить" рядом -->
-                        <div class="d-flex gap-2">
-                            <a th:href="@{/projects/edit/{id}(id=${project.id})}" class="btn-edit-green">Редактировать</a>
-                            <a th:href="@{/invitations/projects/{projectId}/invite(projectId=${project.id})}" class="btn-edit-green">Пригласить</a>
-                        </div>
-                        <!-- Отображение аватаров коллабораторов -->
-                        <div class="collaborators-section mt-3">
-                            <h3>Коллаборации</h3>
-                            <div class="collaborators-list">
-                                <th:block th:each="team : ${project.projectTeams}">
-                                    <th:block th:if="${team.role == 'COLLABORATOR'}">
-                                        <a th:href="@{/userProfile/{id}(id=${team.client.id})}">
-                                            <img th:src="${team.client.avatarUrl != null ? team.client.avatarUrl : '/noAvatar.png'}"
-                                                 alt="Avatar" class="collaborator-avatar">
-                                        </a>
-                                    </th:block>
-                                </th:block>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-            </th:block>
-        </ul>
-
-        <!-- Список проектов, в которых пользователь является коллабораторами -->
-        <div class="collaborator-projects-section">
-            <h2 class="section-title">Проекты, в которых вы соавтор</h2>
-            <ul class="list-style-none mt-3">
-                <th:block th:each="team : ${collaboratorProjects}">
-                    <li class="Box-row project-item p-3 mb-3" style="border: 1px solid #d1d5da; border-radius: 6px;" th:data-project-id="${team.project.id}">
-                        <div class="d-flex flex-items-center flex-justify-between">
-                            <strong class="f4" style="color: #000000;">
-                                <span th:text="${team.project.name}">Название Проекта</span>
-                                <span class="badge" th:text="${team.project.language}">Language</span>
-                            </strong>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-green btn-open"><i class='bx bx-folder-open'></i></button>
-                                <button class="btn btn-sm btn-info btn-info-project"><i class='bx bx-info-circle'></i></button>
-                                <!-- Кнопки "Удалить", "Редактировать", "Пригласить" не отображаются -->
-                            </div>
-                        </div>
-                        <div class="project-details mt-2" style="display: none;">
-                            <p><strong>Имя проекта:</strong> <span th:text="${team.project.name}"></span></p>
-                            <p><strong>Описание:</strong> <span th:text="${team.project.readMe}"></span></p>
-                            <!-- Удалено отображение языка -->
-                            <!-- Нет кнопок "Пригласить" -->
-                            <!-- Отображение аватаров коллабораторов -->
-<!--                            <div class="collaborators-section mt-3">-->
-<!--                                <h3>Коллаборации</h3>-->
-<!--                                <div class="collaborators-list">-->
-<!--                                    <th:block th:each="collab : ${team.project.projectTeams}">-->
-<!--                                        <th:block th:if="${collab.role == 'COLLABORATOR'}">-->
-<!--                                            <a th:href="@{/userProfile/{id}(id=${collab.client.id})}">-->
-<!--                                                <img th:src="${collab.client.avatarUrl != null ? collab.client.avatarUrl : '/noAvatar.png'}"-->
-<!--                                                     alt="Avatar" class="collaborator-avatar">-->
-<!--                                            </a>-->
-<!--                                        </th:block>-->
-<!--                                    </th:block>-->
-<!--                                </div>-->
-<!--                            </div>-->
-                        </div>
-                    </li>
-                </th:block>
-            </ul>
         </div>
     </div>
 </div>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Назначение событий кнопкам "Открыть проект"
-        const openButtons = document.querySelectorAll('.btn-open');
-        openButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const projectItem = button.closest('.project-item');
-                const projectId = projectItem.getAttribute('data-project-id');
-                if (projectId) {
-                    window.location.href = `/Compiler/project/${projectId}`;
-                } else {
-                    console.error("Project ID не найден");
-                }
-            });
-        });
+    const container = document.getElementById('container');
+    const registerBtn = document.getElementById('register');
+    const loginBtn = document.getElementById('login');
 
-        // Назначение событий кнопкам "Инфо"
-        const infoButtons = document.querySelectorAll('.btn-info-project');
-        infoButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const projectItem = button.closest('.project-item');
-                const projectDetails = projectItem.querySelector('.project-details');
-                // Переключение видимости информации о проекте
-                projectDetails.style.display = (projectDetails.style.display === 'none' || projectDetails.style.display === '') ? 'block' : 'none';
-            });
-        });
-    });
-
-    // Функция фильтрации проектов
-    function filterProjects() {
-        const searchInput = document.getElementById('projectSearchInput').value.toLowerCase();
-        const projectItems = document.querySelectorAll('.project-item');
-        projectItems.forEach(item => {
-            const projectName = item.querySelector('strong').textContent.toLowerCase();
-            if (projectName.includes(searchInput)) {
-                item.style.display = '';
-            } else {
-                item.style.display = 'none';
-            }
+    if (registerBtn) {
+        registerBtn.addEventListener('click', () => {
+            container.classList.add("active");
         });
     }
+
+    if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
+            container.classList.remove("active");
+        });
+    }
+
+    const matrixContainer = document.getElementById('matrixContainer');
+    const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+    function createMatrixSpan() {
+        const span = document.createElement('span');
+        let trailLength = Math.floor(Math.random() * 5) + 5;  // Define length of the trail (5-10 characters)
+        let trailText = '';
+
+        for (let i = 0; i < trailLength; i++) {
+            trailText += characters.charAt(Math.floor(Math.random() * characters.length)) + '\n';
+        }
+
+        span.textContent = trailText;
+        span.classList.add('falling'); // Add falling class to ensure animation
+        span.style.left = Math.random() * 100 + 'vw';
+        span.style.animationDuration = Math.random() * 5 + 5 + 's';
+        span.style.opacity = Math.random() * 0.5 + 0.5;
+
+        matrixContainer.appendChild(span);
+
+        setTimeout(() => {
+            matrixContainer.removeChild(span);
+        }, 10000); // Remove after animation completes
+    }
+
+    setInterval(createMatrixSpan, 150);
 
 </script>
 </body>
 
 </html>
-

@@ -247,7 +247,6 @@ public class UserController {
             return "redirect:/login";
         }
         Client currentUser = currentUserOpt.get();
-
         Client viewedUser = clientService.findOne(id);
         if (viewedUser == null) {
             return "redirect:/userProfile/" + currentUser.getId();
@@ -255,6 +254,7 @@ public class UserController {
 
         boolean isOwnProfile = viewedUser.getId().equals(currentUser.getId());
         model.addAttribute("isOwnProfile", isOwnProfile);
+
         List<ProjectTeam> collaboratorProjects = projectTeamService.findCollaboratorProjects(currentUser);
         List<ProjectTeam> projectTeams = projectTeamService.findByClient(viewedUser);
         model.addAttribute("collaboratorProjects", collaboratorProjects);
@@ -270,6 +270,7 @@ public class UserController {
             model.addAttribute("friendsProjects", projectTeamService.findCollaboratorProjects(currentUser));
         } else {
             model.addAttribute("projects", projectService.findAccessibleProjects(viewedUser, currentUser));
+            model.addAttribute("friends", friendshipService.getFriends(viewedUser));
         }
 
         return "userProfile";
@@ -280,23 +281,61 @@ public class UserController {
         Client currentUser = clientService.findByUsername(authentication.getName())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        // Получение созданных проектов
         List<Project> ownedProjects = projectService.findByClient(currentUser);
         if (ownedProjects.isEmpty()) {
             model.addAttribute("message", "У вас нет созданных проектов для мониторинга.");
             return "monitoring";
         }
 
-        // Получение UID дашбордов для каждого проекта (предполагается, что UID хранится в проекте)
         Map<String, String> projectDashboards = new HashMap<>();
         for (Project project : ownedProjects) {
-            // Предполагается, что у вас есть поле `dashboardUid` в сущности Project
             projectDashboards.put(project.getName(), project.getDashboardUid());
         }
 
         model.addAttribute("projectDashboards", projectDashboards);
         model.addAttribute("ownedProjects", ownedProjects);
 
-        return "monitoring"; // Название вашего Thymeleaf шаблона
+        return "monitoring";
     }
+    @GetMapping("/check_email")
+    @ResponseBody
+    public Map<String, Boolean> checkEmail(@RequestParam("email") String email) {
+        boolean exists = clientService.getClientByEmail(email).isPresent();
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("exists", exists);
+        return response;
+    }
+    @GetMapping("/check_username")
+    @ResponseBody
+    public Map<String, Boolean> checkUsername(@RequestParam("username") String username) {
+        boolean exists = clientService.findByUsername(username).isPresent();
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("exists", exists);
+        return response;
+    }
+    @GetMapping("/searchUsers")
+    @ResponseBody
+    public List<Map<String, Object>> searchUsers(@RequestParam("query") String query, Authentication authentication) {
+        Client currentUser = clientService.findByUsername(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Client> matchingUsers = clientService.searchByUsername(query);
+        List<Client> friends = friendshipService.getFriends(currentUser);
+
+        List<Map<String, Object>> results = new ArrayList<>();
+        for (Client user : matchingUsers) {
+            if (user.equals(currentUser)) continue; // Exclude the current user
+
+            Map<String, Object> userMap = new HashMap<>();
+            userMap.put("id", user.getId());
+            userMap.put("username", user.getUsername());
+            userMap.put("avatarUrl", user.getAvatarUrl());
+            userMap.put("isFriend", friends.contains(user)); // Check friendship status
+            results.add(userMap);
+        }
+
+        return results;
+    }
+
+
 }

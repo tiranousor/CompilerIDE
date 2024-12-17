@@ -1,201 +1,253 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель Управления</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
-
+    <title>Welcome to CompilerIDE</title>
+    <link href="https://fonts.googleapis.com/css2?family=SF+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body {
+        /* Global Styles */
+        * {
             margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-            background-color: #f0f2f5;
-            color: #24292e;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .container-fluid {
-            padding: 20px;
+        html, body {
+            height: 100%;
+            font-family: 'SF Mono', monospace;
+            background: radial-gradient(circle, #0d1117, #010409);
+            color: #c9d1d9;
         }
 
-        .stats-row {
+        body {
             display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .chart-card {
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            margin-bottom: 20px;
+            flex-direction: column;
         }
 
-        .chart-card.half-width {
-            flex:  48% 0 0;
+        /* Header */
+        .header {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 40px;
+            align-items: center;
         }
 
-        .small-card {
-            background-color: #ffffff;
-            border: 1px solid #dcdcdc;
-            border-radius: 12px;
-            padding: 10px 15px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            flex: 1 1 30%;
+        .header img {
+            height: 32px;
         }
 
-        .small-card-container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            width: 48%;
+        .header a {
+            font-size: 14px;
+            color: #8b949e;
+            text-decoration: none;
         }
 
-        canvas {
-            max-width: 100%;
+        .header a span {
+            color: #ffffff;
         }
 
-        .hidden {
+        .header a:hover {
+            text-decoration: underline;
+        }
+
+        /* Container */
+        .container {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        h1 {
+            font-size: 18px;
+            color: #ffffff;
+            margin-bottom: 16px;
+        }
+
+        label {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #f0f6fc;
+        }
+
+        .form-group {
             display: none;
         }
 
-        .chart-bar {
-            background-color: rgba(155, 89, 182, 0.6);
-            border-color: rgba(155, 89, 182, 1);
+        .form-group.active {
+            display: block;
+        }
+
+        .input-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-container input {
+            width: 100%;
+            padding: 10px 10px;
+            font-size: 14px;
+            color: #c9d1d9;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        .input-container input:focus {
+            border-color: #58a6ff;
+            box-shadow: 0 0 0 3px rgba(56, 139, 253, 0.4);
+        }
+
+        .input-container .arrow {
+            position: absolute;
+            left: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #79c0ff;
+            font-size: 18px;
+        }
+
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #ffffff;
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            border-color: #2ea043;
+        }
+
+        /* Typing effect */
+        .typing {
+            display: inline-block;
+            overflow: hidden;
+            white-space: nowrap;
+            animation: typing 3s steps(30, end), blink-caret 0.5s step-end infinite;
+            border-right: 2px solid;
+        }
+
+        @keyframes typing {
+            from {
+                width: 0;
+            }
+            to {
+                width: 100%;
+            }
+        }
+
+        @keyframes blink-caret {
+            from, to {
+                border-color: transparent;
+            }
+            50% {
+                border-color: #58a6ff;
+            }
         }
     </style>
 </head>
+
 <body>
-<div class="container-fluid">
-
-    <!-- Chart Section -->
-    <div class="stats-row">
-        <div class="chart-card half-width">
-            <h5>Распределение по дням недели</h5>
-            <canvas id="weeklyDistributionChart" height="100"></canvas>
-        </div>
-        <div class="small-card-container">
-            <div class="small-card">
-                <i class="fas fa-calendar-day"></i>
-                <h3>2</h3>
-                <span>Новых проектов сегодня</span>
-            </div>
-            <div class="small-card">
-                <i class="fas fa-calendar-week"></i>
-                <h3>2</h3>
-                <span>Новых проектов за неделю</span>
-            </div>
-            <div class="small-card">
-                <i class="fas fa-calendar-alt"></i>
-                <h3>2</h3>
-                <span>Новых проектов за месяц</span>
-            </div>
-            <div class="small-card">
-                <i class="fas fa-user-plus"></i>
-                <h3>2</h3>
-                <span>Новых пользователей сегодня</span>
-            </div>
-            <div class="small-card">
-                <i class="fas fa-user-clock"></i>
-                <h3>2</h3>
-                <span>Новых пользователей за неделю</span>
-            </div>
-            <div class="small-card">
-                <i class="fas fa-user-friends"></i>
-                <h3>2</h3>
-                <span>Новых пользователей за месяц</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Active Users and Top Users Section -->
-    <div class="stats-row">
-        <div class="small-card">
-            <i class="fas fa-user-clock"></i>
-            <h3>2</h3>
-            <span>Активных пользователей сегодня</span>
-        </div>
-        <div class="small-card">
-            <i class="fas fa-user-clock"></i>
-            <h3>2</h3>
-            <span>Активных пользователей за неделю</span>
-        </div>
-        <div class="small-card">
-            <i class="fas fa-user-clock"></i>
-            <h3>2</h3>
-            <span>Активных пользователей за месяц</span>
-        </div>
-        <div class="chart-card" style="flex: 1;">
-            <h5>Топ пользователей за всё время</h5>
-            <div class="user-entry">
-                <i class="fas fa-trophy" style="color: gold;"></i>
-                <span>alisa</span>
-                <span>00h:00m:25s</span>
-            </div>
-            <div class="user-entry">
-                <i class="fas fa-trophy" style="color: silver;"></i>
-                <span>user2</span>
-                <span>00h:00m:20s</span>
-            </div>
-            <div class="user-entry">
-                <i class="fas fa-trophy" style="color: bronze;"></i>
-                <span>user3</span>
-                <span>00h:00m:15s</span>
-            </div>
-        </div>
-    </div>
+<!-- Header -->
+<div class="header">
+    <img src="https://cdn.pixabay.com/photo/2017/01/31/17/28/dog-2029214_1280.png" alt="CompilerIDE Logo">
+    <a href="/login"><span>Already have an account?</span> Sign in →</a>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Container -->
+<div class="container">
+    <h1><span class="typing">Добро пожаловать в CompilerIDE</span></h1>
+    <form id="registration-form" action="/register" method="post">
+        <!-- Email -->
+        <div class="form-group active" id="email-group">
+            <label for="email">Введите почту*</label>
+            <div class="input-container">
+                <span class="arrow">→</span>
+                <input type="email" id="email" name="email" placeholder="example@domain.com" required>
+            </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group" id="password-group">
+            <label for="password">Придумайте пароль*</label>
+            <div class="input-container">
+                <span class="arrow">→</span>
+                <input type="password" id="password" name="password" placeholder="Минимум 8 символов" required>
+            </div>
+        </div>
+
+        <!-- Username -->
+        <div class="form-group" id="username-group">
+            <label for="username">Введите имя пользователя*</label>
+            <div class="input-container">
+                <span class="arrow">→</span>
+                <input type="text" id="username" name="username" placeholder="Ваш никнейм" required>
+            </div>
+        </div>
+
+        <button type="submit" class="btn" id="submit-button" disabled>Продолжить</button>
+    </form>
+</div>
+
 <script>
-    // Chart setup for Распределение по дням недели
-    const ctx = document.getElementById('weeklyDistributionChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'],
-            datasets: [
-                {
-                    label: 'Проекты',
-                    data: [2, 4, 3, 5, 1, 0, 2],
-                    backgroundColor: 'rgba(155, 89, 182, 0.6)',
-                    borderColor: 'rgba(155, 89, 182, 1)',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Пользователи',
-                    data: [3, 2, 4, 1, 3, 2, 5],
-                    backgroundColor: 'rgba(52, 152, 219, 0.6)',
-                    borderColor: 'rgba(52, 152, 219, 1)',
-                    borderWidth: 1
-                }
-            ]
-        },
-        options: {
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `${context.dataset.label}: ${context.parsed.y}`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: { display: false },
-                y: { display: false }
-            }
+    const emailGroup = document.getElementById('email-group');
+    const passwordGroup = document.getElementById('password-group');
+    const usernameGroup = document.getElementById('username-group');
+    const submitButton = document.getElementById('submit-button');
+
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const usernameInput = document.getElementById('username');
+
+    emailInput.addEventListener('input', () => {
+        if (emailInput.validity.valid) {
+            passwordGroup.classList.add('active');
+        } else {
+            passwordGroup.classList.remove('active');
+            passwordInput.value = '';
+            usernameGroup.classList.remove('active');
+            usernameInput.value = '';
+            submitButton.disabled = true;
+        }
+    });
+
+    passwordInput.addEventListener('input', () => {
+        if (passwordInput.validity.valid) {
+            usernameGroup.classList.add('active');
+        } else {
+            usernameGroup.classList.remove('active');
+            usernameInput.value = '';
+            submitButton.disabled = true;
+        }
+    });
+
+    usernameInput.addEventListener('input', () => {
+        if (usernameInput.validity.valid) {
+            submitButton.disabled = false;
+        } else {
+            submitButton.disabled = true;
         }
     });
 </script>
 </body>
+
 </html>

@@ -105,7 +105,7 @@ public class WorkerStatusService {
 
     private double getMemoryUsage(String containerName) {
         // Prometheus-запрос для получения использования памяти в MB
-        String query = String.format("container_memory_usage_bytes{container_name=\"%s\"}/(1024*1024)", containerName);
+        String query = String.format("container_memory_usage_bytes{container_name=\"%s\"}/1024/1024", containerName);
         return queryPrometheusMetric(query);
     }
     private double queryPrometheusMetric(String query) {

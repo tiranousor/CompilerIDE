@@ -200,15 +200,9 @@ public class FriendController {
             return "error";
         }
 
-        if (!friendshipService.areFriends(currentUser, friend)) {
-            model.addAttribute("error", "Вы не являетесь другом этого пользователя.");
-            return "error";
-        }
-
-
         List<Project> friendsProjects = projectService.findByClient(friend);
         List<ProjectInfo> projectsWithRoles = friendsProjects.stream().map(project -> {
-            boolean isOwner = projectTeamService.findByClient(currentUser).equals(currentUser.getId());
+            boolean isOwner = project.getClient().equals(currentUser);
 
             Optional<ProjectTeam> team = projectTeamService.findByProjectAndClient(project, currentUser);
             boolean isCollaborator = team.map(t -> t.getRole() == ProjectTeam.Role.COLLABORATOR).orElse(false);

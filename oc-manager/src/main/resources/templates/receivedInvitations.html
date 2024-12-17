@@ -2,7 +2,7 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Приглашения на проекты</title>
+    <title th:text="'Инвайты для ' + ${client.username}">User Invite</title>
     <link rel="icon" href="/favicon.png" type="image/png">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">

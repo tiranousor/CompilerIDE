@@ -214,6 +214,7 @@ public class AdminController {
             return ResponseEntity.status(500).body("Unexpected error: " + e.getMessage());
         }
     }
+
     @PostMapping("/users/addAdmins")
     @ResponseBody
     public ResponseEntity<?> addAdmins(@RequestBody Map<String, List<Long>> payload) {
