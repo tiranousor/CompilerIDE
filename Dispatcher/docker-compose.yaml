@@ -188,6 +188,21 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
 
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 2911
+      POSTGRES_DB: Compiler_DB
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    restart: always
+
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -214,6 +229,7 @@ networks:
     driver: bridge
 
 volumes:
+  postgres-data:
   minio-data:
   grafana-data:
   prometheus-data:

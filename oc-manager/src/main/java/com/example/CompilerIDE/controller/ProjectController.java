@@ -118,13 +118,14 @@ public class ProjectController  {
         if (client == null) {
             return "redirect:/login";
         }
+
+        project.setClient(client);
         projectValidator.validate(project, bindingResult);
         if (bindingResult.hasErrors()) {
             model.addAttribute("client", client);
-            model.addAttribute("project", new Project());
             return "new_project_form";
         }
-        project.setClient(client);
+
         projectService.save(project);
         if (project.getRefGit() != null && !project.getRefGit().isEmpty()) {
             try {
@@ -211,7 +212,6 @@ public class ProjectController  {
         }
 
         projectForm.setClient(client);
-
         projectValidator.validate(projectForm, bindingResult);
         if (bindingResult.hasErrors()) {
             model.addAttribute("client", client);
