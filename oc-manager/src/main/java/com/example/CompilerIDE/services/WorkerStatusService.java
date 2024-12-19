@@ -1,151 +1,117 @@
 package com.example.CompilerIDE.services;
 
-import com.example.CompilerIDE.dto.WorkerMetrics;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.example.CompilerIDE.dto.ContainerStatsDTO;
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.model.Container;
+import com.github.dockerjava.api.model.Statistics;
+import com.github.dockerjava.core.DefaultDockerClientConfig;
+import com.github.dockerjava.core.DockerClientBuilder; // Убедитесь что импорт есть
+import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
+import io.lettuce.core.output.ScanOutput;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.sun.management.OperatingSystemMXBean;
+import java.io.Closeable;
+import java.lang.management.ManagementFactory;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @Service
 public class WorkerStatusService {
-    private static final Logger logger = LoggerFactory.getLogger(WorkerStatusService.class);
+    private final DockerClient dockerClient;
 
-    private final RestTemplate restTemplate;
+    public WorkerStatusService() {
+        DefaultDockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
+        ApacheDockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()
+                .dockerHost(config.getDockerHost())
+                .maxConnections(100)
+                .connectionTimeout(Duration.ofSeconds(30))
+                .responseTimeout(Duration.ofSeconds(45))
+                .build();
 
-    @Value("${dispatcher.url}")
-    private String dispatcherUrl;
-    @Value("${prometheus.url}")
-    private String prometheusUrl;
-
-    @Autowired
-    public WorkerStatusService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+        this.dockerClient = DockerClientBuilder.getInstance(config)
+                .withDockerHttpClient(httpClient)
+                .build();
     }
 
-    public Map<String, Boolean> getWorkerStatus() {
-        String url = dispatcherUrl + "/admin/status";
-        logger.info("Запрос статуса воркеров по URL: {}", url);
-        try {
-            ResponseEntity<Map<String, Boolean>> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<Map<String, Boolean>>() {}
-            );
-            logger.info("Получен ответ от Dispatcher: {}", response.getBody());
-            return response.getBody();
-        } catch (Exception e) {
-            logger.error("Ошибка при получении статуса воркеров: {}", e.getMessage(), e);
-            return Map.of(); // Возвращаем пустую карту вместо Map.of("error", false)
-        }
-    }
+    public List<ContainerStatsDTO> getAllContainerStats() {
+        List<Container> containers = dockerClient.listContainersCmd().exec();
+        System.out.println(containers.size());
+        List<ContainerStatsDTO> statsList = new ArrayList<>();
 
-    public List<WorkerMetrics> getAllWorkerMetrics() {
-        // Получаем статусы воркеров
-        Map<String, Boolean> workerStatus = getWorkerStatus();
+        for (Container container : containers) {
+            String containerId = container.getId();
 
-        // Получаем список URL воркеров
-        Set<String> workerUrls = workerStatus.keySet();
+            var statsCallback = dockerClient.statsCmd(containerId)
+                    .withNoStream(true)
+                    .exec(new com.github.dockerjava.api.async.ResultCallback.Adapter<Statistics>() {
+                        @Override
+                        public void onNext(Statistics stats) {
+                            if (stats == null) return;
 
-        List<WorkerMetrics> metricsList = new ArrayList<>();
+                            String name = (container.getNames() != null && container.getNames().length > 0)
+                                    ? container.getNames()[0] : containerId;
 
-        for (String url : workerUrls) {
-            WorkerMetrics metrics = new WorkerMetrics();
-            metrics.setUrl(url);
-            metrics.setAvailable(workerStatus.get(url));
+                            double cpuPercent = calculateCpuPercent(stats);
+                            long memoryUsage = stats.getMemoryStats() != null && stats.getMemoryStats().getUsage() != null
+                                    ? stats.getMemoryStats().getUsage() : 0;
+                            long memoryLimit = stats.getMemoryStats() != null && stats.getMemoryStats().getLimit() != null
+                                    ? stats.getMemoryStats().getLimit() : 0;
 
-            String containerName = getContainerNameFromUrl(url);
+                            statsList.add(new ContainerStatsDTO(containerId, name, cpuPercent, memoryUsage, memoryLimit));
+                        }
+                    });
 
-            if (containerName == null) {
-                metrics.setCpuUsage(0.0);
-                metrics.setMemoryUsage(0.0);
-            } else {
-                double cpuUsage = getCpuUsage(containerName);
-                double memoryUsage = getMemoryUsage(containerName);
-                metrics.setCpuUsage(cpuUsage);
-                metrics.setMemoryUsage(memoryUsage);
+            try {
+                statsCallback.awaitCompletion();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
 
-            metricsList.add(metrics);
+
         }
 
-        return metricsList;
+        return statsList;
     }
+    public SystemMemoryInfo getSystemMemoryInfo() {
+        OperatingSystemMXBean osBean = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class);
+        long totalMemory = osBean.getTotalPhysicalMemorySize();
+        long freeMemory = osBean.getFreePhysicalMemorySize();
+        long usedMemory = totalMemory - freeMemory;
+        return new SystemMemoryInfo(totalMemory, usedMemory);
+    }
+    private double calculateCpuPercent(Statistics stats) {
+        if (stats.getCpuStats() == null || stats.getPreCpuStats() == null) {
+            return 0.0;
+        }
 
-    private String getContainerNameFromUrl(String url) {
-        // Извлекаем имя контейнера из URL
-        // Предполагается, что URL имеет вид http://worker1:5000, извлекаем 'worker1'
-        try {
-            String withoutProtocol = url.substring(url.indexOf("//") + 2);
-            String containerName = withoutProtocol.split(":")[0];
-            return containerName;
-        } catch (Exception e) {
-            logger.error("Ошибка при извлечении имени контейнера из URL '{}': {}", url, e.getMessage());
-            return null;
+        Long cpuDelta = stats.getCpuStats().getCpuUsage().getTotalUsage() -
+                stats.getPreCpuStats().getCpuUsage().getTotalUsage();
+
+        Long systemDelta = stats.getCpuStats().getSystemCpuUsage() -
+                stats.getPreCpuStats().getSystemCpuUsage();
+
+        double cpuPercent = 0.0;
+        if (systemDelta > 0 && cpuDelta > 0) {
+            cpuPercent = (cpuDelta.doubleValue() / systemDelta.doubleValue()) * stats.getCpuStats().getOnlineCpus() * 100.0;
+        }
+        return cpuPercent;
+    }
+    public static class SystemMemoryInfo {
+        private long totalMemory;
+        private long usedMemory;
+
+        public SystemMemoryInfo(long totalMemory, long usedMemory) {
+            this.totalMemory = totalMemory;
+            this.usedMemory = usedMemory;
+        }
+
+        public long getTotalMemory() {
+            return totalMemory;
+        }
+
+        public long getUsedMemory() {
+            return usedMemory;
         }
     }
-
-    private double getCpuUsage(String containerName) {
-        // Prometheus-запрос для получения использования CPU в процентах
-        String query = String.format("sum(rate(container_cpu_usage_seconds_total{container_name=\"%s\"}[1m]))*100", containerName);
-        return queryPrometheusMetric(query);
-    }
-
-    private double getMemoryUsage(String containerName) {
-        // Prometheus-запрос для получения использования памяти в MB
-        String query = String.format("container_memory_usage_bytes{container_name=\"%s\"}/1024/1024", containerName);
-        return queryPrometheusMetric(query);
-    }
-    private double queryPrometheusMetric(String query) {
-        // Используем UriComponentsBuilder для корректного кодирования параметров
-        String url = UriComponentsBuilder.fromHttpUrl(prometheusUrl)
-                .path("/api/v1/query")
-                .queryParam("query", query)
-                .toUriString();
-
-        logger.info("Запрос метрики Prometheus по URL: {}", url);
-        try {
-            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<Map<String, Object>>() {}
-            );
-
-            if (response.getStatusCode() == HttpStatus.OK) {
-                Map<String, Object> body = response.getBody();
-                String status = (String) body.get("status");
-                if ("success".equals(status)) {
-                    Map<String, Object> data = (Map<String, Object>) body.get("data");
-                    List<Map<String, Object>> result = (List<Map<String, Object>>) data.get("result");
-                    if (result.isEmpty()) {
-                        return 0.0;
-                    }
-                    Map<String, Object> firstResult = result.get(0);
-                    List<Object> values = (List<Object>) firstResult.get("value");
-                    if (values.size() < 2) {
-                        return 0.0;
-                    }
-                    String valueStr = (String) values.get(1);
-                    return Double.parseDouble(valueStr);
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Ошибка при запросе метрики Prometheus: {}", e.getMessage(), e);
-        }
-        return 0.0;
-    }
-
 }

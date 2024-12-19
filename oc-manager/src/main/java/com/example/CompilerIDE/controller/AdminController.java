@@ -78,20 +78,13 @@ public class AdminController {
         return "admin/user_list";
     }
 
-    @GetMapping("/status")
-    public String getWorkerStatus(Model model,Authentication authentication) {
+    @GetMapping("/metrics")
+    public String showMetricsPage(Model model, Authentication authentication) {
         Client client = clientService.findByUsername(authentication.getName()).orElse(null);
         model.addAttribute("client", client);
-        Map<String, Boolean> workerStatus = workerStatusService.getWorkerStatus();
-        model.addAttribute("workerStatus", workerStatus);
-        return "admin/status";
+        return "admin/metrics";
     }
 
-    @GetMapping("/status/data")
-    public ResponseEntity<List<WorkerMetrics>> getWorkerStatusData() {
-        List<WorkerMetrics> metricsList = workerStatusService.getAllWorkerMetrics();
-        return ResponseEntity.ok(metricsList);
-    }
     @GetMapping("/users/list")
     public String getUsersList(@RequestParam(name = "sort", required = false, defaultValue = "registrationDateDesc") String sort, Model model) {
         List<Client> users = userActivityService.getUsersSorted(sort);
@@ -334,4 +327,5 @@ public class AdminController {
         model.addAttribute("client", client);
         return "admin/projects_list";
     }
+
 }

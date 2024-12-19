@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,8 +38,13 @@ public class CodeCompilationService {
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> stderrList = (List<Map<String, Object>>) stderrObj;
             result.setStderr(stderrList);
-        } else if (stderrObj instanceof String stderrString) {
-            Map<String, Object> errorMap = Map.of("message", stderrString);
+        } else if (stderrObj instanceof String) {
+            String stderrString = (String) stderrObj;
+            Map<String, Object> errorMap = new HashMap<>();
+            errorMap.put("message", stderrString);
+            errorMap.put("file", "");
+            errorMap.put("line", 0);
+            errorMap.put("column", 0);
             result.setStderr(Collections.singletonList(errorMap));
         } else {
             result.setStderr(Collections.emptyList());
@@ -53,6 +59,7 @@ public class CodeCompilationService {
 
         return result;
     }
+
 
 
 
