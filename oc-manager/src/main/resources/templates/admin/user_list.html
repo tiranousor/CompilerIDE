@@ -706,8 +706,8 @@
                             <option value="registrationDateDesc">Когда зарегистрировались (новые сначала)</option>
                             <option value="alphabetical">По алфавиту</option>
                             <option value="onlyAdmins">Только админы</option>
-                            <option value="bannedFirst">Только заблокированные</option>
                             <option value="onlyUsers">Только пользователи</option>
+                            <option value="onlyBanned">Только заблокированные</option>
                             <option value="activity">По активности</option>
                         </select>
                     </div>
@@ -724,8 +724,8 @@
                     </div>
                 </div>
 
-                <!-- Список пользователей -->
                 <div th:fragment="userList" >
+                    <div class="user-list">
                         <div th:each="user : ${users}" class="user-item" th:data-username="${user.username.toLowerCase()}" th:data-email="${user.email.toLowerCase()}">
                             <label class="custom-checkbox">
                                 <input type="checkbox" class="user-select-checkbox" th:value="${user.id}">
@@ -753,6 +753,7 @@
                                 </form>
                             </div>
                         </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -798,7 +799,6 @@
     const csrfToken = /*[[${_csrf.token}]]*/ '';
     const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
 
-    // Функция для массового добавления администраторов
     function addAdmins() {
         const selectedCheckboxes = document.querySelectorAll('.user-select-checkbox:checked');
         if (selectedCheckboxes.length === 0) {
@@ -841,7 +841,6 @@
         });
     }
 
-    // Функция для массового бана пользователей
     function banSelectedUsers() {
         const selectedCheckboxes = document.querySelectorAll('.user-select-checkbox:checked');
         if (selectedCheckboxes.length === 0) {
@@ -861,7 +860,6 @@
         }
         const currentAdminId = /*[[${client.id}]]*/ 0;
 
-            // Удаляем ID текущего администратора из списка, если он там есть
             const filteredUserIds = userIds.filter(id => id !== currentAdminId);
 
             if (filteredUserIds.length === 0) {
@@ -892,13 +890,11 @@
         });
     }
 
-    // Функция для сортировки пользователей
     function sortUsers() {
         const sortValue = document.getElementById('sort-select').value;
 
-        console.log("Sorting users by:", sortValue); // Для отладки
+        console.log("Sorting users by:", sortValue);
 
-        // Отправка запроса на сервер для получения отсортированных данных
         fetch(`/admin/users/list?sort=${sortValue}`)
             .then(response => {
                 if (!response.ok) {
@@ -908,7 +904,6 @@
             })
             .then(html => {
                 console.log("Received HTML for user list:", html); // Для отладки
-                // Замена содержимого списка пользователей новым HTML
                 document.querySelector('.user-list').innerHTML = html;
             })
             .catch(error => {
@@ -917,7 +912,6 @@
             });
     }
 
-    // Функция фильтрации пользователей из боковой панели
     function filterUsersSidebar() {
         const searchInput = document.getElementById('sidebarUserSearchInput').value.toLowerCase();
         const userItems = document.querySelectorAll('.user-item');

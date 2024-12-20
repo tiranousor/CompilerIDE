@@ -1,5 +1,6 @@
 package com.example.CompilerIDE.providers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -42,10 +43,12 @@ public class Project {
 
     @Column(name="project type")
     private String projectType;
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProjectAccessLog> accessLogs;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "access_level", nullable = false)
-    private AccessLevel accessLevel = AccessLevel.PUBLIC; // Значение по умолчанию
+    private AccessLevel accessLevel = AccessLevel.PUBLIC;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -59,7 +62,9 @@ public class Project {
     @ToString.Exclude
     private List<ProjectStruct> projectsStruct;
 
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "project", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
+    @JsonIgnore
+    @ToString.Exclude
     private List<ProjectTeam> projectTeams;
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

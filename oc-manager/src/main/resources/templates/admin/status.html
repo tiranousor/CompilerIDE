@@ -1,31 +1,30 @@
 <!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Статус Воркеров</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Docker Containers Metrics</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/@primer/css/dist/primer.css">
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* Общие стили */
         * {
-          box-sizing: border-box;
-      }
+            box-sizing: border-box;
+        }
 
-      body {
-          margin: 0;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-          background-color: #f0f2f5;
-          color: #24292e;
-      }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            background-color: #f0f2f5;
+            color: #24292e;
+        }
 
-      #wrapper {
-          display: flex;
-      }
+        #wrapper {
+            display: flex;
 
-            .navbar-icons a:hover {
+        }
+          .navbar-icons a:hover {
                color: #d39e00;
            }
 
@@ -34,6 +33,7 @@
                color: #dc3545;
                transition: color 0.3s;
            }
+
 
       #sidebar-wrapper {
           width: 60px;
@@ -48,32 +48,32 @@
           padding-top: 20px;
       }
 
-      #sidebar-wrapper.expanded {
-          width: 250px;
-          align-items: flex-start;
-          padding-left: 20px;
-      }
+        #sidebar-wrapper.expanded {
+            width: 250px;
+            align-items: flex-start;
+            padding-left: 20px;
+        }
 
-      .sidebar-heading {
-          text-align: center;
-          margin-bottom: 30px;
-      }
+        .sidebar-heading {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-      .sidebar-heading i {
-          font-size: 24px;
-          color: #6f42c1;
-      }
+        .sidebar-heading i {
+            font-size: 24px;
+            color: #6f42c1;
+        }
 
-      .sidebar-heading .sidebar-text {
-          margin-left: 10px;
-          font-size: 18px;
-          color: #6f42c1;
-          display: none;
-      }
+        .sidebar-heading .sidebar-text {
+            margin-left: 10px;
+            font-size: 18px;
+            color: #6f42c1;
+            display: none;
+        }
 
-      #sidebar-wrapper.expanded .sidebar-text {
-          display: inline;
-      }
+        #sidebar-wrapper.expanded .sidebar-text {
+            display: inline;
+        }
 
       .list-group-item {
           padding: 15px 20px;
@@ -90,27 +90,28 @@
           position: relative;
       }
 
-      .list-group-item:hover {
-          background-color: #e6e6e6;
-          color: #6f42c1;
-      }
+        .list-group-item:hover {
+            background-color: #e6e6e6;
+            color: #6f42c1;
+        }
 
-      .list-group-item.active {
-          background-color: #6f42c1;
-          color: #ffffff;
-          border: 1px solid #6f42c1;
-      }
+        .list-group-item.active {
+            background-color: #6f42c1;
+            color: #ffffff;
+            border: 1px solid #6f42c1;
+        }
 
-      .list-group-item i {
-          margin-right: 10px;
-          font-size: 18px;
-          min-width: 20px;
-          text-align: center;
-      }
+        .list-group-item i {
+            margin-right: 10px;
+            font-size: 18px;
+            min-width: 20px;
+            text-align: center;
+        }
 
-      #sidebar-wrapper .list-group-item {
-          text-decoration: none;
-      }
+        #sidebar-wrapper .list-group-item {
+            text-decoration: none;
+        }
+
 
 
       #page-content-wrapper {
@@ -131,46 +132,62 @@
            border-bottom: none;
            box-shadow: none;
        }
+
+        .navbar-icons a:hover,
+        .navbar-icons form button:hover {
+            color: #d39e00;
+        }
+
+        .navbar-icons form button .fas:hover {
+            color: #bd2130;
+        }
        .navbar-icons {
            display: flex;
            align-items: center;
            gap: 15px;
        }
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-right: auto;
 
-       .admin-info {
-           display: flex;
-           align-items: center;
-           gap: 10px;
-           margin-right: auto;
-       }
+        }
 
-       .admin-avatar {
-           width: 40px;
-           height: 40px;
-           border-radius: 50%;
+        .admin-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #6f42c1;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
 
-       }
+        .admin-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #24292e;
+        }
 
-       .admin-name {
-           font-size: 16px;
-           font-weight: 600;
-           color: #24292e;
-       }
 
-       .navbar-icons a,
-       .navbar-icons form button {
-           font-size: 24px;
-           cursor: pointer;
-           transition: color 0.3s;
-       }
+        .navbar-icons a,
+        .navbar-icons form button {
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
 
-       .navbar-icons a:hover,
-       .navbar-icons form button:hover {
-           color: #d39e00;
-       }
-        .navbar-icons form button .fas:hover {
-                   color: #bd2130;
-               }
+        h1 {
+            margin-bottom: 1em;
+            text-align: center;
+            font-size: 1.5em;
+            color: #333;
+        }
       .navbar button {
           padding: 8px;
           background-color: #6c757d;
@@ -182,32 +199,174 @@
       .navbar button:hover {
           background-color: #5a6268;
       }
-       .chart-container {
-           position: relative;
-           width: 200px;
-           height: 200px;
-           margin: 20px;
-       }
-       .worker-card {
-           display: flex;
-           flex-direction: column;
-           align-items: center;
-           padding: 15px;
-           border: 1px solid #ddd;
-           border-radius: 8px;
-           box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-           background-color: #fff;
-       }
-       .worker-name {
-           margin-bottom: 10px;
-           font-weight: bold;
-           text-align: center;
-       }
-       .charts-row {
-           display: flex;
-           justify-content: center;
-           flex-wrap: wrap;
-       }
+        p.note {
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 2em;
+        }
+
+        /* Сетка контейнеров */
+        .container-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 контейнера в ряду */
+            gap: 1em;
+            margin-bottom: 2em;
+            width: 100%;
+        }
+
+        @media (max-width: 1200px) {
+            .container-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Стили карточек контейнеров */
+        .container-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1em;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            text-align: center;
+            transition: box-shadow 0.3s;
+            position: relative;
+            height: 250px; /* Увеличенная высота для размещения графика */
+        }
+
+        .container-card:hover {
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .container-card h2 {
+            font-size: 1em;
+            margin-bottom: 0.5em;
+            font-weight: bold;
+            padding: 0.3em 0.6em;
+            border-radius: 4px;
+            background: #d9eafd; /* Пастельный голубой */
+            color: #333;
+            max-width: 100%;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        .container-card .metric {
+            margin: 0.3em 0;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        /* Контейнер для графика внутри карточки */
+        .chart-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 10px; /* Уменьшенный отступ */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            height: 100px; /* Фиксированная высота для графика */
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+        }
+
+        /* Секция с диаграммами */
+        .charts-section {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 2em;
+            margin-top: 2em;
+            width: 100%;
+        }
+
+        .chart-panel {
+            background: #fff;
+            padding: 1em;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: calc(70% - 1em); /* 70% ширины */
+        }
+
+        .chart-panel.pie-chart {
+            width: calc(30% - 1em); /* 30% ширины */
+        }
+
+        .chart-panel.full-width {
+            width: 100%;
+        }
+
+        .chart-panel h3 {
+            text-align:center;
+            margin-bottom:0.5em;
+            font-size: 1em;
+            color: #333;
+        }
+
+        canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        #loading {
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 2em;
+            color: #555;
+        }
+        .metrics-container {
+    max-width: 90%;
+    margin: 0 auto;
+            margin-top: 30px;
+    padding: 20px;
+    background-color: #f0f2f5;
+}
+
+h1, .note {
+    text-align: center;
+}
+
+.container-grid {
+    margin: 20px 0;
+}
+
+.charts-section {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.chart-panel, .chart-panel.full-width {
+    max-width: 100%;
+}
+
+.chart-panel.pie-chart {
+    max-width: 48%;
+}
+
     </style>
 </head>
 <body>
@@ -225,15 +384,17 @@
         <a href="/admin/projects_list" class="list-group-item">
             <i class="fas fa-folder-open"></i> <span class="sidebar-text"></span>
         </a>
-        <a href="/admin/unbanRequests" class="list-group-item  active">
-            <i class="fas fa-ban"></i> <span class="sidebar-text"> </span>
+        <a href="/admin/unbanRequests" class="list-group-item">
+            <i class="fas fa-ban"></i> <span class="sidebar-text"></span>
         </a>
-        <a href="/admin/metrics" class="list-group-item">
+        <a href="/admin/metrics" class="list-group-item active">
             <i class="fas fa-tools"></i> <span class="sidebar-text"></span>
         </a>
     </div>
 
+    <!-- Контент страницы -->
     <div id="page-content-wrapper">
+        <!-- Навигационная панель -->
         <div class="navbar">
             <div class="admin-info">
                 <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="admin-avatar">
@@ -244,207 +405,426 @@
                     <i class="fas fa-bell"></i>
                 </a>
                 <form th:action="@{/logout}" th:method="POST">
-                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                     <button type="submit" title="Выход" style="background: none; border: none; padding: 0;">
                         <i class="fas fa-sign-out-alt"></i>
                     </button>
                 </form>
             </div>
         </div>
-        <div class="main-container">
-            <div class="container">
-                <h1 class="text-center">Статус Воркеров</h1>
-                <div class="charts-row" id="charts-row"></div>
+
+        <div class="metrics-container">
+            <h1>Docker Containers Metrics</h1>
+            <p class="note">Данные обновляются каждые 2 секунды без перезагрузки страницы.</p>
+
+            <!-- Индикатор загрузки -->
+            <div id="loading">Загрузка данных...</div>
+
+            <!-- Сетка контейнеров -->
+            <div class="container-grid" id="containersGrid" style="display:none;"></div>
+
+            <!-- Секция с диаграммами -->
+            <div class="charts-section">
+                <!-- Гистограмма и круговая диаграмма -->
+                <div class="chart-panel">
+                    <h3>Память контейнеров</h3>
+                    <canvas id="memoryChart" width="400" height="300"></canvas>
+                </div>
+
+                <div class="chart-panel pie-chart">
+                    <h3>Использование CPU контейнеров</h3>
+                    <canvas id="cpuChart" width="400" height="300"></canvas>
+                </div>
+
+                <!-- Диаграмма "Доля от памяти всех контейнеров" -->
+                <div class="chart-panel full-width">
+                    <h3>Доля от памяти всех контейнеров</h3>
+                    <canvas id="memoryShareChart" width="400" height="300"></canvas>
+                </div>
             </div>
         </div>
+    </div>
+</div>
 
-
+<!-- Подключаем Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const chartsRow = document.getElementById('charts-row');
-    const charts = {}; // Объект для хранения экземпляров диаграмм
+    let memoryChart;
+    let cpuChart;
+    let memoryShareChart;
 
-    async function fetchWorkerData() {
-        try {
-            const response = await fetch('/admin/status/data');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            updateCharts(data);
-        } catch (error) {
-            console.error('Ошибка при получении данных воркеров:', error);
-        }
+    // Хранилище данных для CPU каждого контейнера: { containerId: { chart: ChartInstance } }
+    const containerData = {};
+    const MAX_POINTS = 10; // Максимальное число точек на графике для каждого контейнера
+
+    // Функции для загрузки данных
+    function loadContainersData() {
+        return fetch('/containers/stats')
+            .then(response => response.json());
     }
 
-    function updateCharts(workers) {
-        workers.forEach((worker, index) => {
-            const existingCard = document.getElementById(`worker-card-${index}`);
-            if (!existingCard) {
-                // Создаём карточку воркера
-                const card = document.createElement('div');
-                card.classList.add('worker-card');
-                card.id = `worker-card-${index}`;
-
-                // Название воркера
-                const workerName = document.createElement('div');
-                workerName.classList.add('worker-name');
-                workerName.textContent = worker.url;
-                card.appendChild(workerName);
-
-                // Контейнер для диаграммы CPU
-                const cpuContainer = document.createElement('div');
-                cpuContainer.classList.add('chart-container');
-                const cpuCanvas = document.createElement('canvas');
-                cpuCanvas.id = `cpu-chart-${index}`;
-                cpuContainer.appendChild(cpuCanvas);
-                card.appendChild(cpuContainer);
-
-                // Контейнер для диаграммы памяти
-                const memoryContainer = document.createElement('div');
-                memoryContainer.classList.add('chart-container');
-                const memoryCanvas = document.createElement('canvas');
-                memoryCanvas.id = `memory-chart-${index}`;
-                memoryContainer.appendChild(memoryCanvas);
-                card.appendChild(memoryContainer);
-
-                chartsRow.appendChild(card);
-
-                // Создаём диаграммы CPU и памяти
-                createCpuChart(cpuCanvas.id, worker);
-                createMemoryChart(memoryCanvas.id, worker);
-            } else {
-                // Обновляем существующие диаграммы
-                updateCpuChart(`cpu-chart-${index}`, worker);
-                updateMemoryChart(`memory-chart-${index}`, worker);
-            }
-        });
-
-        // Удаляем карточки для воркеров, которых больше нет
-        const existingCards = Array.from(chartsRow.children);
-        existingCards.forEach((card, index) => {
-            if (index >= workers.length) {
-                chartsRow.removeChild(card);
-                delete charts[`cpu-chart-${index}`];
-                delete charts[`memory-chart-${index}`];
-            }
-        });
+    function loadSystemMemoryData() {
+        return fetch('/system/memory')
+            .then(response => response.json());
     }
 
-    function createCpuChart(canvasId, worker) {
-        const ctx = document.getElementById(canvasId).getContext('2d');
-        const cpuUsage = worker.cpuUsage.toFixed(2);
-        const cpuData = worker.available ? [0, 100] : [cpuUsage, 100 - cpuUsage];
-
-        charts[canvasId] = new Chart(ctx, {
-            type: 'doughnut',
+    // Функция создания графика для контейнера
+    function createContainerChart(containerId) {
+        const ctx = document.getElementById(`chart-${containerId}`).getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
             data: {
-                labels: ['Использовано', 'Свободно'],
+                labels: Array(MAX_POINTS).fill(''), // пустые подписи
                 datasets: [{
-                    data: cpuData,
-                    backgroundColor: worker.available ? ['rgba(75, 192, 192, 0.5)', '#e0e0e0'] :
-                        ['rgba(255, 99, 132, 0.5)', '#e0e0e0'],
-                    borderWidth: 1
+                    label: 'CPU',
+                    data: [],
+                    fill: false,
+                    borderColor: 'rgba(75,192,192,1)',
+                    tension: 0.1
                 }]
             },
             options: {
                 responsive: false,
+                animation: false,
                 maintainAspectRatio: false,
-                cutout: '70%',
+                scales: {
+                    x: {
+                        display: false
+                    },
+                    y: {
+                        display: false,
+                        suggestedMin: 0,
+                        suggestedMax: 5
+                    }
+                },
                 plugins: {
                     legend: {
                         display: false
                     },
                     tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.parsed.toFixed(2);
-                                return `${label}: ${value}%`;
-                            }
-                        }
+                        enabled: false
                     }
                 }
             }
         });
+        return chart;
     }
 
-    function updateCpuChart(canvasId, worker) {
-        if (charts[canvasId]) {
-            const cpuUsage = worker.cpuUsage.toFixed(2);
-            const newData = worker.available ? [0, 100] : [cpuUsage, 100 - cpuUsage];
-            charts[canvasId].data.datasets[0].data = newData;
+    // Функция обновления графика контейнера
+    function updateContainerChart(containerId, cpuValue) {
+        const dataObj = containerData[containerId];
+        const dataset = dataObj.chart.data.datasets[0];
+        dataset.data.push(cpuValue);
+        if (dataset.data.length > MAX_POINTS) {
+            dataset.data.shift();
+        }
+        dataObj.chart.update();
+    }
 
-            // Обновляем цвета в зависимости от состояния воркера
-            if (worker.available) {
-                charts[canvasId].data.datasets[0].backgroundColor = ['rgba(75, 192, 192, 0.5)', '#e0e0e0'];
-            } else {
-                charts[canvasId].data.datasets[0].backgroundColor = ['rgba(255, 99, 132, 0.5)', '#e0e0e0'];
-            }
+    // Функция создания или обновления карточки контейнера
+    function createOrUpdateContainerCard(container) {
+        const containersGrid = document.getElementById('containersGrid');
+        let containerCard = document.getElementById(`container-card-${container.containerId}`);
 
-            charts[canvasId].update();
+        if (!containerCard) {
+            // Создание новой карточки
+            containerCard = document.createElement('div');
+            containerCard.className = 'container-card';
+            containerCard.id = `container-card-${container.containerId}`;
+
+            const nameElem = document.createElement('h2');
+            nameElem.textContent = container.name;
+            containerCard.appendChild(nameElem);
+
+            const cpuElem = document.createElement('div');
+            cpuElem.className = 'metric';
+            cpuElem.id = `cpu-${container.containerId}`;
+            cpuElem.textContent = 'CPU: ' + container.cpuUsagePercent.toFixed(2) + ' %';
+            containerCard.appendChild(cpuElem);
+
+            const memUsageMB = (container.memoryUsageBytes / (1024 * 1024)).toFixed(2);
+            const memLimitMB = (container.memoryLimitBytes / (1024 * 1024)).toFixed(2);
+
+            const memElem = document.createElement('div');
+            memElem.className = 'metric';
+            memElem.id = `mem-${container.containerId}`;
+            memElem.textContent = `Память: ${memUsageMB}MB / ${memLimitMB}MB`;
+            containerCard.appendChild(memElem);
+
+            const memShareElem = document.createElement('div');
+            memShareElem.className = 'metric';
+            memShareElem.id = `mem-share-${container.containerId}`;
+            containerCard.appendChild(memShareElem);
+
+            // Добавляем холст для графика
+            const chartContainer = document.createElement('div');
+            chartContainer.className = 'chart-container';
+            const canvas = document.createElement('canvas');
+            canvas.id = `chart-${container.containerId}`;
+            chartContainer.appendChild(canvas);
+            containerCard.appendChild(chartContainer);
+
+            containersGrid.appendChild(containerCard);
+
+            // Инициализация графика
+            containerData[container.containerId] = {
+                chart: createContainerChart(container.containerId)
+            };
+        } else {
+            // Обновление существующих метрик
+            const cpuElem = document.getElementById(`cpu-${container.containerId}`);
+            cpuElem.textContent = 'CPU: ' + container.cpuUsagePercent.toFixed(2) + ' %';
+
+            const memUsageMB = (container.memoryUsageBytes / (1024 * 1024)).toFixed(2);
+            const memLimitMB = (container.memoryLimitBytes / (1024 * 1024)).toFixed(2);
+            const memElem = document.getElementById(`mem-${container.containerId}`);
+            memElem.textContent = `Память: ${memUsageMB}MB / ${memLimitMB}MB`;
         }
     }
 
-    function createMemoryChart(canvasId, worker) {
-        const ctx = document.getElementById(canvasId).getContext('2d');
-        const memoryUsage = worker.memoryUsage.toFixed(2);
-        const memoryLimit = 512; // Лимит памяти в MB, измените при необходимости
-        const memoryData = worker.available ? [0, memoryLimit] : [memoryUsage, memoryLimit - memoryUsage];
+    // Основная функция загрузки и обновления UI
+    function loadDataAndUpdateUI() {
+        Promise.all([loadContainersData(), loadSystemMemoryData()])
+            .then(([containersData, systemMemData]) => {
+                document.getElementById('loading').style.display = 'none';
 
-        charts[canvasId] = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Использовано (MB)', 'Свободно (MB)'],
-                datasets: [{
-                    data: memoryData,
-                    backgroundColor: worker.available ? ['rgba(75, 192, 192, 0.5)', '#e0e0e0'] :
-                        ['rgba(255, 99, 132, 0.5)', '#e0e0e0'],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: false,
-                maintainAspectRatio: false,
-                cutout: '70%',
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.parsed.toFixed(2);
-                                return `${label}: ${value} MB`;
-                            }
+                const containersGrid = document.getElementById('containersGrid');
+                containersGrid.innerHTML = '';
+
+                const memoryUsages = containersData.map(c => c.memoryUsageBytes / (1024*1024));
+                const totalContainersMemory = memoryUsages.reduce((a,b)=>a+b,0);
+
+                const names = [];
+                const cpuUsages = [];
+                const memoryLimits = [];
+                const memoryShares = [];
+
+                // Собираем текущие контейнеры в сет
+                const currentContainerIds = new Set(containersData.map(c => c.containerId));
+
+                // Удаляем графики и карточки для несуществующих контейнеров
+                for (let id in containerData) {
+                    if (!currentContainerIds.has(id)) {
+                        // Удаление графика
+                        containerData[id].chart.destroy();
+                        delete containerData[id];
+
+                        // Удаление карточки
+                        const containerCard = document.getElementById(`container-card-${id}`);
+                        if (containerCard) {
+                            containerCard.remove();
                         }
                     }
                 }
-            }
-        });
+
+                // Создаём или обновляем карточки контейнеров
+                containersData.forEach((container, index) => {
+                    createOrUpdateContainerCard(container);
+                });
+
+                // Обновляем долю памяти после создания всех карточек
+                containersData.forEach((container, index) => {
+                    let memPercentOfTotal = 0;
+                    if (totalContainersMemory > 0) {
+                        memPercentOfTotal = ((container.memoryUsageBytes / (1024 * 1024)) / totalContainersMemory) * 100;
+                    }
+                    const memShareElem = document.getElementById(`mem-share-${container.containerId}`);
+                    memShareElem.textContent = `Доля от памяти всех конт.: ${memPercentOfTotal.toFixed(2)}%`;
+
+                    // Добавляем данные для глобальных графиков
+                    names.push(container.name);
+                    cpuUsages.push(container.cpuUsagePercent);
+                    memoryLimits.push(container.memoryLimitBytes / (1024*1024));
+                    memoryShares.push((container.memoryUsageBytes / (1024*1024)));
+                });
+
+                // Обновляем графики контейнеров
+                containersData.forEach((container, index) => {
+                    // Добавляем новую точку данных (cpu)
+                    updateContainerChart(container.containerId, container.cpuUsagePercent);
+                });
+
+                // Обновляем или создаём диаграмму "Доля от памяти всех контейнеров"
+                const memoryShareData = memoryShares.map((mem, idx) => mem / totalContainersMemory * 100);
+                if (!memoryShareChart) {
+                    const memShareCtx = document.getElementById('memoryShareChart').getContext('2d');
+                    memoryShareChart = new Chart(memShareCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: names,
+                            datasets: [{
+                                data: memoryShareData,
+                                backgroundColor: [
+                                    'rgba(255, 99, 132, 0.6)',
+                                    'rgba(54, 162, 235, 0.6)',
+                                    'rgba(255, 206, 86, 0.6)',
+                                    'rgba(75, 192, 192, 0.6)',
+                                    'rgba(153, 102, 255, 0.6)',
+                                    'rgba(255, 159, 64, 0.6)',
+                                    'rgba(201, 203, 207, 0.6)',
+                                    'rgba(255, 99, 132, 0.6)',
+                                    'rgba(54, 162, 235, 0.6)',
+                                    'rgba(255, 206, 86, 0.6)',
+                                    'rgba(75, 192, 192, 0.6)',
+                                    'rgba(153, 102, 255, 0.6)'
+                                ],
+                                borderColor: 'rgba(255,255,255,1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed !== null) {
+                                                label += context.parsed.toFixed(2) + '%';
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    memoryShareChart.data.labels = names;
+                    memoryShareChart.data.datasets[0].data = memoryShareData;
+                    memoryShareChart.update();
+                }
+
+                // Обновляем или создаём график использования CPU контейнеров
+                if (!cpuChart) {
+                    const cpuCtx = document.getElementById('cpuChart').getContext('2d');
+                    cpuChart = new Chart(cpuCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: names,
+                            datasets: [{
+                                label: 'Использование CPU (%)',
+                                data: cpuUsages,
+                                backgroundColor: [
+                                    'rgba(255, 99, 132, 0.6)',
+                                    'rgba(54, 162, 235, 0.6)',
+                                    'rgba(255, 206, 86, 0.6)',
+                                    'rgba(75, 192, 192, 0.6)',
+                                    'rgba(153, 102, 255, 0.6)',
+                                    'rgba(255, 159, 64, 0.6)',
+                                    'rgba(201, 203, 207, 0.6)',
+                                    'rgba(255, 99, 132, 0.6)',
+                                    'rgba(54, 162, 235, 0.6)',
+                                    'rgba(255, 206, 86, 0.6)',
+                                    'rgba(75, 192, 192, 0.6)',
+                                    'rgba(153, 102, 255, 0.6)'
+                                ],
+                                borderColor: 'rgba(255,255,255,1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed !== null) {
+                                                label += context.parsed.toFixed(2) + '%';
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    cpuChart.data.labels = names;
+                    cpuChart.data.datasets[0].data = cpuUsages;
+                    cpuChart.update();
+                }
+
+                // Обновляем или создаём график памяти контейнеров
+                if (!memoryChart) {
+                    const memoryCtx = document.getElementById('memoryChart').getContext('2d');
+                    memoryChart = new Chart(memoryCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: names,
+                            datasets: [
+                                {
+                                    label: 'Используемая память (MB)',
+                                    data: memoryUsages,
+                                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                                    borderColor: 'rgba(54, 162, 235, 1)',
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: 'Лимит памяти (MB)',
+                                    data: memoryLimits,
+                                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                                    borderColor: 'rgba(255,99,132,1)',
+                                    borderWidth: 1
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: false
+                                },
+                                legend: {
+                                    display: true
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    display: false, // Убираем ось Y
+                                },
+                                x: {
+                                    display: false // Убираем ось X
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    memoryChart.data.labels = names;
+                    memoryChart.data.datasets[0].data = memoryUsages;
+                    memoryChart.data.datasets[1].data = memoryLimits;
+                    memoryChart.update();
+                }
+
+                // Скрываем индикатор загрузки
+                document.getElementById('loading').style.display = 'none';
+                // Отображаем сетку контейнеров
+                containersGrid.style.display = 'grid';
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('loading').textContent = 'Ошибка загрузки данных!';
+            });
     }
 
-    function updateMemoryChart(canvasId, worker) {
-        if (charts[canvasId]) {
-            const memoryUsage = worker.memoryUsage.toFixed(2);
-            const memoryLimit = 512; // Лимит памяти в MB, измените при необходимости
-            const newData = worker.available ? [0, memoryLimit] : [memoryUsage, memoryLimit - memoryUsage];
-            charts[canvasId].data.datasets[0].data = newData;
+    // Первичная загрузка
+    loadDataAndUpdateUI();
 
-            // Обновляем цвета в зависимости от состояния воркера
-            if (worker.available) {
-                charts[canvasId].data.datasets[0].backgroundColor = ['rgba(75, 192, 192, 0.5)', '#e0e0e0'];
-            } else {
-                charts[canvasId].data.datasets[0].backgroundColor = ['rgba(255, 99, 132, 0.5)', '#e0e0e0'];
-            }
-
-            charts[canvasId].update();
-        }
-    }
-
-    // Инициализация: получение данных и установка интервала обновления
-    fetchWorkerData();
-    setInterval(fetchWorkerData, 1000); // Обновление каждую секунду
+    // Обновление каждые 2 секунды
+    setInterval(loadDataAndUpdateUI, 2000);
 </script>
 </body>
 </html>

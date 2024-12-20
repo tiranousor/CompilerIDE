@@ -1,4 +1,3 @@
-// UnbanRequestController.java
 package com.example.CompilerIDE.controller;
 
 import com.example.CompilerIDE.providers.Client;
@@ -35,9 +34,16 @@ public class UnbanRequestController  {
 
         String username = authentication.getName();
         Optional<Client> client = clientRepository.findByUsername(username);
-        UnbanRequest existingRequest = unbanRequestRepository.findByClient(client.orElse(null));
+
+        if (client.isEmpty()) {
+            model.addAttribute("error", "Пользователь не найден.");
+            return "banned";
+        }
+
+        UnbanRequest existingRequest = unbanRequestRepository.findByClient(client.get());
         if (existingRequest != null) {
             model.addAttribute("message", "Вы уже отправили запрос на разблокировку. Ожидайте ответа администратора.");
+            model.addAttribute("formSubmitted", true);
             return "banned";
         }
 
@@ -49,6 +55,8 @@ public class UnbanRequestController  {
         unbanRequestRepository.save(unbanRequest);
 
         model.addAttribute("message", "Ваш запрос на разблокировку был отправлен.");
+        model.addAttribute("formSubmitted", true);
         return "banned";
     }
+
 }

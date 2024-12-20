@@ -1,6 +1,7 @@
 package com.example.CompilerIDE.providers;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -9,6 +10,7 @@ import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -19,6 +21,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Client implements Serializable {
+    private static final long serialVersionUID = 6946600510415992063L;
 
     @Id
     @Column(name="user_id")
@@ -33,6 +36,7 @@ public class Client implements Serializable {
     private LocalDateTime lastLogin;
 
     @OneToMany(mappedBy = "client", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ToString.Exclude
     private List<LoginTimestamp> loginTimes = new ArrayList<>();
 
     @Column(name = "email", unique = true)
@@ -60,6 +64,8 @@ public class Client implements Serializable {
     private String resetPasswordToken;
 
     @OneToMany(mappedBy = "client", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
+    @ToString.Exclude
     private List<Project> projects;
     @OneToMany(mappedBy = "sender", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<FriendRequest> sentFriendRequests = new ArrayList<>();
@@ -70,18 +76,24 @@ public class Client implements Serializable {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "isBanned")
+    private boolean isBanned;
+
     @ManyToMany
     @JoinTable(
             name = "friendships",
             joinColumns = @JoinColumn(name = "client1_id"),
             inverseJoinColumns = @JoinColumn(name = "client2_id")
     )
+    @JsonIgnore
     private Set<Client> friends = new HashSet<>();
     @OneToMany(mappedBy = "client", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
+    @ToString.Exclude
     private List<ProjectTeam> projectTeams;
-
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
+
 }

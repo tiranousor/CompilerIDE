@@ -837,9 +837,9 @@ body.light-mode {
 
             setTimeout(() => {
                 if (editor && lineNumber) {
-                    editor.revealLineInCenter(lineNumber);
-                    editor.setPosition({ lineNumber: lineNumber, column: columnNumber || 1 });
-                    editor.focus();
+                      editor.revealPositionInCenter({ lineNumber: lineNumber, column: columnNumber });
+                editor.setPosition({ lineNumber: lineNumber, column: columnNumber });
+                editor.focus();
                 }
             }, 100);
         } else {

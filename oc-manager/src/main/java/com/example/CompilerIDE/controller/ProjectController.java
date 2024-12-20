@@ -141,7 +141,8 @@ public class ProjectController  {
         }
         projectTeamService.addCreator(project, clientService.findByUsername(authentication.getName()).get());
 
-        return "redirect:/userProfile";
+        return "redirect:/userProfile/" + client.getId();
+
     }
 
 
@@ -154,7 +155,8 @@ public class ProjectController  {
             projectService.delete(projectToDelete.get());
         }
 
-        return "redirect:/userProfile";
+        return "redirect:/userProfile/" + client.getId();
+
     }
 
     @GetMapping("/edit/{id}")
@@ -202,13 +204,15 @@ public class ProjectController  {
         Client client = clientOpt.get();
         Optional<Project> projectOpt = projectService.findById(projectId);
         if (projectOpt.isEmpty()) {
-            return "redirect:/userProfile";
+            return "redirect:/userProfile/" + client.getId();
+
         }
 
         Project existingProject = projectOpt.get();
 
         if (!existingProject.getClient().getId().equals(client.getId())) {
-            return "redirect:/userProfile";
+            return "redirect:/userProfile/" + client.getId();
+
         }
 
         projectForm.setClient(client);
@@ -227,7 +231,6 @@ public class ProjectController  {
         existingProject.setAccessLevel(projectForm.getAccessLevel());
         projectService.save(existingProject);
 
-        // Логирование изменений (опционально)
         ProjectAccessLog accessLog = new ProjectAccessLog();
         accessLog.setClient(client);
         accessLog.setProject(existingProject);
@@ -235,7 +238,8 @@ public class ProjectController  {
         accessLog.setActionType("edit");
         projectAccessLogRepository.save(accessLog);
 
-        return "redirect:/userProfile";
+        return "redirect:/userProfile/" + client.getId();
+
     }
 
 

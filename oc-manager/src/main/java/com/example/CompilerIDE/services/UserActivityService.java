@@ -60,7 +60,7 @@ public class UserActivityService {
                 return users.stream()
                         .filter(user -> "ROLE_USER".equals(user.getRole()))
                         .collect(Collectors.toList());
-            case "bannedFirst":
+            case "onlyBanned":
                 return users.stream()
                         .filter(user -> "ROLE_BANNED".equals(user.getRole()))
                         .collect(Collectors.toList());
@@ -95,8 +95,12 @@ public class UserActivityService {
             throw new IllegalArgumentException("No users found with the provided IDs.");
         }
         users.forEach(user -> {
-            System.out.println("Updating user: " + user.getUsername() + " from role " + user.getRole() + " to ROLE_ADMIN");
-            user.setRole("ROLE_ADMIN");
+            if (!"ROLE_ADMIN".equals(user.getRole())) {
+                System.out.println("Updating user: " + user.getUsername() + " to ROLE_ADMIN");
+                user.setRole("ROLE_ADMIN");
+            } else {
+                System.out.println("User " + user.getUsername() + " is already an admin. Skipping.");
+            }
         });
         clientRepository.saveAll(users);
         System.out.println("Successfully updated roles for users: " + users.stream().map(Client::getUsername).collect(Collectors.toList()));

@@ -96,13 +96,12 @@
             background-color: #218838;
             box-shadow: 0 0 15px rgba(33, 136, 56, 0.6);
         }
-
     </style>
 </head>
 <body>
 <div class="container">
     <h1>Ваш аккаунт заблокирован</h1>
-    <p>Пожалуйста, свяжитесь с администратором для получения дополнительной информации.</p>
+
     <div th:if="${message}">
         <p th:text="${message}"></p>
     </div>
@@ -110,8 +109,9 @@
         <p th:text="${error}"></p>
     </div>
 
-    <!-- Форма для отправки сообщения -->
-    <form th:action="@{/sendUnbanRequest}" method="post">
+    <form th:if="${formSubmitted == false}" th:action="@{/sendUnbanRequest}" method="post">
+        <p>Пожалуйста, свяжитесь с администратором для получения дополнительной информации.</p>
+
         <div class="mb-3">
             <input type="email" id="email" name="email" class="form-control" placeholder="Ваш email" th:value="${email}" readonly>
             <textarea id="message" name="message" class="form-control" rows="4" placeholder="Напишите, почему вас нужно разблокировать"></textarea>
@@ -119,6 +119,5 @@
         <button type="submit" class="btn-primary">Отправить запрос на разблокировку</button>
     </form>
 </div>
-
 </body>
 </html>

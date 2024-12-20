@@ -290,55 +290,55 @@
     }
 
     .stat-card:nth-child(1) i {
-        color: #e74c3c; /* Красный */
+        color: #e74c3c;
     }
 
     .stat-card:nth-child(2) i {
-        color: #3498db; /* Синий */
+        color: #3498db;
     }
 
     .stat-card:nth-child(3) i {
-        color: #2ecc71; /* Зеленый */
+        color: #2ecc71;
     }
 
     .stat-card:nth-child(4) i {
-        color: #f1c40f; /* Желтый */
+        color: #f1c40f;
     }
 
     .small-card:nth-child(1) i {
-        color: #9b59b6; /* Фиолетовый */
+        color: #9b59b6;
     }
 
     .small-card:nth-child(2) i {
-        color: #1abc9c; /* Бирюзовый */
+        color: #1abc9c;
     }
 
     .small-card:nth-child(3) i {
-        color: #e67e22; /* Оранжевый */
+        color: #e67e22;
     }
 
     .small-card:nth-child(4) i {
-        color: #34495e; /* Темно-серый */
+        color: #34495e;
     }
 
     .small-card:nth-child(5) i {
-        color: #d35400; /* Терракота */
+        color: #d35400;
     }
 
     .small-card:nth-child(6) i {
-        color: #8e44ad; /* Темный фиолетовый */
+        color: #8e44ad;
     }
 
     .chart-card:nth-child(1) i {
-        color: #2980b9; /* Ярко-синий */
+        color: #2980b9;
     }
 
     .chart-card:nth-child(2) i {
-        color: #27ae60; /* Темно-зеленый */
+        color: #27ae60;
     }
 
     .chart-card:nth-child(3) i {
-        color: #f39c12; /* Ярко-желтый */
+        color: #f39c12;
     }
 
     .container-fluid {
@@ -602,7 +602,6 @@
     </div>
 </div>
 
-<!-- Скрипты -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
@@ -705,81 +704,32 @@
             .catch(error => console.error('Error fetching online time:', error));
     }
 
-    // Обновлять время каждые 10 секунд
     setInterval(updateOnlineTime, 10000);
 
-    // Первый вызов при загрузке страницы
     updateOnlineTime();
     /*]]>*/
 </script>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
-    const languageLabels = [[${projectLanguageLabels}]]; // Языки
-    const languageCounts = [[${projectLanguageCounts}]]; // Количество проектов
-
-    const languageCtx = document.getElementById('languageChart').getContext('2d');
-    new Chart(languageCtx, {
-        type: 'pie',
-        data: {
-            labels: languageLabels,
-            datasets: [{
-                label: 'Проекты',
-                data: languageCounts,
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(54, 162, 235, 0.2)',
-                    'rgba(255, 206, 86, 0.2)',
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(153, 102, 255, 0.2)',
-                    'rgba(255, 159, 64, 0.2)'
-                ],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)',
-                    'rgba(255, 159, 64, 1)'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-                tooltip: { enabled: true }
-            }
-        }
-    });
-    /*]]>*/
-</script>
-
-<script th:inline="javascript">
-    /*<![CDATA[*/
     function updateStats() {
-        fetch('/admin/users') // Эндпоинт для получения свежих данных
+        fetch('/admin/users')
             .then(response => response.json())
             .then(data => {
                 document.querySelector('h3[th\\:text="${totalProjects}"]').innerText = data.totalProjects;
                 document.querySelector('h3[th\\:text="${newProjectsToday}"]').innerText = data.newProjectsToday;
                 document.querySelector('h3[th\\:text="${newProjectsThisWeek}"]').innerText = data.newProjectsThisWeek;
                 document.querySelector('h3[th\\:text="${newProjectsThisMonth}"]').innerText = data.newProjectsThisMonth;
-                // Обновить таблицы или графики, если нужно
             })
             .catch(error => console.error('Ошибка обновления статистики:', error));
     }
 
-    setInterval(updateStats, 30000); // Обновлять каждые 30 секунд
+    setInterval(updateStats, 30000);
     /*]]>*/
 </script>
 <script th:inline="javascript">
     /*<![CDATA[*/
     document.addEventListener("DOMContentLoaded", function () {
-        // Еженедельная гистограмма
         const weeklyLabels = /*[[${activityLabels}]]*/ [];
         const weeklyProjectsData = /*[[${activityProjectCounts}]]*/ [];
         const weeklyUsersData = /*[[${activityUserCounts}]]*/ [];

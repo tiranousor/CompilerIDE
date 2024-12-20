@@ -27,9 +27,10 @@ public class ProjectAccessLog {
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
+
 
     @Column(name = "access_time", nullable = false)
     private Timestamp accessTime;

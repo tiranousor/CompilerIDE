@@ -14,6 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -37,13 +40,13 @@ public class AdminController {
     private final ClientService clientService;
     private final UserActivityService userActivityService;
     private final LoginTimestampRepository loginTimestampRepository;
-
+    private final SessionRegistry sessionRegistry;
     @Autowired
     public AdminController(WorkerStatusService workerStatusService, ClientRepository clientRepository,
                            ProjectRepository projectRepository, MinioService minioService,
                            ProjectService projectService, LoginTimestampService loginTimestampService,
                            UnbanRequestRepository unbanRequestRepository, ClientService clientService,
-                           UserActivityService userActivityService, LoginTimestampRepository loginTimestampRepository) {
+                           UserActivityService userActivityService, LoginTimestampRepository loginTimestampRepository, SessionRegistry sessionRegistry) {
         this.workerStatusService = workerStatusService;
         this.clientRepository = clientRepository;
         this.projectRepository = projectRepository;
@@ -54,6 +57,7 @@ public class AdminController {
         this.clientService = clientService;
         this.userActivityService = userActivityService;
         this.loginTimestampRepository = loginTimestampRepository;
+        this.sessionRegistry = sessionRegistry;
     }
 
 
@@ -109,9 +113,23 @@ public class AdminController {
 
     @PostMapping("/users/{id}/ban")
     public String banUser(@PathVariable("id") Long id) {
-        Client user = clientRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
+        Client user = clientRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
         user.setRole("ROLE_BANNED");
         clientRepository.save(user);
+        List<Object> allPrincipals = sessionRegistry.getAllPrincipals();
+        for (Object principal : allPrincipals) {
+            if (principal instanceof UserDetails) {
+                UserDetails userDetails = (UserDetails) principal;
+                if (userDetails.getUsername().equals(user.getUsername())) {
+                    List<SessionInformation> sessions = sessionRegistry.getAllSessions(principal, false);
+                    for (SessionInformation session : sessions) {
+                        session.expireNow();
+                    }
+                }
+            }
+        }
+
         return "redirect:/admin/users";
     }
     @Secured("ROLE_ADMIN")

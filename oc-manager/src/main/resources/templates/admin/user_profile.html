@@ -291,12 +291,12 @@
         </div>
         <div class="main-container">
             <div class="profile-info-container d-flex flex-column align-items-center">
-                <img th:src="${client.avatarUrl != null ? client.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="profile-avatar">
+                <img th:src="${user.avatarUrl != null ? user.avatarUrl : '/noAvatar.png'}" alt="User Avatar" class="profile-avatar">
                 <div class="profile-info text-center mt-2">
-                    <h2 th:text="${client.username}"></h2>
-                    <p class="color-fg-muted" th:text="${client.email}"></p>
-                    <a th:href="${client.githubProfile}" class="btn-link" target="_blank">GitHub Profile</a>
-                    <p class="color-fg-default mt-3" th:text="${client.about}"></p>
+                    <h2 th:text="${user.username}"></h2>
+                    <p class="color-fg-muted" th:text="${user.email}"></p>
+                    <a th:href="${user.githubProfile}" class="btn-link" target="_blank">GitHub Profile</a>
+                    <p class="color-fg-default mt-3" th:text="${user.about}"></p>
                 </div>
             </div>
             <div class="projects-container">

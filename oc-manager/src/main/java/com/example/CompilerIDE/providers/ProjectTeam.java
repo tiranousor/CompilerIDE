@@ -17,10 +17,12 @@ public class ProjectTeam {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
+    @ToString.Exclude
     private Project project;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id", nullable = false)
+    @ToString.Exclude
     private Client client;
 
     @Enumerated(EnumType.STRING)
