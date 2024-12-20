@@ -44,12 +44,12 @@ public class UserController {
     private final FriendshipService friendshipService;
     private final LoginTimestampRepository loginTimestampRepository;
     private final ProjectTeamService projectTeamService;
-
+    private  final  FriendRequestService friendRequestService;
     @Autowired
     public UserController(ProjectAccessLogService projectAccessLogService, ClientService clientService, ProjectService projectService, ProjectInvitationService projectInvitationService, ClientValidator clientValidator,
                           PasswordEncoder passwordEncoder, ProjectValidator projectValidator, MinioService minioService,
                           ObjectMapper objectMapper, FriendshipService friendshipService,
-                          LoginTimestampRepository loginTimestampRepository, ProjectTeamService projectTeamService) {
+                          LoginTimestampRepository loginTimestampRepository, ProjectTeamService projectTeamService, FriendRequestService friendRequestService) {
         this.projectAccessLogService = projectAccessLogService;
         this.projectInvitationService = projectInvitationService;
         this.passwordEncoder = passwordEncoder;
@@ -62,6 +62,7 @@ public class UserController {
         this.friendshipService = friendshipService;
         this.loginTimestampRepository = loginTimestampRepository;
         this.projectTeamService = projectTeamService;
+        this.friendRequestService = friendRequestService;
     }
 
     @GetMapping("/")
@@ -235,7 +236,8 @@ public class UserController {
             SecurityContextHolder.getContext().setAuthentication(newAuth);
         }
 
-        return "redirect:/userProfile";
+        return "redirect:/userProfile/" + existingClient.getId();
+
     }
 
     @GetMapping("/userProfile/{id}")
@@ -251,6 +253,8 @@ public class UserController {
         if (viewedUser == null) {
             return "redirect:/userProfile/" + currentUser.getId();
         }
+        List<FriendRequest> receivedRequests = friendRequestService.getPendingReceivedRequests(currentUser);
+        model.addAttribute("receivedRequests", receivedRequests);
 
         boolean isOwnProfile = viewedUser.getId().equals(currentUser.getId());
         model.addAttribute("isOwnProfile", isOwnProfile);

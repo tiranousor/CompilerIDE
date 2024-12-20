@@ -8,29 +8,46 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration {
 
     private static final String[] AUTH_WHITELIST = {
-            "/", "/*", "/login", "/registration" ,"/forgot_password", "/reset_password", "/unbanRequest", "/sendUnbanRequest"
+            "/", "/*", "/login", "/registration", "/forgot_password", "/reset_password", "/unbanRequest", "/sendUnbanRequest"
     };
     private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
     private final UserDetailsService clientDetailsService;
     private final CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
 
     @Autowired
-    public SecurityConfiguration(CustomLogoutSuccessHandler customLogoutSuccessHandler, ClientDetailsService clientDetailsService, CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler) {
+    public SecurityConfiguration(CustomLogoutSuccessHandler customLogoutSuccessHandler,
+                                 ClientDetailsService clientDetailsService,
+                                 CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler) {
         this.customLogoutSuccessHandler = customLogoutSuccessHandler;
         this.clientDetailsService = clientDetailsService;
         this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler;
+    }
+
+    @Autowired
+    private BannedUserFilter bannedUserFilter;
+
+    @Bean
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
+
+    @Bean
+    public static HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
     }
 
     @Bean
@@ -46,9 +63,8 @@ public class SecurityConfiguration {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/prometheus").permitAll()
-                        .requestMatchers("/banned", "/sendUnbanRequest").hasAuthority("ROLE_BANNED")
+                        .requestMatchers("/banned", "/sendUnbanRequest").permitAll() // Изменено
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-
                         .requestMatchers("/userProfile").hasRole("USER")
                         .requestMatchers(AUTH_WHITELIST).permitAll()
                         .anyRequest().authenticated()
@@ -63,12 +79,16 @@ public class SecurityConfiguration {
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessHandler(customLogoutSuccessHandler)
-                        .permitAll());
+                        .permitAll()
+                )
+                .sessionManagement(session -> session
+                        .maximumSessions(-1) // Без ограничения количества сессий
+                        .sessionRegistry(sessionRegistry())
+                )
+                .addFilterBefore(bannedUserFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {

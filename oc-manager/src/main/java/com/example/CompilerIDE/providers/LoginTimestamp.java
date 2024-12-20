@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import jakarta.persistence.Entity;
+import lombok.ToString;
+
 import java.sql.Timestamp;
 
 @Data
@@ -27,7 +29,8 @@ public class LoginTimestamp {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "client_id")
+    @JoinColumn(name = "client_id", nullable = false)
+    @ToString.Exclude
     private Client client;
     @Column(name = "login_time")
     private LocalDateTime loginTime;

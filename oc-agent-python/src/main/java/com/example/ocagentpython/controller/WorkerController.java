@@ -248,13 +248,13 @@ public class WorkerController {
 
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i].trim();
+
             if (line.startsWith("File")) {
                 int fileStartIndex = line.indexOf("\"") + 1;
                 int fileEndIndex = line.indexOf("\", line ");
                 if (fileStartIndex != -1 && fileEndIndex != -1) {
                     String filePath = line.substring(fileStartIndex, fileEndIndex);
 
-                    // Удаляем префикс временной директории из пути файла
                     if (filePath.startsWith(projectDirPath)) {
                         filePath = filePath.substring(projectDirPath.length());
                         if (filePath.startsWith(File.separator)) {
@@ -271,25 +271,29 @@ public class WorkerController {
                         lineNumber = 0;
                     }
                 }
-            } else if (line.startsWith("SyntaxError") || line.startsWith("IndentationError") || line.contains("Error")) {
-                message = line;
-            } else if (!line.isEmpty() && message.isEmpty()) {
-                message = line;
             } else if (line.contains("^")) {
-                // Попробуем извлечь номер столбца
-                columnNumber = line.indexOf('^') + 1;
+                columnNumber = line.indexOf('^') + 1; // Индекс '^' + 1 для соответствия позиции
+            } else if (!line.isEmpty() && (line.startsWith("SyntaxError") || line.startsWith("IndentationError") || line.contains("Error"))) {
+                message = line;
+            } else if (!line.isEmpty() && lineNumber > 0 && columnNumber == 0) {
+                // Если указатель '^' отсутствует, определяем колонку по длине строки
+                columnNumber = lines[i - 1].length(); // Берем строку перед ошибкой
             }
         }
 
-        Map<String, Object> errorMap = new HashMap<>();
-        errorMap.put("message", message);
-        errorMap.put("file", file);
-        errorMap.put("line", lineNumber);
-        errorMap.put("column", columnNumber);
+        if (!message.isEmpty()) {
+            Map<String, Object> errorMap = new HashMap<>();
+            errorMap.put("message", message);
+            errorMap.put("file", file);
+            errorMap.put("line", lineNumber);
+            errorMap.put("column", columnNumber);
 
-        errorList.add(errorMap);
+            errorList.add(errorMap);
+        }
+
         return errorList;
     }
+
 
 
 

@@ -74,7 +74,8 @@ public class ProjectInvitationController {
             redirectAttributes.addFlashAttribute("error", "Ошибка при принятии приглашения: " + e.getMessage());
         }
 
-        return "redirect:/userProfile";
+        return "redirect:/userProfile/" + receiver.getId();
+
     }
 
     @PostMapping("/reject/{id}")
@@ -97,7 +98,8 @@ public class ProjectInvitationController {
             redirectAttributes.addFlashAttribute("error", "Ошибка при отклонении приглашения: " + e.getMessage());
         }
 
-        return "redirect:/userProfile";
+        return "redirect:/userProfile/" + receiver.getId();
+
     }
 
     @GetMapping("/projects/{projectId}/invite")
@@ -114,7 +116,8 @@ public class ProjectInvitationController {
 
         if (!isOwner) {
             model.addAttribute("error", "У вас нет прав приглашать пользователей в этот проект.");
-            return "redirect:/userProfile";
+            return "redirect:/userProfile/" + sender.getId();
+
         }
         List<ProjectTeam> collaborators = projectTeamService.findByProjectAndRole(project, ProjectTeam.Role.COLLABORATOR);
         model.addAttribute("collaborators", collaborators);
@@ -182,7 +185,7 @@ public class ProjectInvitationController {
             Project project = projectService.findById(projectId)
                     .orElseThrow(() -> new IllegalArgumentException("Проект не найден."));
 
-            // Проверяем, является ли отправитель создателем проекта
+
             boolean isOwner = projectTeamService.findByProjectAndClient(project, sender)
                     .map(team -> team.getRole() == ProjectTeam.Role.CREATOR)
                     .orElse(false);
