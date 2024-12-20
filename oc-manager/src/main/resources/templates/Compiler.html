@@ -345,7 +345,7 @@ body.light-mode {
         const undoStack = [];
         let pendingCreations = 0;
         let duplicateNameError = false;
-        let isSidebarOpen = false;
+        let isSidebarOpen = true;
         let isSaving = false;
         let autoSaveIntervalId = null;
         function startAutoSave() {
@@ -747,12 +747,6 @@ body.light-mode {
         });
     };
 
-
-
-
-
-
-
         const showMessage = (msg, type = 'error') => {
             const messageDiv = $('#message');
             messageDiv.text(msg);
@@ -833,6 +827,8 @@ body.light-mode {
 
         if (node) {
             saveCurrentFile();
+            // Снимаем выделение со всех ранее выделенных узлов, чтобы не было нескольких выделенных файлов
+            tree.deselect_all(true);
             tree.select_node(node);
 
             setTimeout(() => {
@@ -845,6 +841,7 @@ body.light-mode {
         } else {
             showMessage(`Не удалось найти файл: ${filePath}`, "error");
         }
+
     };
 
 

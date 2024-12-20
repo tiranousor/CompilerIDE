@@ -26,6 +26,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.DocumentBuilder;
+
 @RestController
 public class WorkerController {
 
@@ -58,6 +63,7 @@ public class WorkerController {
     public ResponseEntity<?> compileProject(@RequestBody Map<String, String> payload) {
         String projectId = payload.get("project_id");
         String mainClassName = payload.get("mainClassName");
+        logger.info("Получен запрос на компиляцию проекта '{}', главный класс: '{}'", projectId, mainClassName);
 
         Path projectDir = Paths.get("/tmp", projectId);
         String projectPrefix = "projects/" + projectId + "/";
@@ -67,10 +73,12 @@ public class WorkerController {
             downloadProjectFiles(projectPrefix, projectDir);
 
             if (!isValidMainClass(mainClassName, projectDir)) {
+                logger.warn("Класс '{}' не найден или некорректен в проекте '{}'", mainClassName, projectId);
                 return ResponseEntity.badRequest().body(Map.of("error", "Класс " + mainClassName + " не найден или некорректен"));
             }
 
             boolean isMavenProject = Files.exists(projectDir.resolve("pom.xml"));
+            logger.info("Проект '{}' является Maven-проектом: {}", projectId, isMavenProject);
 
             if (isMavenProject) {
                 return handleMavenProject(projectDir, mainClassName);
@@ -103,6 +111,7 @@ public class WorkerController {
     }
 
     private void prepareProjectDirectory(Path projectDir) throws IOException {
+        logger.info("Подготовка директории проекта '{}'", projectDir.toString());
         FileSystemUtils.deleteRecursively(projectDir.toFile());
         Files.createDirectories(projectDir);
         logger.info("Директория проекта '{}' подготовлена.", projectDir.toString());
@@ -152,8 +161,6 @@ public class WorkerController {
 
     }
 
-
-
     private boolean isValidMainClass(String mainClassName, Path projectDir) throws IOException {
         if (mainClassName == null || mainClassName.trim().isEmpty()) {
             return false;
@@ -174,41 +181,77 @@ public class WorkerController {
             classFilePath = projectDir.resolve(classRelativePath);
         }
 
-        return Files.exists(classFilePath);
+        boolean exists = Files.exists(classFilePath);
+        logger.info("Проверка существования класса '{}': {}", classFilePath.toString(), exists);
+        return exists;
     }
-
 
     private ResponseEntity<?> handleMavenProject(Path projectDir, String mainClassName) throws IOException, InterruptedException {
         Path mavenRepo = Paths.get("/tmp/.m2/repository");
         Files.createDirectories(mavenRepo);
+        logger.info("Используется локальный Maven репозиторий: '{}'", mavenRepo.toString());
+
+        Path pomPath = projectDir.resolve("pom.xml");
+        Map<String, String> mavenCoordinates = extractMavenCoordinates(pomPath);
+
+        if (!mavenCoordinates.containsKey("groupId") || !mavenCoordinates.containsKey("artifactId")) {
+            logger.error("Не удалось извлечь groupId или artifactId из pom.xml");
+            return ResponseEntity.status(500).body(Map.of("error", "Не удалось извлечь groupId или artifactId из pom.xml"));
+        }
+
+        String projectGroupId = mavenCoordinates.get("groupId");
+        String projectArtifactId = mavenCoordinates.get("artifactId");
 
         List<String> mvnCommands = Arrays.asList(
                 "mvn",
-                "-e",
-                "-Dmaven.repo.local=/tmp/.m2/repository",
+                "-B",
+                "-Dstyle.color=never",
+                "-DtrimStackTrace=true",
                 "clean",
                 "compile",
                 "dependency:copy-dependencies"
         );
+
+        logger.info("Выполнение Maven команд: {}", String.join(" ", mvnCommands));
         CommandResult compileResult = executeCommand(mvnCommands, projectDir, 120);
+
+        logger.info("Команда Maven завершилась с кодом: {}", compileResult.getReturnCode());
+
+        logger.info("Maven stdout:\n{}", compileResult.getStdout());
+        logger.info("Maven stderr:\n{}", compileResult.getStderr());
+
         if (compileResult.getReturnCode() != 0) {
-            return buildErrorResponse(compileResult.getStdout(), compileResult.getStderr(), compileResult.getReturnCode());
+            logger.warn("Ошибка компиляции Maven проекта '{}'", projectDir.toString());
+
+            List<Map<String, Object>> errors = parseJavacErrors(compileResult.getStderr(), projectDir, projectGroupId, projectArtifactId);
+
+            if (errors.isEmpty()) {
+                errors = parseJavacErrors(compileResult.getStdout(), projectDir, projectGroupId, projectArtifactId);
+            }
+
+            logger.debug("Ошибки компиляции Maven проекта: {}", errors);
+            return buildErrorResponse("", errors, compileResult.getReturnCode());
         }
 
         List<String> javaRunCommand = Arrays.asList("java", "-cp", "target/classes" + File.pathSeparator + "target/dependency/*", mainClassName);
+        logger.info("Выполнение Java команды: {}", String.join(" ", javaRunCommand));
         CommandResult runResult = executeCommand(javaRunCommand, projectDir, 30);
+        logger.info("Команда Java завершилась с кодом: {}", runResult.getReturnCode());
+
         if (runResult.getReturnCode() != 0) {
-            return buildErrorResponse(runResult.getStdout(), runResult.getStderr(), runResult.getReturnCode());
+            logger.warn("Ошибка выполнения Java приложения в проекте '{}'", projectDir.toString());
+            List<Map<String, Object>> errors = parseJavacErrors(runResult.getStderr(), projectDir, projectGroupId, projectArtifactId);
+            logger.debug("Ошибки выполнения Java приложения: {}", errors);
+            return buildErrorResponse(runResult.getStdout(), errors, runResult.getReturnCode());
         }
 
+        logger.info("Проект '{}' успешно скомпилирован и выполнен.", projectDir.toString());
         return buildSuccessResponse(runResult.getStdout(), runResult.getStderr());
     }
 
-
-
-
     private ResponseEntity<?> handleNonMavenProject(Path projectDir, String mainClassName) throws IOException, InterruptedException {
         List<Path> javaFiles = collectJavaFiles(projectDir);
+        logger.info("Найдено {} Java файлов для компиляции в проекте '{}'", javaFiles.size(), projectDir.toString());
 
         List<String> javacCommand = new ArrayList<>();
         javacCommand.add("javac");
@@ -216,55 +259,53 @@ public class WorkerController {
             javacCommand.add(javaFile.toString());
         }
 
+        logger.info("Выполнение команды javac: {}", String.join(" ", javacCommand));
         CommandResult compileResult = executeCommand(javacCommand, projectDir, 60);
+        logger.info("Команда javac завершилась с кодом: {}", compileResult.getReturnCode());
+
         if (compileResult.getReturnCode() != 0) {
-            List<Map<String, Object>> errors = parseJavacErrors(compileResult.getStderr(), projectDir);
+            logger.warn("Ошибка компиляции проекта '{}'", projectDir.toString());
+            List<Map<String, Object>> errors = parseJavacErrors(compileResult.getStderr(), projectDir, null, null);
+            logger.debug("Ошибки компиляции проекта: {}", errors);
             return buildErrorResponse(compileResult.getStdout(), errors, compileResult.getReturnCode());
         }
 
-
         List<String> javaRunCommand = Arrays.asList("java", "-cp", ".", mainClassName);
+        logger.info("Выполнение Java команды: {}", String.join(" ", javaRunCommand));
         CommandResult runResult = executeCommand(javaRunCommand, projectDir, 30);
+        logger.info("Команда Java завершилась с кодом: {}", runResult.getReturnCode());
+
         if (runResult.getReturnCode() != 0) {
-            return buildErrorResponse(runResult.getStdout(), runResult.getStderr(), runResult.getReturnCode());
+            logger.warn("Ошибка выполнения Java приложения в проекте '{}'", projectDir.toString());
+            List<Map<String, Object>> errors = parseJavacErrors(runResult.getStderr(), projectDir, null, null);
+            if (runResult.getReturnCode() != 0 && errors.isEmpty()) {
+                String runStderr = runResult.getStderr() == null ? "" : runResult.getStderr().toLowerCase();
+                String runStdout = runResult.getStdout() == null ? "" : runResult.getStdout().toLowerCase();
+                if (runStderr.contains("could not find or load main class") || runStdout.contains("could not find or load main class")) {
+                    Map<String, Object> errorMap = new HashMap<>();
+                    errorMap.put("message", "Не удалось запустить главный класс. Убедитесь, что 'package' соответствует структуре каталогов.");
+                    errorMap.put("file", "");
+                    errorMap.put("line", 0);
+                    errorMap.put("column", 0);
+                    errors.add(errorMap);
+                } else {
+                    Map<String, Object> errorMap = new HashMap<>();
+                    errorMap.put("message", "Неизвестная ошибка при запуске приложения.");
+                    errorMap.put("file", "");
+                    errorMap.put("line", 0);
+                    errorMap.put("column", 0);
+                    errors.add(errorMap);
+                }
+                return buildErrorResponse(runResult.getStdout(), errors, runResult.getReturnCode());
+            }
+
+            logger.debug("Ошибки выполнения Java приложения: {}", errors);
+            return buildErrorResponse(runResult.getStdout(), errors, runResult.getReturnCode());
         }
 
+        logger.info("Проект '{}' успешно скомпилирован и выполнен.", projectDir.toString());
         return buildSuccessResponse(runResult.getStdout(), runResult.getStderr());
     }
-
-    private String findJarFileName(Path targetDir) throws IOException {
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(targetDir, "*.jar")) {
-            for (Path entry : stream) {
-                return entry.getFileName().toString();
-            }
-        }
-        return null;
-    }
-
-
-    private boolean hasShadePlugin(Path projectDir) throws IOException {
-        Path pomFile = projectDir.resolve("pom.xml");
-        if (!Files.exists(pomFile)) {
-            return false;
-        }
-        String pomContent = Files.readString(pomFile);
-        return pomContent.contains("maven-shade-plugin");
-    }
-
-
-    private String buildClasspath(Path projectDir, Path mavenRepo) throws IOException {
-        List<String> classpathEntries = new ArrayList<>();
-
-        Files.walk(mavenRepo)
-                .filter(path -> path.toString().endsWith(".jar"))
-                .forEach(path -> classpathEntries.add(path.toString()));
-
-        classpathEntries.add(projectDir.resolve("target/classes").toString());
-
-        return String.join(File.pathSeparator, classpathEntries);
-    }
-
-
 
     private List<Path> collectJavaFiles(Path projectDir) throws IOException {
         List<Path> javaFiles = new ArrayList<>();
@@ -283,6 +324,7 @@ public class WorkerController {
 
         Files.createDirectories(Paths.get("/tmp/.m2/repository"));
 
+        logger.info("Запуск процесса: {}", String.join(" ", command));
         Process process = processBuilder.start();
 
         StringBuilder stdout = new StringBuilder();
@@ -325,56 +367,251 @@ public class WorkerController {
         }
 
         int exitCode = process.exitValue();
+        logger.info("Процесс завершился с кодом: {}", exitCode);
 
         return new CommandResult(stdout.toString(), stderr.toString(), exitCode);
     }
 
-    private List<Map<String, Object>> parseJavacErrors(String stderrOutput, Path projectDir) {
+    private List<Map<String, Object>> parseJavacErrors(String stderrOutput, Path projectDir, String groupId, String artifactId) {
         List<Map<String, Object>> errorList = new ArrayList<>();
+        Set<String> uniqueErrors = new HashSet<>();
+        boolean collectArtifacts = false;
 
         if (stderrOutput == null || stderrOutput.isEmpty()) {
+            logger.debug("Нет ошибок для парсинга.");
             return errorList;
         }
 
         String[] lines = stderrOutput.split("\n");
-        Pattern errorPattern = Pattern.compile("^(.*\\.java):(\\d+): error: (.*)$");
+        Pattern artifactPattern = Pattern.compile("([a-zA-Z0-9_.\\-]+):([a-zA-Z0-9_.\\-]+):jar:([a-zA-Z0-9_.\\-]+)");
 
-        Path srcMainJava = projectDir.resolve("src/main/java");
-        String basePath = srcMainJava.toString();
+        logger.debug("Начинается парсинг ошибок компиляции. Входные данные:\n{}", stderrOutput);
 
-        for (int i = 0; i < lines.length; i++) {
-            Matcher matcher = errorPattern.matcher(lines[i]);
-            if (matcher.matches()) {
-                String filePath = matcher.group(1).trim();
-                int lineNumber = Integer.parseInt(matcher.group(2).trim());
-                String message = matcher.group(3).trim();
+        for (String line : lines) {
+            line = line.trim();
 
-                if (filePath.startsWith(basePath)) {
-                    filePath = filePath.substring(basePath.length() + 1);
+            if (line.contains("The following artifacts could not be resolved:")) {
+                collectArtifacts = true;
+
+                String[] parts = line.split("The following artifacts could not be resolved:");
+                if (parts.length > 1) {
+                    String artifactsPart = parts[1].trim();
+                    Matcher artifactMatcher = artifactPattern.matcher(artifactsPart);
+                    while (artifactMatcher.find()) {
+                        String currentGroupId = artifactMatcher.group(1);
+                        String currentArtifactId = artifactMatcher.group(2);
+                        String version = artifactMatcher.group(3);
+
+                        if (groupId != null && artifactId != null &&
+                                currentGroupId.equals(groupId) && currentArtifactId.equals(artifactId)) {
+                            logger.debug("Исключение основной цели проекта из списка ошибок: {}:{}:{}", currentGroupId, currentArtifactId, version);
+                            continue;
+                        }
+
+                        Map<String, Object> errorMap = new HashMap<>();
+                        errorMap.put("message", "Не удалось разрешить зависимость: " + currentGroupId + ":" + currentArtifactId + ":" + version);
+                        errorMap.put("file", "");
+                        errorMap.put("line", 0);
+                        errorMap.put("column", 0);
+
+                        String key = currentGroupId + ":" + currentArtifactId + ":" + version;
+                        logger.debug("Обнаружена ошибка Maven зависимости: {}", key);
+
+                        if (!uniqueErrors.contains(key)) {
+                            errorList.add(errorMap);
+                            uniqueErrors.add(key);
+                            logger.debug("Добавлена новая Maven ошибка: {}", key);
+                        } else {
+                            logger.debug("Пропущена дублирующая Maven ошибка: {}", key);
+                        }
+                    }
+                }
+                continue;
+            }
+
+            if (collectArtifacts) {
+                Matcher artifactMatcher = artifactPattern.matcher(line);
+                if (artifactMatcher.find()) {
+                    String currentGroupId = artifactMatcher.group(1);
+                    String currentArtifactId = artifactMatcher.group(2);
+                    String version = artifactMatcher.group(3);
+
+                    if (groupId != null && artifactId != null &&
+                            currentGroupId.equals(groupId) && currentArtifactId.equals(artifactId)) {
+                        logger.debug("Исключение основной цели проекта из списка ошибок: {}:{}:{}", currentGroupId, currentArtifactId, version);
+                        continue;
+                    }
+
+                    Map<String, Object> errorMap = new HashMap<>();
+                    errorMap.put("message", "Не удалось разрешить зависимость: " + currentGroupId + ":" + currentArtifactId + ":" + version);
+                    errorMap.put("file", "");
+                    errorMap.put("line", 0);
+                    errorMap.put("column", 0);
+
+                    String key = currentGroupId + ":" + currentArtifactId + ":" + version;
+                    logger.debug("Обнаружена ошибка Maven зависимости: {}", key);
+
+                    if (!uniqueErrors.contains(key)) {
+                        errorList.add(errorMap);
+                        uniqueErrors.add(key);
+                        logger.debug("Добавлена новая Maven ошибка: {}", key);
+                    } else {
+                        logger.debug("Пропущена дублирующая Maven ошибка: {}", key);
+                    }
+                } else {
+                    collectArtifacts = false;
+                }
+
+                continue;
+            }
+
+            Pattern errorPatternOld = Pattern.compile("^\\[ERROR\\]\\s+(.*\\.java):(\\d+):\\s+error:\\s+(.*)$");
+            Pattern errorPatternNew = Pattern.compile("^\\[ERROR\\]\\s+(.*\\.java):\\[(\\d+),(\\d+)\\]\\s+(.*)$");
+            Pattern mavenErrorPattern = Pattern.compile("^\\[ERROR\\]\\s+(.*)$");
+
+            Matcher matcherOld = errorPatternOld.matcher(line);
+            Matcher matcherNew = errorPatternNew.matcher(line);
+            Matcher mavenMatcher = mavenErrorPattern.matcher(line);
+
+            if (matcherOld.matches()) {
+                String filePath = matcherOld.group(1).trim();
+                int lineNumber = Integer.parseInt(matcherOld.group(2).trim());
+                String message = matcherOld.group(3).trim();
+
+                Path absolutePath = Paths.get(filePath);
+                if (!absolutePath.isAbsolute()) {
+                    absolutePath = projectDir.resolve(absolutePath).normalize();
+                }
+
+                String relativePath = projectDir.relativize(absolutePath).toString().replace(File.separatorChar, '/');
+
+                Map<String, Object> errorMap = new HashMap<>();
+                errorMap.put("message", message);
+                errorMap.put("file", relativePath);
+                errorMap.put("line", lineNumber);
+                errorMap.put("column", 0);
+
+                String key = relativePath + ":" + lineNumber + ":" + errorMap.get("column") + ":" + message;
+                logger.debug("Обнаружена ошибка (старый формат): {}", key);
+
+                if (!uniqueErrors.contains(key)) {
+                    errorList.add(errorMap);
+                    uniqueErrors.add(key);
+                    logger.debug("Добавлена новая ошибка: {}", key);
+                } else {
+                    logger.debug("Пропущена дублирующая ошибка: {}", key);
+                }
+            } else if (matcherNew.matches()) {
+                String filePath = matcherNew.group(1).trim();
+                int lineNumber = Integer.parseInt(matcherNew.group(2).trim());
+                int columnNumber = Integer.parseInt(matcherNew.group(3).trim());
+                String message = matcherNew.group(4).trim();
+
+                Path absolutePath = Paths.get(filePath);
+                if (!absolutePath.isAbsolute()) {
+                    absolutePath = projectDir.resolve(absolutePath).normalize();
+                }
+
+                String relativePath = projectDir.relativize(absolutePath).toString().replace(File.separatorChar, '/');
+
+                Map<String, Object> errorMap = new HashMap<>();
+                errorMap.put("message", message);
+                errorMap.put("file", relativePath);
+                errorMap.put("line", lineNumber);
+                errorMap.put("column", columnNumber);
+
+                String key = relativePath + ":" + lineNumber + ":" + columnNumber + ":" + message;
+                logger.debug("Обнаружена ошибка (новый формат): {}", key);
+
+                if (!uniqueErrors.contains(key)) {
+                    errorList.add(errorMap);
+                    uniqueErrors.add(key);
+                    logger.debug("Добавлена новая ошибка: {}", key);
+                } else {
+                    logger.debug("Пропущена дублирующая ошибка: {}", key);
+                }
+            } else if (mavenMatcher.matches()) {
+                String message = mavenMatcher.group(1).trim();
+
+                if (message.startsWith("To see the full stack trace") ||
+                        message.startsWith("Re-run Maven using the") ||
+                        message.startsWith("For more information about the errors") ||
+                        message.startsWith("[Help") ||
+                        message.startsWith("COMPILATION ERROR :") ||
+                        message.startsWith("BUILD FAILURE") ||
+                        message.startsWith("Failed to execute goal") ||
+                        message.startsWith("-> [Help") ||
+                        message.startsWith("Please remove or make sure it appears in the correct subdirectory of the sourcepath.") ||
+                        message.startsWith("bad source file:") ||
+                        message.startsWith("file does not contain class")) {
+                    continue;
                 }
 
                 Map<String, Object> errorMap = new HashMap<>();
                 errorMap.put("message", message);
-                errorMap.put("file", filePath);
-                errorMap.put("line", lineNumber);
+                errorMap.put("file", "");
+                errorMap.put("line", 0);
                 errorMap.put("column", 0);
 
-                if (i + 2 < lines.length) {
-                    String pointerLine = lines[i + 2];
-                    int columnNumber = pointerLine.indexOf('^') + 1;
-                    if (columnNumber > 0) {
-                        errorMap.put("column", columnNumber);
-                    }
-                }
+                String key = message;
+                logger.debug("Обнаружена общая ошибка Maven: {}", key);
 
-                errorList.add(errorMap);
+                if (!uniqueErrors.contains(key)) {
+                    errorList.add(errorMap);
+                    uniqueErrors.add(key);
+                    logger.debug("Добавлена новая общая ошибка Maven: {}", key);
+                } else {
+                    logger.debug("Пропущена дублирующая общая ошибка Maven: {}", key);
+                }
+            }
+
+
+            if (line.contains("Failed to execute goal")) {
+                logger.debug("Достигнут конец блока ошибок компиляции. Остановка парсинга.");
+                break;
             }
         }
+
+        logger.debug("Парсинг ошибок завершён. Всего ошибок: {}", errorList.size());
+        logger.debug("Список ошибок: {}", errorList);
 
         return errorList;
     }
 
+    private Map<String, String> extractMavenCoordinates(Path pomPath) {
+        Map<String, String> coordinates = new HashMap<>();
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setNamespaceAware(true);
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document doc = builder.parse(pomPath.toFile());
 
+            NodeList groupIdNodes = doc.getElementsByTagName("groupId");
+            NodeList artifactIdNodes = doc.getElementsByTagName("artifactId");
+
+            String groupId = null;
+            String artifactId = null;
+
+            if (groupIdNodes.getLength() > 0) {
+                groupId = groupIdNodes.item(0).getTextContent().trim();
+            }
+
+            if (artifactIdNodes.getLength() > 0) {
+                artifactId = artifactIdNodes.item(0).getTextContent().trim();
+            }
+
+            if (groupId != null && artifactId != null) {
+                coordinates.put("groupId", groupId);
+                coordinates.put("artifactId", artifactId);
+            } else {
+                logger.warn("Не удалось извлечь groupId и/или artifactId из '{}'", pomPath.toString());
+            }
+
+        } catch (Exception e) {
+            logger.error("Ошибка при парсинге pom.xml '{}': {}", pomPath.toString(), e.getMessage());
+        }
+        return coordinates;
+    }
 
     private ResponseEntity<?> buildSuccessResponse(String stdout, String stderr) {
         Map<String, Object> response = new HashMap<>();
@@ -384,37 +621,13 @@ public class WorkerController {
         return ResponseEntity.ok(response);
     }
 
-    private ResponseEntity<?> buildErrorResponse(String stdout, Object stderr, int returnCode) {
-        List<Map<String, Object>> errors = new ArrayList<>();
-        if (stderr instanceof List) {
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> stderrList = (List<Map<String, Object>>) stderr;
-            errors = stderrList;
-        } else if (stderr instanceof String) {
-            String stderrString = (String) stderr;
-            List<Map<String, Object>> parsedErrors = parseJavacErrors(stderrString, Paths.get("/tmp", "dummy"));
-            if (!parsedErrors.isEmpty()) {
-                errors = parsedErrors;
-            } else {
-                Map<String, Object> errorMap = new HashMap<>();
-                errorMap.put("message", stderrString.trim());
-                errorMap.put("file", "");
-                errorMap.put("line", 0);
-                errorMap.put("column", 0);
-                errors.add(errorMap);
-            }
-        }
-
+    private ResponseEntity<?> buildErrorResponse(String stdout, List<Map<String, Object>> errors, int returnCode) {
         Map<String, Object> response = new HashMap<>();
-        response.put("stdout", "");
+        response.put("stdout", stdout != null ? stdout : "");
         response.put("stderr", errors);
         response.put("returncode", returnCode);
-
         return ResponseEntity.ok(response);
     }
-
-
-
 
     @Data
     @AllArgsConstructor

@@ -7,6 +7,7 @@ services:
     ports:
       - "5001:5000"
     environment:
+      - JAVA_OPTS=-Djansi.tmpdir=/app/tmp
       - MINIO_ENDPOINT=http://minio:9000
       - MINIO_ACCESS_KEY=qwerdsaf
       - MINIO_SECRET_KEY=88888888556556556
@@ -18,7 +19,7 @@ services:
     restart: always
     read_only: true
     tmpfs:
-      - /tmp
+      - /tmp:exec,mode=1777
     deploy:
       resources:
         limits:
@@ -33,6 +34,7 @@ services:
     ports:
       - "5002:5000"
     environment:
+      - JAVA_OPTS=-Djansi.tmpdir=/app/tmp
       - MINIO_ENDPOINT=http://minio:9000
       - MINIO_ACCESS_KEY=qwerdsaf
       - MINIO_SECRET_KEY=88888888556556556
@@ -44,7 +46,7 @@ services:
     restart: always
     read_only: true
     tmpfs:
-      - /tmp
+      - /tmp:exec,mode=1777
     deploy:
       resources:
         limits:
@@ -193,7 +195,7 @@ services:
     container_name: postgres
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 2911
+      POSTGRES_PASSWORD: 3012
       POSTGRES_DB: Compiler_DB
     ports:
       - "5432:5432"
