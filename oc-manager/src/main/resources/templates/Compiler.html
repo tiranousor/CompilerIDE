@@ -275,9 +275,10 @@ body.light-mode {
 <body>
 <div id="container">
     <div class="icon-panel">
-        <button id="profile-button" title="Profile" data-url="/userProfile">
+        <button id="profile-button" title="Profile" data-user-id="${currentUser.id}">
             <i class="fas fa-user-circle"></i>
         </button>
+
         <button id="project-button" title="Project Tree">
             <i class="fas fa-project-diagram"></i>
         </button>
@@ -333,6 +334,15 @@ body.light-mode {
             const profileUrl = $(this).data('url');
             window.location.href = profileUrl;
         });
+        const userId = document.querySelector('meta[name="currentUserId"]').content;
+    $('#profile-button').on('click', function() {
+        if (userId) {
+            window.location.href = `/userProfile/${userId}`;
+        } else {
+            console.error("Идентификатор пользователя не найден.");
+            alert("Не удалось перейти на страницу профиля. Идентификатор пользователя отсутствует.");
+        }
+    });
     });
 
     $(function() {

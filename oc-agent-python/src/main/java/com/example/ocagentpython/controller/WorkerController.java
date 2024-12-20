@@ -21,6 +21,8 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestController
 public class WorkerController {
@@ -224,14 +226,12 @@ public class WorkerController {
 
         List<Map<String, Object>> stderrDetails = parsePythonError(error.toString(), mainScriptName, projectDir);
 
-
         return ResponseEntity.ok(Map.of(
                 "stdout", output.toString(),
                 "stderr", stderrDetails,
                 "returncode", exitCode
         ));
     }
-
     private List<Map<String, Object>> parsePythonError(String errorOutput, String scriptName, Path projectDir) {
         List<Map<String, Object>> errorList = new ArrayList<>();
         if (errorOutput == null || errorOutput.isEmpty()) {
@@ -246,55 +246,66 @@ public class WorkerController {
 
         String projectDirPath = projectDir.toString();
 
+        // Регулярное выражение для строк, начинающихся с File
+        Pattern filePattern = Pattern.compile("^File \"([^\"]+)\", line (\\d+)");
+
         for (int i = 0; i < lines.length; i++) {
             String line = lines[i].trim();
 
-            if (line.startsWith("File")) {
-                int fileStartIndex = line.indexOf("\"") + 1;
-                int fileEndIndex = line.indexOf("\", line ");
-                if (fileStartIndex != -1 && fileEndIndex != -1) {
-                    String filePath = line.substring(fileStartIndex, fileEndIndex);
+            Matcher matcher = filePattern.matcher(line);
+            if (matcher.find()) {
+                // Добавление предыдущей ошибки, если она существует
+                if (!message.isEmpty()) {
+                    Map<String, Object> errorMap = new HashMap<>();
+                    errorMap.put("message", message);
+                    errorMap.put("file", file);
+                    errorMap.put("line", lineNumber);
+                    errorMap.put("column", columnNumber);
+                    errorList.add(errorMap);
 
-                    if (filePath.startsWith(projectDirPath)) {
-                        filePath = filePath.substring(projectDirPath.length());
-                        if (filePath.startsWith(File.separator)) {
-                            filePath = filePath.substring(1);
-                        }
-                    }
+                    // Сброс переменных
+                    message = "";
+                    lineNumber = 0;
+                    columnNumber = 0;
+                }
 
-                    file = filePath;
+                String filePath = matcher.group(1);
+                lineNumber = Integer.parseInt(matcher.group(2));
 
-                    String lineNumberStr = line.substring(fileEndIndex + 8).trim();
-                    try {
-                        lineNumber = Integer.parseInt(lineNumberStr);
-                    } catch (NumberFormatException e) {
-                        lineNumber = 0;
+                if (filePath.startsWith(projectDirPath)) {
+                    filePath = filePath.substring(projectDirPath.length());
+                    if (filePath.startsWith(File.separator)) {
+                        filePath = filePath.substring(1);
                     }
                 }
+
+                file = filePath;
             } else if (line.contains("^")) {
-                columnNumber = line.indexOf('^') + 1; // Индекс '^' + 1 для соответствия позиции
+                int caretPosition = line.lastIndexOf('^');
+                if (caretPosition != -1) {
+                    if (caretPosition > 0) {
+                        columnNumber = caretPosition + 1;
+                    } else {
+                        columnNumber = 1;
+                    }
+                }
             } else if (!line.isEmpty() && (line.startsWith("SyntaxError") || line.startsWith("IndentationError") || line.contains("Error"))) {
                 message = line;
-            } else if (!line.isEmpty() && lineNumber > 0 && columnNumber == 0) {
-                // Если указатель '^' отсутствует, определяем колонку по длине строки
-                columnNumber = lines[i - 1].length(); // Берем строку перед ошибкой
             }
         }
 
+        // Добавление последней ошибки
         if (!message.isEmpty()) {
             Map<String, Object> errorMap = new HashMap<>();
             errorMap.put("message", message);
             errorMap.put("file", file);
             errorMap.put("line", lineNumber);
             errorMap.put("column", columnNumber);
-
             errorList.add(errorMap);
         }
 
         return errorList;
     }
-
-
 
 
 }
