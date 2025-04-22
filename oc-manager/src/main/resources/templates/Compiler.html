@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="projectId" th:content="${projectId}">
+
+    <meta name="currentUserId" th:content="${client.id}">
     <meta name="_csrf" th:content="${_csrf.token}" />
     <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     <meta name="fileStructure" th:content="${fileStructure}">
@@ -269,13 +271,17 @@ body.light-mode {
     color: #333;
     border-top: 1px solid #ccc;
 }
-
+body.light-mode { background-color: #f4f4f4; color: #24292e; }
+        #container.light-mode { background-color: #eaeaea; }
+        #sidebar.light-mode { background: #f6f8fa; border-right: 1px solid #ccc; }
+        #jstree.light-mode { border-right: 1px solid #ccc; }
+        #editor-container.light-mode { background-color: #ffffff; }
     </style>
 </head>
 <body>
 <div id="container">
     <div class="icon-panel">
-        <button id="profile-button" title="Profile" data-user-id="${currentUser.id}">
+        <button id="profile-button" title="Profile" data-user-id="${currentUserId}">
             <i class="fas fa-user-circle"></i>
         </button>
 
@@ -858,6 +864,7 @@ body.light-mode {
         const clearEditorIfDeleted = (node) => {
             if (currentFile && node.id === currentFile.id) {
                 editor.setValue('');
+                editor.updateOptions({ readOnly: true });
                 currentFile = null;
                 console.log(`Файл "${node.text}" удалён. Редактор очищен.`);
                 return;
@@ -1050,6 +1057,7 @@ body.light-mode {
                 if (editor) {
                     isUndoing = true;
                     const currentModel = editor.getModel();
+                    editor.updateOptions({ readOnly: false });
                     if (currentModel) {
                         monaco.editor.setModelLanguage(currentModel, language);
                         editor.setValue(content);
@@ -1058,6 +1066,14 @@ body.light-mode {
                     console.log(`Файл "${node.text}" загружен в редактор с языком "${language}".`);
                 }
                 currentFile = node;
+            }
+            else {
+                // Блокируем редактор при выборе папки
+                if (editor) {
+                    editor.updateOptions({ readOnly: true });
+                    editor.setValue("// Выберите файл для редактирования");
+                }
+                currentFile = null;
             }
         };
         const undo = () => {
@@ -1373,6 +1389,12 @@ body.light-mode {
             })
             .on('delete_node.jstree', function (e, data) {
                 clearEditorIfDeleted(data.node);
+                if (currentFile && data.node.id === currentFile.id) {
+                        editor.updateOptions({ readOnly: true });
+                        editor.setValue("// Создайте файл в дереве проекта, чтобы начать редактирование");
+                        currentFile = null;
+                    }
+
             })
             .on('move_node.jstree', function (e, data) {
                 if (!isUndoing) {
@@ -1413,9 +1435,10 @@ body.light-mode {
                     value: '',
                     language: 'plaintext',
                     theme: localStorage.getItem('theme') === 'light' ? 'vs' : 'vs-dark',
-                    automaticLayout: true
+                    automaticLayout: true,
+                    readOnly: true
                 });
-
+                editor.setValue("// Создайте файл в дереве проекта, чтобы начать редактирование");
                 document.getElementById('theme-button').addEventListener('click', () => {
                     const newTheme = body.classList.contains('light-mode') ? 'vs' : 'vs-dark';
                     monaco.editor.setTheme(newTheme);
@@ -1432,6 +1455,36 @@ body.light-mode {
                 });
             });
         };
+         const body = $('body');
+    const container = $('#container');
+    const sidebar = $('#sidebar');
+    const jstree  = $('#jstree');
+    const editorContainer = $('#editor-container');
+
+    function applyTheme(isLight) {
+        // body и панели
+        body.toggleClass('light-mode', isLight);
+        container.toggleClass('light-mode', isLight);
+        sidebar.toggleClass('light-mode', isLight);
+        jstree.toggleClass('light-mode', isLight);
+        editorContainer.toggleClass('light-mode', isLight);
+
+        // Monaco-тема
+        const theme = isLight ? 'vs' : 'vs-dark';
+        if (window.monaco) {
+            monaco.editor.setTheme(theme);
+        }
+    }
+
+    // начальное состояние из localStorage
+    const saved = localStorage.getItem('theme') === 'light';
+    applyTheme(saved);
+
+    $('#theme-button').on('click', function() {
+        const isNowLight = !body.hasClass('light-mode');
+        localStorage.setItem('theme', isNowLight ? 'light' : 'dark');
+        applyTheme(isNowLight);
+    });
         initializeSelectMainClassModal();
         initializeJsTree();
     });

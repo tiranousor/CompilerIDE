@@ -10,15 +10,19 @@ import com.example.CompilerIDE.util.FileUploadUtil;
 import com.example.CompilerIDE.util.ProjectValidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -32,6 +36,9 @@ import java.util.*;
 
 @Controller
 public class UserController {
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
     private final ProjectAccessLogService projectAccessLogService;
     private final ClientService clientService;
     private final ProjectService projectService;
@@ -110,6 +117,7 @@ public class UserController {
         model.addAttribute("projectName", project.getName());
         model.addAttribute("language", project.getLanguage());
         model.addAttribute("fileStructure", fileStructureJson);
+        model.addAttribute("client", currentUser);
 
         return "Compiler";
     }
@@ -154,9 +162,9 @@ public class UserController {
         System.out.println("Authenticated Username: " + authName);
 
         Optional<Client> clientOpt = clientService.findByUsername(authName);
-//        if (clientOpt.isEmpty()) {
-//            return "redirect:/login";
-//        }
+        if (clientOpt.isEmpty()) {
+            return "redirect:/login";
+        }
         Client client = clientOpt.get();
         List<ProjectInvitation> pendingInvitations = projectInvitationService.getPendingInvitationsForReceiver(client);
         int invitationCount = pendingInvitations.size();
@@ -185,7 +193,7 @@ public class UserController {
     }
 
     @PostMapping("/edit/{id}")
-    public String updateProfile(Authentication authentication, @PathVariable("id") int id,
+    public String updateProfile(HttpServletRequest request, Authentication authentication, @PathVariable("id") int id,
                                 @Valid @ModelAttribute("client") Client clientForm, BindingResult bindingResult,
                                 @RequestParam("avatarFile") MultipartFile avatarFile) {
 
@@ -227,18 +235,33 @@ public class UserController {
         existingClient.setGithubProfile(clientForm.getGithubProfile());
         existingClient.setAbout(clientForm.getAbout());
 
+
+
         clientService.update(id, existingClient);
 
-        ClientDetails updatedClientDetails = new ClientDetails(existingClient);
+        ClientDetails updatedDetails = new ClientDetails(existingClient);
 
-        Authentication newAuth = new UsernamePasswordAuthenticationToken(
-                updatedClientDetails,
-                authentication.getCredentials(),
-                updatedClientDetails.getAuthorities()
-        );
+        UsernamePasswordAuthenticationToken newAuth =
+                new UsernamePasswordAuthenticationToken(
+                        updatedDetails,
+                        authentication.getCredentials(),          // старые credentials, Spring их не проверяет
+                        updatedDetails.getAuthorities()
+                );
+//        Authentication newAuth = authenticationManager.authenticate(reauthToken);
+//        Authentication newAuth = new UsernamePasswordAuthenticationToken(
+//                updatedClientDetails,
+//                authentication.getCredentials(),
+//                updatedClientDetails.getAuthorities()
+//        );
 
         SecurityContextHolder.getContext().setAuthentication(newAuth);
-
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.setAttribute(
+                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                    SecurityContextHolder.getContext()
+            );
+        }
 
         return "redirect:/userProfile/" + existingClient.getId();
 
