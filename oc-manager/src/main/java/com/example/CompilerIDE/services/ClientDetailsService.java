@@ -22,14 +22,11 @@ public class ClientDetailsService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        logger.debug("Loading user by username: {}", username);
-        Optional<Client> client = clientRepository.findByUsername(username);
+    public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
+        Optional<Client> client = clientRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(identifier, identifier);
         if (client.isEmpty()) {
-            logger.error("User not found: {}", username);
-            throw new UsernameNotFoundException("User not found");
+            throw new UsernameNotFoundException("User not found with identifier: " + identifier);
         }
-        logger.debug("User found: {}", username);
         return new ClientDetails(client.get());
     }
 }

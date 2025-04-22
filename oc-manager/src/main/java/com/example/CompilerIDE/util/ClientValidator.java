@@ -24,10 +24,12 @@ public class ClientValidator implements Validator {
     @Override
     public void validate(Object target, Errors errors) {
         Client client = (Client) target;
-        if (clientService.findByUsername(client.getUsername()).isPresent()) {
+        String username = client.getUsername() != null ? client.getUsername().toLowerCase() : "";
+        String email = client.getEmail() != null ? client.getEmail().toLowerCase() : "";
+        if (clientService.findByUsername(username).isPresent()) {
             errors.rejectValue("username", "error.username", "Пользователь с таким именем уже существует");
         }
-        if (clientService.getClientByEmail(client.getEmail()).isPresent()) {
+        if (clientService.getClientByEmail(email).isPresent()) {
             errors.rejectValue("email", "error.email", "Пользователь с таким email уже существует");
         }
 

@@ -14,7 +14,4 @@ import java.util.Map;
 public interface CompileClient {
     @PostMapping(value = "/compile", consumes = "application/json")
     ResponseEntity<Map<String, Object>> compileCode(@RequestBody CompileRequest request);}
-//    @GetMapping("/api/workers/status")
-//    Map<String, Boolean> getWorkerStatus();}
-
 

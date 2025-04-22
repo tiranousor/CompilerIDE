@@ -55,8 +55,11 @@ public class ForgotPasswordController {
         String token = RandomStringUtils.randomAlphanumeric(10);
         try {
             clientService.updateResetPasswordToken(token, email);
+            Client client = clientService.getClientByEmail(email)
+                    .orElseThrow(() -> new ClientNotFoundException("Email не найден: " + email));
+
             String resetPasswordLink = getSiteURL(request) + "/reset_password?token=" + token;
-            sendEmail(email, resetPasswordLink);
+            sendEmail(email, resetPasswordLink, client.getUsername());
             model.addAttribute("message", "Вам отправлено письмо с ссылкой для восстановления пароля на электронную почту. Проверьте её прямо сейчас.");
         } catch (ClientNotFoundException ex) {
             model.addAttribute("error", ex.getMessage());
@@ -67,7 +70,7 @@ public class ForgotPasswordController {
         return "forgot_password_form";
     }
 
-    public void sendEmail(String recipientEmail, String link) throws MessagingException, UnsupportedEncodingException {
+    public void sendEmail(String recipientEmail, String link, String username) throws MessagingException, UnsupportedEncodingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
@@ -77,6 +80,7 @@ public class ForgotPasswordController {
 
         Context context = new Context();
         context.setVariable("link", link);
+        context.setVariable("username", username);
         String htmlContent = templateEngine.process("email/reset_password_email", context);
 
         helper.setText(htmlContent, true);

@@ -154,9 +154,9 @@ public class UserController {
         System.out.println("Authenticated Username: " + authName);
 
         Optional<Client> clientOpt = clientService.findByUsername(authName);
-        if (clientOpt.isEmpty()) {
-            return "redirect:/login";
-        }
+//        if (clientOpt.isEmpty()) {
+//            return "redirect:/login";
+//        }
         Client client = clientOpt.get();
         List<ProjectInvitation> pendingInvitations = projectInvitationService.getPendingInvitationsForReceiver(client);
         int invitationCount = pendingInvitations.size();
@@ -177,7 +177,7 @@ public class UserController {
     public String editProfile(Model model, @PathVariable("id") int id, Authentication authentication) {
         Optional<Client> clientOpt = clientService.findByUsername(authentication.getName());
         if (clientOpt.isEmpty()) {
-            return "redirect:/login";
+            return "redirect:/userProfile/{id}";
         }
         Client client = clientOpt.get();
         model.addAttribute("client", clientService.findOne(client.getId()));
@@ -188,6 +188,11 @@ public class UserController {
     public String updateProfile(Authentication authentication, @PathVariable("id") int id,
                                 @Valid @ModelAttribute("client") Client clientForm, BindingResult bindingResult,
                                 @RequestParam("avatarFile") MultipartFile avatarFile) {
+
+        if (!avatarFile.isEmpty() && avatarFile.getSize() > (2 * 1024 * 1024)) {
+            bindingResult.rejectValue("avatarUrl", "error.avatarUrl", "Размер файла превышает допустимый лимит (2MB). Пожалуйста, выберите файл меньшего размера.");
+            return "editProfile";
+        }
         if (bindingResult.hasErrors()) {
             return "editProfile";
         }
@@ -224,17 +229,16 @@ public class UserController {
 
         clientService.update(id, existingClient);
 
-        if (!authentication.getName().equals(existingClient.getUsername())) {
-            ClientDetails updatedClientDetails = new ClientDetails(existingClient);
+        ClientDetails updatedClientDetails = new ClientDetails(existingClient);
 
-            Authentication newAuth = new UsernamePasswordAuthenticationToken(
-                    updatedClientDetails,
-                    authentication.getCredentials(),
-                    updatedClientDetails.getAuthorities()
-            );
+        Authentication newAuth = new UsernamePasswordAuthenticationToken(
+                updatedClientDetails,
+                authentication.getCredentials(),
+                updatedClientDetails.getAuthorities()
+        );
 
-            SecurityContextHolder.getContext().setAuthentication(newAuth);
-        }
+        SecurityContextHolder.getContext().setAuthentication(newAuth);
+
 
         return "redirect:/userProfile/" + existingClient.getId();
 

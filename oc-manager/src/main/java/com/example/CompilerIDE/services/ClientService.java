@@ -27,6 +27,8 @@ public class ClientService {
 
     @Transactional
     public void save(Client client){
+        client.setUsername(client.getUsername().toLowerCase());
+        client.setEmail(client.getEmail().toLowerCase());
         client.setPassword(passwordEncoder.encode(client.getPassword()));
         clientRepository.save(client);
     }
@@ -81,6 +83,8 @@ public class ClientService {
     @Transactional
     public void update(long id, Client updateClient){
         updateClient.setId(id);
+        updateClient.setUsername(updateClient.getUsername().toLowerCase());
+        updateClient.setEmail(updateClient.getEmail().toLowerCase());
         clientRepository.save(updateClient);
     }
 

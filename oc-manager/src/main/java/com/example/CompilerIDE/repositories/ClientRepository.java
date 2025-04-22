@@ -18,6 +18,7 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     List<Client> findAllByOrderByLastLoginDesc();
     long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
     Optional <Client> findByEmail(String email);
+    Optional<Client> findByUsernameIgnoreCaseOrEmailIgnoreCase(String username, String email);
 
     public Client findByResetPasswordToken(String token);
     List<Client> findByUsernameContainingIgnoreCase(String username);

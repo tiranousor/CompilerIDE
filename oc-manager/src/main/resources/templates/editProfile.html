@@ -192,9 +192,14 @@
             <label for="avatarFile">
                 <i class='bx bx-upload file-upload-icon'></i>
             </label>
+
+
         </div>
 
         <form th:action="@{/edit/{id}(id=${client.id})}" th:method="POST" th:object="${client}" enctype="multipart/form-data">
+            <div th:if="${error}" class="form-error" style="margin-bottom: 10px;">
+                <p th:text="${error}"></p>
+            </div>
             <input type="file"  id="avatarFile" name="avatarFile" class="form-control" accept="image/*" onchange="previewImage(event)" />
             <div class="form-error" th:if="${#fields.hasErrors('avatarUrl')}" th:errors="*{avatarUrl}"></div>
 
