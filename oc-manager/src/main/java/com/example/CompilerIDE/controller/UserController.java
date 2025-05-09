@@ -110,6 +110,7 @@ public class UserController {
         model.addAttribute("projectName", project.getName());
         model.addAttribute("language", project.getLanguage());
         model.addAttribute("fileStructure", fileStructureJson);
+        model.addAttribute("analysis", project.isAnalysisEnabled());
 
         return "Compiler";
     }

@@ -29,6 +29,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.HandlerMapping;
 
 import java.io.IOException;
@@ -448,6 +449,25 @@ public class ProjectController  {
             logger.error("Ошибка при получении содержимого файла: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось получить содержимое файла.");
         }
+    }
+
+    @PatchMapping("/{projectId}/analysis")
+    public ResponseEntity<?> toggleAnalysis(@PathVariable Integer projectId,
+                                            @RequestBody Boolean enabled,
+                                            Authentication auth) {
+
+        Project p = projectService.findById(projectId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        if (!projectService.canEditProject(p,
+                clientService.findByUsername(auth.getName()).orElse(null))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+
+        p.setAnalysisEnabled(Boolean.TRUE.equals(enabled));
+        projectService.save(p);
+
+        return ResponseEntity.ok(Map.of("enabled", p.isAnalysisEnabled()));
     }
 
 }

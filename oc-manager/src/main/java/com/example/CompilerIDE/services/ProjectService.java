@@ -351,6 +351,9 @@ public class ProjectService {
     }
 
     public boolean canEditProject(Project project, Client client) {
+        if (client == null) {
+            return false;
+        }
         Optional<ProjectTeam> team = projectTeamService.findByProjectAndClient(project, client);
         return team.isPresent() && (team.get().getRole() == ProjectTeam.Role.CREATOR || team.get().getRole() == ProjectTeam.Role.COLLABORATOR);
     }

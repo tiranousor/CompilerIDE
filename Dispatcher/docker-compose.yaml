@@ -1,4 +1,43 @@
 services:
+
+  # ==== статический анализ ====
+  analyze-worker-1:
+    build:
+      context: ../oc-agent-analyze-java
+      dockerfile: Dockerfile
+    image: oc-agent-analyze-java:latest
+    ports:
+      - "8078:8080"
+    networks:
+      - app-network
+
+  analyze-worker-2:
+    build:
+      context: ../oc-agent-analyze-java
+      dockerfile: Dockerfile
+    image: oc-agent-analyze-java:latest
+    ports:
+      - "8077:8080"
+    networks:
+      - app-network
+
+  dispatcher-analyze:
+    build:
+      context: ../dispatcher-analyze
+      dockerfile: Dockerfile
+    image: dispatcher-analyze:latest
+    # На хост пробрасываем 8079 → 8080 внутри контейнера
+    ports:
+      - "8079:8080"
+    environment:
+      - ANALYZE_WORKER_URLS=http://analyze-worker-1:8080,http://analyze-worker-2:8080
+    depends_on:
+      - analyze-worker-1
+      - analyze-worker-2
+    networks:
+      - app-network
+
+  # ==== компилятор Java ====
   worker1:
     build:
       context: ../oc-agent-javac
@@ -12,14 +51,11 @@ services:
       - MINIO_ACCESS_KEY=qwerdsaf
       - MINIO_SECRET_KEY=88888888556556556
       - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
+    depends_on: [minio]
+    networks: [app-network]
     restart: always
     read_only: true
-    tmpfs:
-      - /tmp:exec,mode=1777
+    tmpfs: ['/tmp:exec,mode=1777']
     deploy:
       resources:
         limits:
@@ -39,20 +75,18 @@ services:
       - MINIO_ACCESS_KEY=qwerdsaf
       - MINIO_SECRET_KEY=88888888556556556
       - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
+    depends_on: [minio]
+    networks: [app-network]
     restart: always
     read_only: true
-    tmpfs:
-      - /tmp:exec,mode=1777
+    tmpfs: ['/tmp:exec,mode=1777']
     deploy:
       resources:
         limits:
           cpus: '0.5'
           memory: 512M
 
+  # ==== Python-воркеры ====
   python-worker1:
     build:
       context: ../oc-agent-python
@@ -65,14 +99,11 @@ services:
       - MINIO_ACCESS_KEY=qwerdsaf
       - MINIO_SECRET_KEY=88888888556556556
       - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
+    depends_on: [minio]
+    networks: [app-network]
     restart: always
     read_only: true
-    tmpfs:
-      - /tmp
+    tmpfs: ['/tmp']
     deploy:
       resources:
         limits:
@@ -91,27 +122,27 @@ services:
       - MINIO_ACCESS_KEY=qwerdsaf
       - MINIO_SECRET_KEY=88888888556556556
       - MINIO_BUCKET_NAME=my-bucket
-    depends_on:
-      - minio
-    networks:
-      - app-network
+    depends_on: [minio]
+    networks: [app-network]
     restart: always
     read_only: true
-    tmpfs:
-      - /tmp
+    tmpfs: ['/tmp']
     deploy:
       resources:
         limits:
           cpus: '0.5'
           memory: 512M
 
+  # ==== главный диспетчер заявок ====
   dispatcher:
     build:
-      context: /
+      context: .
+      dockerfile: Dockerfile
     image: dispatcher:latest
     container_name: dispatcher
+    # Пробросили 8083 (хост) → 8081 (контейнер)
     ports:
-      - "8081:8081"
+      - "8083:8081"
     environment:
       - MINIO_ENDPOINT=http://minio:9000
       - MINIO_ACCESS_KEY=qwerdsaf
@@ -119,14 +150,8 @@ services:
       - MINIO_BUCKET_NAME=my-bucket
       - WORKER_URLS=http://worker1:5000,http://worker2:5000
       - PYTHON_WORKER_URLS=http://python-worker1:6000,http://python-worker2:6000
-    depends_on:
-      - minio
-      - worker1
-      - worker2
-      - python-worker1
-      - python-worker2
-    networks:
-      - app-network
+    depends_on: [minio, worker1, worker2, python-worker1, python-worker2]
+    networks: [app-network]
     restart: always
     deploy:
       resources:
@@ -134,13 +159,12 @@ services:
           cpus: '0.5'
           memory: 512M
 
+  # ==== вспомогательные сервисы ====
   redis:
-    image: "redis:6.2"
+    image: redis:6.2
     container_name: redis
-    ports:
-      - "6379:6379"
-    networks:
-      - app-network
+    ports: ["6379:6379"]
+    networks: [app-network]
     restart: always
 
   minio:
@@ -155,31 +179,27 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - minio-data:/data
-    networks:
-      - app-network
+    networks: [app-network]
     restart: always
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
     ports:
-      - "8082:8080"
+      - "8082:8080"   # только cadvisor использует 8082
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
-    networks:
-      - app-network
+    networks: [app-network]
     restart: always
 
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
-    ports:
-      - "9090:9090"
-    networks:
-      - app-network
+    ports: ["9090:9090"]
+    networks: [app-network]
     restart: always
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
@@ -197,29 +217,24 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 3012
       POSTGRES_DB: Compiler_DB
-    ports:
-      - "5432:5432"
+    ports: ["5432:5432"]
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    networks:
-      - app-network
+    networks: [app-network]
     restart: always
 
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
-    ports:
-      - "3000:3000"
+    ports: ["3000:3000"]
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
       - ./grafana/provisioning/dashboards:/var/lib/grafana/dashboards
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-    networks:
-        - app-network
+    networks: [app-network]
+    depends_on: [prometheus]
     restart: always
-    depends_on:
-      - prometheus
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
@@ -231,8 +246,8 @@ networks:
     driver: bridge
 
 volumes:
-  postgres-data:
   minio-data:
-  grafana-data:
   prometheus-data:
+  postgres-data:
+  grafana-data:
   cadvisor-data:

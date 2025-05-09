@@ -7,268 +7,275 @@
     <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     <meta name="fileStructure" th:content="${fileStructure}">
     <meta name="projectLanguage" th:content="${language}">
+    <meta name="analysisEnabled" th:content="${analysis}">
     <link rel="icon" href="/favicon.png" type="image/png">
     <title th:text="'Проект: ' + ${projectName}">Project Title</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
 
 
-  * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-<!--            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;-->
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-        }
+        * {
+                  margin: 0;
+                  padding: 0;
+                  box-sizing: border-box;
+      <!--            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;-->
+                  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+              }
 
-        body, html {
-            height: 100%;
-            margin: 0;
-            overflow: hidden;
-            background-color: #f6f8fa;
-            color: #24292e;
-        }
+              body, html {
+                  height: 100%;
+                  margin: 0;
+                  overflow: hidden;
+                  background-color: #f6f8fa;
+                  color: #24292e;
+              }
 
-        .compile-error {
-            color: red;
-            cursor: pointer;
-        }
+              .compile-error {
+                  color: red;
+                  cursor: pointer;
+              }
 
-        .compile-error:hover {
-            text-decoration: underline;
-        }
+              .compile-error:hover {
+                  text-decoration: underline;
+              }
 
-        #container {
-            display: flex;
-            height: 100%;
-            background-color: #282c34;
-        }
+              #container {
+                  display: flex;
+                  height: 100%;
+                  background-color: #282c34;
+              }
 
-        #sidebar {
-            width: 300px;
-             background: #ffffff;
-             color: #24292e;
-            overflow: hidden;
-            transition: width 0.3s ease;
-            border-right: 1px solid #d1d5da;
+              #sidebar {
+                  width: 300px;
+                   background: #ffffff;
+                   color: #24292e;
+                  overflow: hidden;
+                  transition: width 0.3s ease;
+                  border-right: 1px solid #d1d5da;
 
-        }
+              }
 
-        #jstree {
-            overflow: auto;
-<!--            height: calc(100% - 60px);-->
-            padding: 20px;
-            border-right: 1px solid #333;
-        }
+              #jstree {
+                  overflow: auto;
+      <!--            height: calc(100% - 60px);-->
+                  padding: 20px;
+                  border-right: 1px solid #333;
+              }
 
-        #editor-container {
-            position: relative;
-            height: 100%;
-            flex-grow: 1;
-             width: calc(100% - 300px);
-            transition: width 0.3s ease;
-        }
+              #editor-container {
+                  position: relative;
+                  height: 100%;
+                  flex-grow: 1;
+                   width: calc(100% - 300px);
+                  transition: width 0.3s ease;
+              }
 
-        #editor {
-            width: 100%;
-            height: 100%;
-        }
+              #editor {
+                  width: 100%;
+                  height: 100%;
+              }
 
-        .icon-panel {
-            width: 60px;
-            background-color: #f6f8fa;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid #d1d5da;
-            align-items: center;
-            padding-top: 15px;
-        }
-        button:disabled {
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        .icon-panel button {
-            background: none;
-            border: none;
-            color: #24292e;
-            margin: 10px 0;
-            cursor: pointer;
-            font-size: 24px;
-            transition: transform 0.2s, color 0.3s;
-        }
+              .icon-panel {
+                  width: 60px;
+                  background-color: #f6f8fa;
+                  display: flex;
+                  flex-direction: column;
+                  border-right: 1px solid #d1d5da;
+                  align-items: center;
+                  padding-top: 15px;
+              }
+              button:disabled {
+                  cursor: not-allowed;
+                  opacity: 0.6;
+              }
+              .icon-panel button {
+                  background: none;
+                  border: none;
+                  color: #24292e;
+                  margin: 10px 0;
+                  cursor: pointer;
+                  font-size: 24px;
+                  transition: transform 0.2s, color 0.3s;
+              }
 
-        .icon-panel button:hover {
-            transform: scale(1.1);
-            color: #28a745;
+              .icon-panel button:hover {
+                  transform: scale(1.1);
+                  color: #28a745;
 
-        }
+              }
 
-        .btn-primary-custom {
-            color: #fff;
-            background-color: #007bff;
-            border-color: #007bff;
-            transition: background-color 0.3s, transform 0.2s;
-        }
+              .btn-primary-custom {
+                  color: #fff;
+                  background-color: #007bff;
+                  border-color: #007bff;
+                  transition: background-color 0.3s, transform 0.2s;
+              }
 
-        .btn-primary-custom:hover {
-            background-color: #0056b3;
-            transform: scale(1.05);
-        }
+              .btn-primary-custom:hover {
+                  background-color: #0056b3;
+                  transform: scale(1.05);
+              }
 
-        #compile-output {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #f6f8fa;
-            padding: 15px;
-            color: #333;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.9em;
-            max-height: 200px;
-            overflow-y: auto;
-            border-top: 1px solid #d1d5da;
-        }
+              #compile-output {
+                  position: absolute;
+                  bottom: 0;
+                  left: 0;
+                  right: 0;
+                  background: #f6f8fa;
+                  padding: 15px;
+                  color: #333;
+                  font-family: 'Courier New', Courier, monospace;
+                  font-size: 0.9em;
+                  max-height: 200px;
+                  overflow-y: auto;
+                  border-top: 1px solid #d1d5da;
+              }
 
-        #compile-output h3 {
-            font-size: 1.1em;
-            margin-bottom: 10px;
-        }
+              #compile-output h3 {
+                  font-size: 1.1em;
+                  margin-bottom: 10px;
+              }
 
-        .code-explorer-heading {
-            text-align: center;
-            background: #333;
-            padding: 10px;
-            font-weight: bold;
-            font-size: 1.1em;
-            border-bottom: 1px solid #444;
-        }
-        #main-class-container {
-            position: absolute;
-            top: 10px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 5px;
-            border-radius: 5px;
-            color: #24292e;
-            border: 1px solid #d1d5da;
-            display: flex;
-            align-items: center;
-            z-index: 1000;
-            background-color: #f6f8fa;
+              .code-explorer-heading {
+                  text-align: center;
+                  background: #333;
+                  padding: 10px;
+                  font-weight: bold;
+                  font-size: 1.1em;
+                  border-bottom: 1px solid #444;
+              }
+              #main-class-container {
+                  position: absolute;
+                  top: 10px;
+                  right: 20px;
+                  background: rgba(0, 0, 0, 0.8);
+                  padding: 5px;
+                  border-radius: 5px;
+                  color: #24292e;
+                  border: 1px solid #d1d5da;
+                  display: flex;
+                  align-items: center;
+                  z-index: 1000;
+                  background-color: #f6f8fa;
 
-        }
+              }
 
-        #main-class-container label {
-            margin-right: 5px;
-        }
+              #main-class-container label {
+                  margin-right: 5px;
+              }
 
-        #main-class-input {
-            border: 1px solid #555;
-            color: #24292e;
-            padding: 2px 5px;
-            border-radius: 3px;
-        }
-        #selectMainClassModal {
-            display: none; /* Скрыто по умолчанию */
-            position: fixed; /* Оставаться на месте */
-            z-index: 1001; /* На вершине */
-            left: 0;
-            top: 0;
-            width: 100%; /* Полная ширина */
-            height: 100%; /* Полная высота */
-            overflow: auto; /* Включить прокрутку, если необходимо */
-            background-color: rgba(0,0,0,0.5); /* Черный с прозрачностью */
-        }
+              #main-class-input {
+                  border: 1px solid #555;
+                  color: #24292e;
+                  padding: 2px 5px;
+                  border-radius: 3px;
+              }
+              #selectMainClassModal {
+                  display: none; /* Скрыто по умолчанию */
+                  position: fixed; /* Оставаться на месте */
+                  z-index: 1001; /* На вершине */
+                  left: 0;
+                  top: 0;
+                  width: 100%; /* Полная ширина */
+                  height: 100%; /* Полная высота */
+                  overflow: auto; /* Включить прокрутку, если необходимо */
+                  background-color: rgba(0,0,0,0.5); /* Черный с прозрачностью */
+              }
 
-        #selectMainClassModalContent {
-            background-color: #fefefe;
-            margin: 10% auto; /* 10% от верхней границы и по центру */
-            padding: 20px;
-            border: 1px solid #888;
-            width: 50%; /* Ширина модального окна */
-            border-radius: 5px;
-        }
+              #selectMainClassModalContent {
+                  background-color: #fefefe;
+                  margin: 10% auto; /* 10% от верхней границы и по центру */
+                  padding: 20px;
+                  border: 1px solid #888;
+                  width: 50%; /* Ширина модального окна */
+                  border-radius: 5px;
+              }
 
-        #selectMainClassModalContent h2 {
-            margin-top: 0;
-        }
+              #selectMainClassModalContent h2 {
+                  margin-top: 0;
+              }
 
-        #classesList {
-            list-style: none;
-            padding: 0;
-            max-height: 300px;
-            overflow-y: auto;
-        }
+              #classesList {
+                  list-style: none;
+                  padding: 0;
+                  max-height: 300px;
+                  overflow-y: auto;
+              }
 
-        #classesList li {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-            cursor: pointer;
-        }
+              #classesList li {
+                  padding: 10px;
+                  border-bottom: 1px solid #ddd;
+                  cursor: pointer;
+              }
 
-        #classesList li:hover {
-            background-color: #f1f1f1;
-        }
+              #classesList li:hover {
+                  background-color: #f1f1f1;
+              }
 
-        #closeModal {
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+              #closeModal {
+                  float: right;
+                  font-size: 28px;
+                  font-weight: bold;
+                  cursor: pointer;
+              }
 
-        /* Добавим стили для новой кнопки */
-        .icon-panel button#select-main-class-button {
-            /* Если необходимо, добавьте индивидуальные стили */
-        }
+              #analyze-toggle { font-size:26px; transition:color .2s }
+              #analyze-toggle.off  { color:#d73a49 }   /* красный — выкл. */
+              #analyze-toggle.on   { color:#28a745 }   /* зелёный — вкл. */
 
-        .btn-group {
-            display: flex;
-            justify-content: center;
-            padding: 10px;
-            background: #282c34;
-            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
-        }
-/* Светлая тема */
-body.light-mode {
-    background-color: #ffffff;
-    color: #000000;
-}
+              /* Добавим стили для новой кнопки */
+              .icon-panel button#select-main-class-button {
+                  /* Если необходимо, добавьте индивидуальные стили */
+              }
 
-#container.light-mode {
-    background-color: #f4f4f4;
-}
+              .btn-group {
+                  display: flex;
+                  justify-content: center;
+                  padding: 10px;
+                  background: #282c34;
+                  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+              }
+      /* Светлая тема */
+      body.light-mode {
+          background-color: #ffffff;
+          color: #000000;
+      }
 
-#sidebar.light-mode {
-    background: #eaeaea;
-    color: #000000;
-    border-right: 1px solid #ccc;
-}
+      #container.light-mode {
+          background-color: #f4f4f4;
+      }
 
-#jstree.light-mode {
-    border-right: 1px solid #ccc;
-}
+      #sidebar.light-mode {
+          background: #eaeaea;
+          color: #000000;
+          border-right: 1px solid #ccc;
+      }
 
-#editor.light-mode {
-    background-color: #ffffff;
-    color: #000000;
-}
+      #jstree.light-mode {
+          border-right: 1px solid #ccc;
+      }
 
-.icon-panel.light-mode button {
-    color: #000;
-}
+      #editor.light-mode {
+          background-color: #ffffff;
+          color: #000000;
+      }
 
-.icon-panel.light-mode button:hover {
-    color: #0366d6;
-}
+      .icon-panel.light-mode button {
+          color: #000;
+      }
 
-#compile-output.light-mode {
-    background: #f6f6f6;
-    color: #333;
-    border-top: 1px solid #ccc;
-}
+      .icon-panel.light-mode button:hover {
+          color: #0366d6;
+      }
+
+      #compile-output.light-mode {
+          background: #f6f6f6;
+          color: #333;
+          border-top: 1px solid #ccc;
+      }
 
     </style>
 </head>
@@ -287,6 +294,9 @@ body.light-mode {
         </button>
         <button id="compile-button" title="Compile Code">
             <i class="fas fa-play"></i>
+        </button>
+        <button id="analyze-toggle" class="toggle-on" title="Static analysis">
+            <i class="fas fa-toggle-on"></i>
         </button>
         <button id="select-main-class-button" title="Выберите исполняемый файл">
             <i class="fas fa-file-code"></i>
@@ -329,6 +339,7 @@ body.light-mode {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
 <script>
+
     $(document).ready(function() {
         $('#profile-button').on('click', function() {
             const profileUrl = $(this).data('url');
@@ -344,7 +355,20 @@ body.light-mode {
         }
     });
     });
+    let analysisEnabled = document.querySelector('meta[name="analysisEnabled"]').content === 'true';
+    const toggleBtn = $('#analyze-toggle');
 
+    function setToggleUi() {
+       toggleBtn.toggleClass('on', analysisEnabled)
+                .toggleClass('off', !analysisEnabled)
+                .find('i')
+                .toggleClass('fa-toggle-on', analysisEnabled)
+                .toggleClass('fa-toggle-off', !analysisEnabled);
+    }
+    setToggleUi();
+
+    const ANALYZE_PORT = 8079;
+    const ANALYZE_BASE = `${location.protocol}//${location.hostname}:${ANALYZE_PORT}`;
     $(function() {
         let editor;
         let currentFile = null;
@@ -418,6 +442,95 @@ body.light-mode {
         }
         return mainClassName;
     };
+
+    toggleBtn.on('click', () => {
+       fetch(`/projects/${projectId}/analysis`,{
+          method:'PATCH',
+          headers:{'Content-Type':'application/json',[csrfHeader]:csrfToken},
+          body: JSON.stringify(!analysisEnabled)
+       })
+       .then(r=>r.json())
+       .then(({enabled})=>{
+            analysisEnabled = enabled;
+            setToggleUi();
+            if(!enabled){
+               monaco.editor.setModelMarkers(editor.getModel(),'analyze',[]);
+            }else if(currentFile?.text.endsWith('.java')){
+               sendAnalyze();      // сразу пересчитаем
+            }
+       }).catch(console.error);
+    });
+
+    /* ws.js */
+    let stomp;
+    function wsConnect(onOpen) {
+      if (stomp && stomp.connected) { onOpen(); return; }
+
+    const sock  = new SockJS(`${ANALYZE_BASE}/ws`);
+      stomp = Stomp.over(sock);
+      stomp.debug = () => {};               // выключить лог
+
+      stomp.connect({}, onOpen, err => console.error('WS error', err));
+    }
+
+        // ===== ANALYZE =====
+    const DEBOUNCE = 800;                 // мс
+    let analyzeTimer = null;
+
+    function scheduleAnalyze() {
+      clearTimeout(analyzeTimer);
+      analyzeTimer = setTimeout(sendAnalyze, DEBOUNCE);
+    }
+
+    function sendAnalyze() {
+      if (!analysisEnabled) return;
+      const payload = {
+          sources: collectJavaSources(),
+          current: currentFile ? getFullPath(currentFile) : ""
+      };
+
+      fetch(`${ANALYZE_BASE}/analyze`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+      })
+        .then(r => r.json())
+        .then(({taskId}) => {
+            const dest = `/topic/analyze/${taskId}`;
+            // ждём, пока STOMP-клиент подключится, и только потом подписываемся
+            wsConnect(() => {
+                stomp.subscribe(dest, msg => {
+                    const diags = JSON.parse(msg.body);
+                    showMarkers(diags);
+                });
+            });
+        })
+        .catch(console.error);
+    }
+
+    function subscribeResult(taskId) {
+      wsConnect(()=> {
+        stomp.subscribe(`/topic/analyze/${taskId}`, msg => {
+          const diagnostics = JSON.parse(msg.body);
+          showMarkers(diagnostics);
+        });
+      });
+    }
+
+    function showMarkers(diags){
+        const markers = diags.map(d => ({
+          message:  d.message,
+          severity: d.severity === 1
+                      ? monaco.MarkerSeverity.Warning
+                      : monaco.MarkerSeverity.Error,
+          startLineNumber: d.line || 1,
+          startColumn:     d.column || 1,
+          endLineNumber:   d.line || 1,
+          endColumn:       d.endColumn || (d.column || 1) + 1
+        }));
+        monaco.editor.setModelMarkers(editor.getModel(),'analyze',markers);
+    }
+
 
     const getJavaClassNameFromPath = (path) => {
         if (path.startsWith('src/main/java/')) {
@@ -497,6 +610,19 @@ body.light-mode {
         mainClassName = mainClassName.replace(/\//g, '.');
 
         return mainClassName;
+    }
+
+    function collectJavaSources() {
+      const map = {};
+      const tree = $('#jstree').jstree(true);
+
+      (function walk(node){
+          if (node.type==='file' && node.text.endsWith('.java'))
+              map[getFullPath(node)] = node.data.content || "";
+          node.children.forEach(id => walk(tree.get_node(id)));
+      })(tree.get_node("root"));
+
+      return map;
     }
 
     function setMainClass(mainClassName) {
@@ -1395,6 +1521,9 @@ body.light-mode {
                 saveCurrentFile();
                 if (data.node.type === 'file') {
                     loadFile(data.node);
+                    if (analysisEnabled && data.node.text.endsWith('.java')) {           // 👈
+                        sendAnalyze();                                // анализ сразу
+                    }
                 }
             });
             $(document).on('keydown', function(e) {
@@ -1427,6 +1556,9 @@ body.light-mode {
                     }
                     if (currentFile) {
                         currentFile.data.content = editor.getValue();
+                        if (analysisEnabled && currentFile?.text.endsWith('.java')) {
+                            scheduleAnalyze();
+                        }
                         console.log(`Содержимое файла "${currentFile.text}" обновлено.`);
                     }
                 });

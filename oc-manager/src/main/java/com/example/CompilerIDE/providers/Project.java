@@ -58,6 +58,9 @@ public class Project {
     @Column(name = "main_class")
     private String mainClass;
 
+    @Column(name="analysis_enabled", nullable=false)
+    private boolean analysisEnabled = true;
+
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @ToString.Exclude
     private List<ProjectStruct> projectsStruct;
@@ -66,11 +69,15 @@ public class Project {
     @JsonIgnore
     @ToString.Exclude
     private List<ProjectTeam> projectTeams;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
     private String dashboardUid;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
+
 }
