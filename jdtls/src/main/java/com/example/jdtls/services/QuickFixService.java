@@ -19,10 +19,6 @@ public class QuickFixService {
         this.server = server;
     }
 
-    /**
-     * @param uri   – URI дока, например "file:///tmp/jdtls-workspace/src/Main.java"
-     * @param text  – полный текст
-     */
     public CompletableFuture<List<org.eclipse.lsp4j.CodeAction>> getQuickFixes(String uri, String text) {
         // 1) открываем или обновляем документ
         DidOpenTextDocumentParams open = new DidOpenTextDocumentParams();
@@ -30,23 +26,31 @@ public class QuickFixService {
         open.setTextDocument(item);
         server.getTextDocumentService().didOpen(open);
 
-        // 2) готовим параметры для запроса codeAction
+        // 2) готовим параметры
         CodeActionParams params = new CodeActionParams();
         params.setTextDocument(new TextDocumentIdentifier(uri));
-        // в данном простом примере проверяем весь документ
-        params.setRange(new Range(new Position(0,0), new Position( Integer.MAX_VALUE, 0 )));
-        params.setContext(new CodeActionContext(Collections.emptyList()));
+        params.setRange(new Range(new Position(0, 0), new Position(Integer.MAX_VALUE, 0)));
 
-        // 3) шлём запрос
-        CompletableFuture<List<Either<Command, CodeAction>>> future =
-                server.getTextDocumentService().codeAction(params);
+        // передаём хотя бы пустой список diagnostics и разрешённые виды ("quickfix"):
+        CodeActionContext ctx = new CodeActionContext(
+                Collections.emptyList(),
+                Collections.singletonList(CodeActionKind.QuickFix)
+        );
+        params.setContext(ctx);
 
-        // 4) конвертируем ответ в чистые LSP CodeAction’ы
-        return future.thenApply(list ->
-                list.stream()
+        // 3) шлём запрос и ОБРАБАТЫВАЕМ ошибки!
+        return server.getTextDocumentService().codeAction(params)
+                // если LSP упал — просто вернём пустой список
+                .exceptionally(ex -> {
+                    System.err.println("LSP codeAction failed: " + ex.getMessage());
+                    return Collections.emptyList();
+                })
+                // вытаскиваем из Either только правую часть
+                .thenApply(list -> list.stream()
                         .filter(Either::isRight)
                         .map(Either::getRight)
                         .collect(Collectors.toList())
-        );
+                );
     }
 }
+

@@ -1,5 +1,6 @@
 package com.example.jdtls.config;
 
+import com.example.jdtls.diagnostics.DiagnosticCollector;
 import jakarta.annotation.PreDestroy;
 import org.eclipse.lsp4j.*;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
@@ -16,15 +17,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Paths;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class LspConfiguration {
 
-    /** В application.properties:
-     *   jdtls.home=C:/jdt-language-server-latest
-     */
     @Value("${jdtls.home}")
     private String jdtlsHome;
 
@@ -33,30 +32,12 @@ public class LspConfiguration {
     @Bean
     public Process jdtLsProcess() throws IOException {
         File root = Paths.get(jdtlsHome).toFile();
-        if (!root.isDirectory()) {
-            throw new IOException("jdtls.home не папка: " + jdtlsHome);
-        }
-
-        // **1) Берём ваш конкретный launcher-jar по прямому пути**:
         File launcherJar = new File(root,
-                "plugins/org.eclipse.equinox.launcher_1.7.0.v20250424-1814.jar"
-        );
-        if (!launcherJar.exists()) {
-            throw new IOException("Не найден JAR: " + launcherJar);
-        }
+                "plugins/org.eclipse.equinox.launcher_1.7.0.v20250424-1814.jar");
+        File configDir = new File(root,
+                System.getProperty("os.name").toLowerCase().contains("win")
+                        ? "config_win" : "config_linux");
 
-        // **2) Конфиг под Windows или Linux**:
-        String os = System.getProperty("os.name").toLowerCase();
-        String cfgName = os.contains("win") ? "config_win" : "config_linux";
-        File configDir = new File(root, cfgName);
-        if (!configDir.isDirectory()) {
-            throw new IOException("Не найдена папка конфигурации: " + configDir);
-        }
-
-        // **3) Где jdt.ls будет держать workspace-данные**:
-        String dataDir = System.getProperty("java.io.tmpdir") + "/jdtls-workspace";
-
-        // **4) Собираем и запускаем процесс**:
         ProcessBuilder pb = new ProcessBuilder(
                 "java",
                 "-Declipse.application=org.eclipse.jdt.ls.core.id1",
@@ -66,49 +47,45 @@ public class LspConfiguration {
                 "--add-opens", "java.base/java.util=ALL-UNNAMED",
                 "-jar", launcherJar.getAbsolutePath(),
                 "-configuration", configDir.getAbsolutePath(),
-                "-data",       dataDir
+                "-data", System.getProperty("java.io.tmpdir") + "/jdtls-workspace"
         );
-        pb.directory(root);
-        pb.redirectError(Redirect.INHERIT);
-        pb.redirectOutput(Redirect.INHERIT);
+        pb.directory(root)
+                .redirectError(Redirect.INHERIT)
+                .redirectOutput(Redirect.INHERIT);
 
         this.jdtlsProcess = pb.start();
         return this.jdtlsProcess;
     }
 
     @Bean
-    public LanguageClient languageClient() {
-        return new LanguageClient() {
-            @Override public void telemetryEvent(Object o) {}
-            @Override public void publishDiagnostics(PublishDiagnosticsParams params) {
-                System.out.println("DIAGS: " + params);
-            }
-            @Override public void showMessage(MessageParams messageParams) {}
-            @Override public java.util.concurrent.CompletableFuture<MessageActionItem>
-            showMessageRequest(ShowMessageRequestParams params) {
-                return null;
-            }
-            @Override public void logMessage(MessageParams message) {}
-        };
+    public LanguageClient languageClient(DiagnosticCollector collector) {
+        return collector;
     }
 
     @Bean
     public LanguageServer languageServer(Process jdtLsProcess,
                                          LanguageClient client) throws IOException {
-        InputStream  in  = jdtLsProcess.getInputStream();
+        InputStream in  = jdtLsProcess.getInputStream();
         OutputStream out = jdtLsProcess.getOutputStream();
 
         Launcher<LanguageServer> launcher =
                 LSPLauncher.createClientLauncher(client, in, out);
-        Future<?> startFuture = launcher.startListening();
+        launcher.startListening();
 
         LanguageServer server = launcher.getRemoteProxy();
 
-        // initialize
+        // **не блокируемся** — запускаем initialize() в фоне:
         InitializeParams init = new InitializeParams();
         init.setRootUri(Paths.get(jdtlsHome).toUri().toString());
         init.setCapabilities(new ClientCapabilities());
-        server.initialize(init).join();
+        server.initialize(init)
+                .whenComplete((res, err) -> {
+                    if (err != null) {
+                        System.err.println("LSP initialization failed: " + err);
+                    } else {
+                        System.out.println("LSP initialized: " + res.getCapabilities());
+                    }
+                });
 
         return server;
     }
@@ -122,3 +99,4 @@ public class LspConfiguration {
         }
     }
 }
+

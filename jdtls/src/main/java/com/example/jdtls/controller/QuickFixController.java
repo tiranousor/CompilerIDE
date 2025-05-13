@@ -12,16 +12,13 @@ import java.util.concurrent.CompletableFuture;
 @RestController
 @RequestMapping("/quickfix")
 public class QuickFixController {
-
     private final QuickFixService service;
-
-    public QuickFixController(QuickFixService service) {
-        this.service = service;
-    }
+    public QuickFixController(QuickFixService service) { this.service = service; }
 
     @PostMapping
-    public CompletableFuture<List<CodeAction>> quickFix(@RequestBody QuickFixRequest req) {
-        // req.uri — file://…; req.content — исходный текст Java
-        return service.getQuickFixes(req.getUri(), req.getContent());
+    public List<CodeAction> quickFix(@RequestBody QuickFixRequest req) {
+        // блокируем, ждём результат синхронно
+        return service.getQuickFixes(req.getUri(), req.getContent()).join();
     }
 }
+
