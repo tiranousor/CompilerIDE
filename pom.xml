@@ -19,7 +19,8 @@
 		<module>oc-agent-javac</module>
 		<module>Dispatcher</module>
 		<module>oc-agent-python</module>
-	</modules>
+        <module>jdtls</module>
+    </modules>
 
 	<properties>
 		<java.version>21</java.version>
