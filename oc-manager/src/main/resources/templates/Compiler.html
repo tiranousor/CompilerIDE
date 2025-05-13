@@ -60,7 +60,7 @@
 
               #jstree {
                   overflow: auto;
-      <!--            height: calc(100% - 60px);-->
+<!--                  height: calc(100% - 60px);-->
                   padding: 20px;
                   border-right: 1px solid #333;
               }
@@ -337,441 +337,400 @@
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.33.0/min/vs/loader.js"></script>
+
 <script>
-
-    $(document).ready(function() {
-        $('#profile-button').on('click', function() {
-            const profileUrl = $(this).data('url');
-            window.location.href = profileUrl;
-        });
-        const userId = document.querySelector('meta[name="currentUserId"]').content;
-    $('#profile-button').on('click', function() {
-        if (userId) {
-            window.location.href = `/userProfile/${userId}`;
-        } else {
-            console.error("Идентификатор пользователя не найден.");
-            alert("Не удалось перейти на страницу профиля. Идентификатор пользователя отсутствует.");
-        }
+    // 1) Настраиваем AMD-лоадер
+    require.config({
+      paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.33.0/min/vs' }
     });
-    });
-    let analysisEnabled = document.querySelector('meta[name="analysisEnabled"]').content === 'true';
-    const toggleBtn = $('#analyze-toggle');
 
-    function setToggleUi() {
-       toggleBtn.toggleClass('on', analysisEnabled)
-                .toggleClass('off', !analysisEnabled)
-                .find('i')
-                .toggleClass('fa-toggle-on', analysisEnabled)
-                .toggleClass('fa-toggle-off', !analysisEnabled);
-    }
-    setToggleUi();
+    // 2) Загружаем сам Monaco
+    require(['vs/editor/editor.main'], function () {
+      const editor = monaco.editor.create(
+        document.getElementById('editor'),
+        { value: '', language: 'plaintext', theme: 'vs-dark', automaticLayout: true }
+      );
 
-    const ANALYZE_PORT = 8079;
-    const ANALYZE_BASE = `${location.protocol}//${location.hostname}:${ANALYZE_PORT}`;
-    $(function() {
-        let editor;
-        let currentFile = null;
-        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
-        const projectId = document.querySelector('meta[name="projectId"]').content;
-        let isUndoing = false;
-        const undoStack = [];
-        let pendingCreations = 0;
-        let duplicateNameError = false;
-        let isSidebarOpen = true;
-        let isSaving = false;
-        let autoSaveIntervalId = null;
-        function startAutoSave() {
-            autoSaveIntervalId = setInterval(function() {
-                console.log("Автосохранение проекта...");
-                saveProject(false);
-            }, 15000);
-        }
-        function stopAutoSave() {
-            if (autoSaveIntervalId) {
-                clearInterval(autoSaveIntervalId);
-                autoSaveIntervalId = null;
-            }
-        }
+      // Если MonacoServices нужен сразу:
+      // (будет подхвачен из monaco-languageclient ниже)
+      // MonacoServices.install(editor);
 
-    const initializeSelectMainClassModal = () => {
-        const modal = $('#selectMainClassModal');
-        const closeModalBtn = $('#closeModal');
+      // 3) Динамически подтягиваем ESM-библиотеки
+      (async () => {
+        const { createMessageConnection } = await import('https://cdn.skypack.dev/vscode-jsonrpc@8.2.1');
+        const { listen }                 = await import('https://cdn.skypack.dev/vscode-ws-jsonrpc@3.4.0');
+        const mlc                         = await import('https://cdn.skypack.dev/monaco-languageclient@9.6.0');
+        const { MonacoLanguageClient, CloseAction, ErrorAction, MonacoServices } = mlc;
 
-        closeModalBtn.on('click', function() {
-            modal.hide();
+        // Теперь ставим сервисы
+        MonacoServices.install(editor);
+
+        // 4) Инициализируем ваш JDT LS
+        const socket = new WebSocket(`ws://${location.hostname}:8065/lsp/java`);
+        listen({
+          webSocket: socket,
+          onConnection: conn => {
+            const client = new MonacoLanguageClient({
+              name: 'JDT LS',
+              clientOptions: {
+                documentSelector: ['java'],
+                errorHandler: { error: () => ErrorAction.Continue,
+                                closed: () => CloseAction.Restart }
+              },
+              connectionProvider: { get: () => Promise.resolve(conn) }
+            });
+            client.start();
+          }
         });
 
-        $(window).on('click', function(event) {
-            if ($(event.target).is(modal)) {
-                modal.hide();
-            }
-        });
-
-        $('#select-main-class-button').on('click', function(event) {
-            event.stopPropagation();
-            stopAutoSave();
-            saveProject(false).then(function() {
-                return $.ajax({
-                    url: `/projects/${projectId}/classes-with-main`,
-                    type: 'GET',
-                    headers: {
-                        [csrfHeader]: csrfToken
+                $(document).ready(function() {
+                    $('#profile-button').on('click', function() {
+                        const profileUrl = $(this).data('url');
+                        window.location.href = profileUrl;
+                    });
+                    const userId = document.querySelector('meta[name="currentUserId"]').content;
+                $('#profile-button').on('click', function() {
+                    if (userId) {
+                        window.location.href = `/userProfile/${userId}`;
+                    } else {
+                        console.error("Идентификатор пользователя не найден.");
+                        alert("Не удалось перейти на страницу профиля. Идентификатор пользователя отсутствует.");
                     }
                 });
-            }).done(function(mainClasses) {
-                showMainClassModal(mainClasses);
-            }).fail(function(xhr, status, error) {
-                console.error("Ошибка при получении списка классов:", error);
-                showMessage("Не удалось загрузить список классов.", "error");
-            }).always(function() {
-                startAutoSave();
-            });
-        });
-    };
-    const ensureMainClassName = (mainClassName, projectLanguage) => {
-        const languageExtensionMap = {
-            'python': '.py',
-        };
-
-        const extension = languageExtensionMap[projectLanguage.toLowerCase()];
-
-        if (extension && !mainClassName.toLowerCase().endsWith(extension)) {
-            return mainClassName + extension;
-        }
-        return mainClassName;
-    };
-
-    toggleBtn.on('click', () => {
-       fetch(`/projects/${projectId}/analysis`,{
-          method:'PATCH',
-          headers:{'Content-Type':'application/json',[csrfHeader]:csrfToken},
-          body: JSON.stringify(!analysisEnabled)
-       })
-       .then(r=>r.json())
-       .then(({enabled})=>{
-            analysisEnabled = enabled;
-            setToggleUi();
-            if(!enabled){
-               monaco.editor.setModelMarkers(editor.getModel(),'analyze',[]);
-            }else if(currentFile?.text.endsWith('.java')){
-               sendAnalyze();      // сразу пересчитаем
-            }
-       }).catch(console.error);
-    });
-
-    /* ws.js */
-    let stomp;
-    function wsConnect(onOpen) {
-      if (stomp && stomp.connected) { onOpen(); return; }
-
-    const sock  = new SockJS(`${ANALYZE_BASE}/ws`);
-      stomp = Stomp.over(sock);
-      stomp.debug = () => {};               // выключить лог
-
-      stomp.connect({}, onOpen, err => console.error('WS error', err));
-    }
-
-        // ===== ANALYZE =====
-    const DEBOUNCE = 800;                 // мс
-    let analyzeTimer = null;
-
-    function scheduleAnalyze() {
-      clearTimeout(analyzeTimer);
-      analyzeTimer = setTimeout(sendAnalyze, DEBOUNCE);
-    }
-
-    function sendAnalyze() {
-      if (!analysisEnabled) return;
-      const payload = {
-          sources: collectJavaSources(),
-          current: currentFile ? getFullPath(currentFile) : ""
-      };
-
-      fetch(`${ANALYZE_BASE}/analyze`, {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify(payload)
-      })
-        .then(r => r.json())
-        .then(({taskId}) => {
-            const dest = `/topic/analyze/${taskId}`;
-            // ждём, пока STOMP-клиент подключится, и только потом подписываемся
-            wsConnect(() => {
-                stomp.subscribe(dest, msg => {
-                    const diags = JSON.parse(msg.body);
-                    showMarkers(diags);
                 });
-            });
-        })
-        .catch(console.error);
-    }
+                let analysisEnabled = document.querySelector('meta[name="analysisEnabled"]').content === 'true';
+                const toggleBtn = $('#analyze-toggle');
 
-    function subscribeResult(taskId) {
-      wsConnect(()=> {
-        stomp.subscribe(`/topic/analyze/${taskId}`, msg => {
-          const diagnostics = JSON.parse(msg.body);
-          showMarkers(diagnostics);
-        });
-      });
-    }
+                function setToggleUi() {
+                   toggleBtn.toggleClass('on', analysisEnabled)
+                            .toggleClass('off', !analysisEnabled)
+                            .find('i')
+                            .toggleClass('fa-toggle-on', analysisEnabled)
+                            .toggleClass('fa-toggle-off', !analysisEnabled);
+                }
+                setToggleUi();
 
-    function showMarkers(diags){
-        const markers = diags.map(d => ({
-          message:  d.message,
-          severity: d.severity === 1
-                      ? monaco.MarkerSeverity.Warning
-                      : monaco.MarkerSeverity.Error,
-          startLineNumber: d.line || 1,
-          startColumn:     d.column || 1,
-          endLineNumber:   d.line || 1,
-          endColumn:       d.endColumn || (d.column || 1) + 1
-        }));
-        monaco.editor.setModelMarkers(editor.getModel(),'analyze',markers);
-    }
+                const ANALYZE_PORT = 8079;
+                const ANALYZE_BASE = `${location.protocol}//${location.hostname}:${ANALYZE_PORT}`;
+                $(function() {
+                    let currentFile = null;
+                    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+                    const projectId = document.querySelector('meta[name="projectId"]').content;
+                    let isUndoing = false;
+                    const undoStack = [];
+                    let pendingCreations = 0;
+                    let duplicateNameError = false;
+                    let isSidebarOpen = true;
+                    let isSaving = false;
+                    let autoSaveIntervalId = null;
+                    function startAutoSave() {
+                        autoSaveIntervalId = setInterval(function() {
+                            console.log("Автосохранение проекта...");
+                            saveProject(false);
+                        }, 15000);
+                    }
+                    function stopAutoSave() {
+                        if (autoSaveIntervalId) {
+                            clearInterval(autoSaveIntervalId);
+                            autoSaveIntervalId = null;
+                        }
+                    }
 
+                const initializeSelectMainClassModal = () => {
+                    const modal = $('#selectMainClassModal');
+                    const closeModalBtn = $('#closeModal');
 
-    const getJavaClassNameFromPath = (path) => {
-        if (path.startsWith('src/main/java/')) {
-            path = path.substring('src/main/java/'.length);
-        }
+                    closeModalBtn.on('click', function() {
+                        modal.hide();
+                    });
 
-        let className = path.replace(/\//g, '.');
+                    $(window).on('click', function(event) {
+                        if ($(event.target).is(modal)) {
+                            modal.hide();
+                        }
+                    });
 
-        if (className.endsWith('.java')) {
-            className = className.slice(0, -5);
-        }
+                    $('#select-main-class-button').on('click', function(event) {
+                        event.stopPropagation();
+                        stopAutoSave();
+                        saveProject(false).then(function() {
+                            return $.ajax({
+                                url: `/projects/${projectId}/classes-with-main`,
+                                type: 'GET',
+                                headers: {
+                                    [csrfHeader]: csrfToken
+                                }
+                            });
+                        }).done(function(mainClasses) {
+                            showMainClassModal(mainClasses);
+                        }).fail(function(xhr, status, error) {
+                            console.error("Ошибка при получении списка классов:", error);
+                            showMessage("Не удалось загрузить список классов.", "error");
+                        }).always(function() {
+                            startAutoSave();
+                        });
+                    });
+                };
+                const ensureMainClassName = (mainClassName, projectLanguage) => {
+                    const languageExtensionMap = {
+                        'python': '.py',
+                    };
 
-        return className;
-    };
+                    const extension = languageExtensionMap[projectLanguage.toLowerCase()];
 
+                    if (extension && !mainClassName.toLowerCase().endsWith(extension)) {
+                        return mainClassName + extension;
+                    }
+                    return mainClassName;
+                };
 
-    const fetchClassesWithMain = () => {
-        $.ajax({
-            url: `/projects/${projectId}/classes-with-main`,
-            type: 'GET',
-            headers: {
-                [csrfHeader]: csrfToken
-            },
-            success: function(mainClasses) {
-                populateClassesList(mainClasses);
-                $('#selectMainClassModal').show();
-            },
-            error: function(xhr, status, error) {
-                console.error("Ошибка при получении списка классов с main методом:", error);
-                showMessage("Не удалось загрузить список классов.", "error");
-            }
-        });
-    };
+                toggleBtn.on('click', () => {
+                   fetch(`/projects/${projectId}/analysis`,{
+                      method:'PATCH',
+                      headers:{'Content-Type':'application/json',[csrfHeader]:csrfToken},
+                      body: JSON.stringify(!analysisEnabled)
+                   })
+                   .then(r=>r.json())
+                   .then(({enabled})=>{
+                        analysisEnabled = enabled;
+                        setToggleUi();
+                        if(!enabled){
+                           monaco.editor.setModelMarkers(editor.getModel(),'analyze',[]);
+                        }else if(currentFile?.text.endsWith('.java')){
+                           sendAnalyze();      // сразу пересчитаем
+                        }
+                   }).catch(console.error);
+                });
 
-    const populateClassesList = (mainClasses) => {
-        const classesList = $('#classesList');
-        classesList.empty();
+                /* ws.js */
+                let stomp;
+                function wsConnect(onOpen) {
+                  if (stomp && stomp.connected) { onOpen(); return; }
 
-        if (mainClasses.length === 0) {
-            classesList.append('<li>Классы с main методом не найдены</li>');
-        } else {
-            const projectLanguage = document.querySelector('meta[name="projectLanguage"]').getAttribute('content').toLowerCase();
+                const sock  = new SockJS(`${ANALYZE_BASE}/ws`);
+                  stomp = Stomp.over(sock);
+                  stomp.debug = () => {};               // выключить лог
 
-            mainClasses.forEach(function(classItem) {
-                const path = classItem.path;
-
-                let mainClassName;
-
-                if (projectLanguage === 'java') {
-                    mainClassName = getJavaClassNameFromPath(path);
-                } else {
-                    mainClassName = path;
+                  stomp.connect({}, onOpen, err => console.error('WS error', err));
                 }
 
-                classesList.append(`<li data-class-name="${mainClassName}">${path}</li>`);
-            });
-        }
+                    // ===== ANALYZE =====
+                const DEBOUNCE = 800;                 // мс
+                let analyzeTimer = null;
 
-        $('#classesList li').on('click', function() {
-            const selectedClass = $(this).data('class-name');
-            if (selectedClass) {
-                setMainClass(selectedClass);
-                $('#selectMainClassModal').hide();
-            }
-        });
-    };
-    const projectLanguage = document.querySelector('meta[name="projectLanguage"]').getAttribute('content').toLowerCase();
-    function normalizeJavaMainClass(mainClassName) {
-        if (mainClassName.startsWith('src/main/java/')) {
-            mainClassName = mainClassName.substring('src/main/java/'.length);
-        }
+                function scheduleAnalyze() {
+                  clearTimeout(analyzeTimer);
+                  analyzeTimer = setTimeout(sendAnalyze, DEBOUNCE);
+                }
 
-        if (mainClassName.endsWith('.java')) {
-            mainClassName = mainClassName.slice(0, -5);
-        }
+                function sendAnalyze() {
+                  if (!analysisEnabled) return;
+                  const payload = {
+                      sources: collectJavaSources(),
+                      current: currentFile ? getFullPath(currentFile) : ""
+                  };
 
-        mainClassName = mainClassName.replace(/\//g, '.');
+                  fetch(`${ANALYZE_BASE}/analyze`, {
+                      method:'POST',
+                      headers:{'Content-Type':'application/json'},
+                      body: JSON.stringify(payload)
+                  })
+                    .then(r => r.json())
+                    .then(({taskId}) => {
+                        const dest = `/topic/analyze/${taskId}`;
+                        // ждём, пока STOMP-клиент подключится, и только потом подписываемся
+                        wsConnect(() => {
+                            stomp.subscribe(dest, msg => {
+                                const diags = JSON.parse(msg.body);
+                                showMarkers(diags);
+                            });
+                        });
+                    })
+                    .catch(console.error);
+                }
 
-        return mainClassName;
-    }
+                function subscribeResult(taskId) {
+                  wsConnect(()=> {
+                    stomp.subscribe(`/topic/analyze/${taskId}`, msg => {
+                      const diagnostics = JSON.parse(msg.body);
+                      showMarkers(diagnostics);
+                    });
+                  });
+                }
 
-    function collectJavaSources() {
-      const map = {};
-      const tree = $('#jstree').jstree(true);
-
-      (function walk(node){
-          if (node.type==='file' && node.text.endsWith('.java'))
-              map[getFullPath(node)] = node.data.content || "";
-          node.children.forEach(id => walk(tree.get_node(id)));
-      })(tree.get_node("root"));
-
-      return map;
-    }
-
-    function setMainClass(mainClassName) {
-        console.log("Установка mainClassName:", mainClassName);
-
-        if (projectLanguage === 'java') {
-            mainClassName = normalizeJavaMainClass(mainClassName);
-        } else {
-            mainClassName = ensureMainClassName(mainClassName, projectLanguage);
-        }
-
-        $.ajax({
-            url: `/projects/${projectId}/mainClass`,
-            type: 'POST',
-            contentType: 'application/json',
-            headers: {
-                [csrfHeader]: csrfToken
-            },
-            data: JSON.stringify({ mainClass: mainClassName }),
-            success: function(response) {
-                console.log("mainClassName успешно установлен:", response);
-                showMessage("Главный класс успешно установлен.", "success");
-                $('#main-class-input').val(mainClassName);
-            },
-            error: function(xhr, status, error) {
-                console.error("Ошибка при установке mainClassName:", error);
-                showMessage("Ошибка при установке главного класса.", "error");
-            }
-        });
-    }
-
-    $('#main-class-input').on('change', function() {
-        let mainClassName = $('#main-class-input').val().trim();
-        if (projectLanguage === 'java') {
-            mainClassName = normalizeJavaMainClass(mainClassName);
-        }
-        $.ajax({
-            url: `/projects/${projectId}/mainClass`,
-            type: 'POST',
-            contentType: 'application/json',
-            headers: {
-                [csrfHeader]: csrfToken
-            },
-            data: JSON.stringify({ mainClass: mainClassName }),
-            success: function(response) {
-                showMessage("Главный класс успешно установлен.", "success");
-                $('#main-class-input').val(mainClassName);
-            },
-            error: function(xhr, status, error) {
-                console.error("Ошибка при установке mainClassName:", error);
-                showMessage("Ошибка при установке главного класса.", "error");
-            }
-        });
-    });
+                function showMarkers(diags){
+                    const markers = diags.map(d => ({
+                      message:  d.message,
+                      severity: d.severity === 1
+                                  ? monaco.MarkerSeverity.Warning
+                                  : monaco.MarkerSeverity.Error,
+                      startLineNumber: d.line || 1,
+                      startColumn:     d.column || 1,
+                      endLineNumber:   d.line || 1,
+                      endColumn:       d.endColumn || (d.column || 1) + 1
+                    }));
+                    monaco.editor.setModelMarkers(editor.getModel(),'analyze',markers);
+                }
 
 
-    const saveMainClass = () => {
-        const mainClassInput = document.getElementById('main-class-input');
-        let mainClassName = mainClassInput.value.trim();
+                const getJavaClassNameFromPath = (path) => {
+                    if (path.startsWith('src/main/java/')) {
+                        path = path.substring('src/main/java/'.length);
+                    }
 
-        const projectLanguage = document.querySelector('meta[name="projectLanguage"]').getAttribute('content').toLowerCase();
+                    let className = path.replace(/\//g, '.');
 
-        if (!mainClassName) {
-            showMessage("Введите название класса для компиляции.", "error");
-            return;
-        }
+                    if (className.endsWith('.java')) {
+                        className = className.slice(0, -5);
+                    }
 
-        if (projectLanguage === 'java') {
-            if (mainClassName.endsWith('.java')) {
-                mainClassName = mainClassName.slice(0, -5);
-            }
-            if (mainClassName.startsWith('src.main.java.')) {
-                mainClassName = mainClassName.substring('src.main.java.'.length);
-            }
-        }
-
-        $.ajax({
-            url: `/projects/${projectId}/mainClass`,
-            type: 'POST',
-            contentType: 'application/json',
-            headers: {
-                [csrfHeader]: csrfToken
-            },
-            data: JSON.stringify({ mainClass: mainClassName }),
-            success: function(response) {
-                console.log("mainClassName успешно установлен:", response);
-                showMessage("Главный класс успешно установлен.", "success");
-                $('#main-class-input').val(mainClassName);
-            },
-            error: function(xhr, status, error) {
-                console.error("Ошибка при установке mainClassName:", error);
-                showMessage("Ошибка при установке главного класса.", "error");
-            }
-        });
-    };
+                    return className;
+                };
 
 
-    $('#project-button').on('click', function() {
-            if (isSidebarOpen) {
-                $('#sidebar').css('width', '0');
-                $('#editor-container').css('width', 'calc(100% - 50px)');
-                $(this).removeClass('active');
-            } else {
-                $('#sidebar').css('width', '300px');
-                $('#editor-container').css('width', 'calc(100% - 350px)');
-                $(this).addClass('active');
-            }
-            isSidebarOpen = !isSidebarOpen;
-        });
-        const getLanguageFromFilename = (filename) => {
-            const extension = filename.split('.').pop().toLowerCase();
-            const languageMap = {
-                'js': 'javascript',
-                'html': 'html',
-                'css': 'css',
-                'json': 'json',
-                'md': 'markdown',
-                'py': 'python',
-                'java': 'java',
-                'c': 'c',
-                'cpp': 'cpp',
-                'ts': 'typescript',
-                'xml': 'xml',
-            };
-            return languageMap[extension] || 'plaintext';
-        };
+                const fetchClassesWithMain = () => {
+                    $.ajax({
+                        url: `/projects/${projectId}/classes-with-main`,
+                        type: 'GET',
+                        headers: {
+                            [csrfHeader]: csrfToken
+                        },
+                        success: function(mainClasses) {
+                            populateClassesList(mainClasses);
+                            $('#selectMainClassModal').show();
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Ошибка при получении списка классов с main методом:", error);
+                            showMessage("Не удалось загрузить список классов.", "error");
+                        }
+                    });
+                };
 
-        const compileCode = () => {
-            const compileButton = $('#compile-button');
+                const populateClassesList = (mainClasses) => {
+                    const classesList = $('#classesList');
+                    classesList.empty();
 
-            compileButton.prop('disabled', true);
-            compileButton.css('opacity', '0.6');
+                    if (mainClasses.length === 0) {
+                        classesList.append('<li>Классы с main методом не найдены</li>');
+                    } else {
+                        const projectLanguage = document.querySelector('meta[name="projectLanguage"]').getAttribute('content').toLowerCase();
 
-            stopAutoSave();
+                        mainClasses.forEach(function(classItem) {
+                            const path = classItem.path;
 
-            saveProject(false)
-                .then(function() {
-                    return new Promise(resolve => setTimeout(resolve, 2000));
-                })
-                .then(function() {
+                            let mainClassName;
+
+                            if (projectLanguage === 'java') {
+                                mainClassName = getJavaClassNameFromPath(path);
+                            } else {
+                                mainClassName = path;
+                            }
+
+                            classesList.append(`<li data-class-name="${mainClassName}">${path}</li>`);
+                        });
+                    }
+
+                    $('#classesList li').on('click', function() {
+                        const selectedClass = $(this).data('class-name');
+                        if (selectedClass) {
+                            setMainClass(selectedClass);
+                            $('#selectMainClassModal').hide();
+                        }
+                    });
+                };
+                const projectLanguage = document.querySelector('meta[name="projectLanguage"]').getAttribute('content').toLowerCase();
+                function normalizeJavaMainClass(mainClassName) {
+                    if (mainClassName.startsWith('src/main/java/')) {
+                        mainClassName = mainClassName.substring('src/main/java/'.length);
+                    }
+
+                    if (mainClassName.endsWith('.java')) {
+                        mainClassName = mainClassName.slice(0, -5);
+                    }
+
+                    mainClassName = mainClassName.replace(/\//g, '.');
+
+                    return mainClassName;
+                }
+
+                function collectJavaSources() {
+                  const map = {};
+                  const tree = $('#jstree').jstree(true);
+
+                  (function walk(node){
+                      if (node.type==='file' && node.text.endsWith('.java'))
+                          map[getFullPath(node)] = node.data.content || "";
+                      node.children.forEach(id => walk(tree.get_node(id)));
+                  })(tree.get_node("root"));
+
+                  return map;
+                }
+
+                function setMainClass(mainClassName) {
+                    console.log("Установка mainClassName:", mainClassName);
+
+                    if (projectLanguage === 'java') {
+                        mainClassName = normalizeJavaMainClass(mainClassName);
+                    } else {
+                        mainClassName = ensureMainClassName(mainClassName, projectLanguage);
+                    }
+
+                    $.ajax({
+                        url: `/projects/${projectId}/mainClass`,
+                        type: 'POST',
+                        contentType: 'application/json',
+                        headers: {
+                            [csrfHeader]: csrfToken
+                        },
+                        data: JSON.stringify({ mainClass: mainClassName }),
+                        success: function(response) {
+                            console.log("mainClassName успешно установлен:", response);
+                            showMessage("Главный класс успешно установлен.", "success");
+                            $('#main-class-input').val(mainClassName);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Ошибка при установке mainClassName:", error);
+                            showMessage("Ошибка при установке главного класса.", "error");
+                        }
+                    });
+                }
+
+                $('#main-class-input').on('change', function() {
+                    let mainClassName = $('#main-class-input').val().trim();
+                    if (projectLanguage === 'java') {
+                        mainClassName = normalizeJavaMainClass(mainClassName);
+                    }
+                    $.ajax({
+                        url: `/projects/${projectId}/mainClass`,
+                        type: 'POST',
+                        contentType: 'application/json',
+                        headers: {
+                            [csrfHeader]: csrfToken
+                        },
+                        data: JSON.stringify({ mainClass: mainClassName }),
+                        success: function(response) {
+                            showMessage("Главный класс успешно установлен.", "success");
+                            $('#main-class-input').val(mainClassName);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Ошибка при установке mainClassName:", error);
+                            showMessage("Ошибка при установке главного класса.", "error");
+                        }
+                    });
+                });
+
+
+                const saveMainClass = () => {
+                    const mainClassInput = document.getElementById('main-class-input');
+                    let mainClassName = mainClassInput.value.trim();
+
                     const projectLanguage = document.querySelector('meta[name="projectLanguage"]').getAttribute('content').toLowerCase();
 
-                    const mainClassInput = document.getElementById('main-class-input');
-                    let mainClassName = $('#main-class-input').val().trim();
                     if (!mainClassName) {
-                        return fetchClassesWithMainAfterSave().then(function(mainClasses) {
-                            showMainClassModal(mainClasses);
-                            throw new Error("No main class chosen - opened modal");
-                        });
+                        showMessage("Введите название класса для компиляции.", "error");
+                        return;
                     }
 
                     if (projectLanguage === 'java') {
@@ -781,792 +740,866 @@
                         if (mainClassName.startsWith('src.main.java.')) {
                             mainClassName = mainClassName.substring('src.main.java.'.length);
                         }
-                    } else {
-                        mainClassName = ensureMainClassName(mainClassName, projectLanguage);
                     }
 
-                    const compileRequest = {
-                        project_id: Number(projectId),
-                        language: projectLanguage,
-                        mainClassName: mainClassName
-                    };
-
-                    console.log("Отправка compileRequest:", compileRequest);
-
-                    return $.ajax({
-                        url: '/compile',
+                    $.ajax({
+                        url: `/projects/${projectId}/mainClass`,
                         type: 'POST',
                         contentType: 'application/json',
                         headers: {
                             [csrfHeader]: csrfToken
                         },
-                        data: JSON.stringify(compileRequest),
+                        data: JSON.stringify({ mainClass: mainClassName }),
+                        success: function(response) {
+                            console.log("mainClassName успешно установлен:", response);
+                            showMessage("Главный класс успешно установлен.", "success");
+                            $('#main-class-input').val(mainClassName);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Ошибка при установке mainClassName:", error);
+                            showMessage("Ошибка при установке главного класса.", "error");
+                        }
                     });
-                })
-                .done(function(response) {
-                    console.log("Результат компиляции:", response);
-                    displayCompileResult(response);
+                };
 
-                    if (response.returnCode === 0) {
-                        showMessage("Компиляция завершена успешно.", "success");
-                    } else {
-                        showMessage("Произошла ошибка при компиляции.", "error");
-                    }
-                })
-                .fail(function(xhr, status, error) {
-                    console.error("Ошибка при отправке запроса на компиляцию:", error);
-                    showMessage("Ошибка при отправке запроса на компиляцию.", "error");
-                })
-                .always(function() {
-                    compileButton.prop('disabled', false);
-                    compileButton.css('opacity', '1');
+
+                $('#project-button').on('click', function() {
+                        if (isSidebarOpen) {
+                            $('#sidebar').css('width', '0');
+                            $('#editor-container').css('width', 'calc(100% - 50px)');
+                            $(this).removeClass('active');
+                        } else {
+                            $('#sidebar').css('width', '300px');
+                            $('#editor-container').css('width', 'calc(100% - 350px)');
+                            $(this).addClass('active');
+                        }
+                        isSidebarOpen = !isSidebarOpen;
+                    });
+                    const getLanguageFromFilename = (filename) => {
+                        const extension = filename.split('.').pop().toLowerCase();
+                        const languageMap = {
+                            'js': 'javascript',
+                            'html': 'html',
+                            'css': 'css',
+                            'json': 'json',
+                            'md': 'markdown',
+                            'py': 'python',
+                            'java': 'java',
+                            'c': 'c',
+                            'cpp': 'cpp',
+                            'ts': 'typescript',
+                            'xml': 'xml',
+                        };
+                        return languageMap[extension] || 'plaintext';
+                    };
+
+                    const compileCode = () => {
+                        const compileButton = $('#compile-button');
+
+                        compileButton.prop('disabled', true);
+                        compileButton.css('opacity', '0.6');
+
+                        stopAutoSave();
+
+                        saveProject(false)
+                            .then(function() {
+                                return new Promise(resolve => setTimeout(resolve, 2000));
+                            })
+                            .then(function() {
+                                const projectLanguage = document.querySelector('meta[name="projectLanguage"]').getAttribute('content').toLowerCase();
+
+                                const mainClassInput = document.getElementById('main-class-input');
+                                let mainClassName = $('#main-class-input').val().trim();
+                                if (!mainClassName) {
+                                    return fetchClassesWithMainAfterSave().then(function(mainClasses) {
+                                        showMainClassModal(mainClasses);
+                                        throw new Error("No main class chosen - opened modal");
+                                    });
+                                }
+
+                                if (projectLanguage === 'java') {
+                                    if (mainClassName.endsWith('.java')) {
+                                        mainClassName = mainClassName.slice(0, -5);
+                                    }
+                                    if (mainClassName.startsWith('src.main.java.')) {
+                                        mainClassName = mainClassName.substring('src.main.java.'.length);
+                                    }
+                                } else {
+                                    mainClassName = ensureMainClassName(mainClassName, projectLanguage);
+                                }
+
+                                const compileRequest = {
+                                    project_id: Number(projectId),
+                                    language: projectLanguage,
+                                    mainClassName: mainClassName
+                                };
+
+                                console.log("Отправка compileRequest:", compileRequest);
+
+                                return $.ajax({
+                                    url: '/compile',
+                                    type: 'POST',
+                                    contentType: 'application/json',
+                                    headers: {
+                                        [csrfHeader]: csrfToken
+                                    },
+                                    data: JSON.stringify(compileRequest),
+                                });
+                            })
+                            .done(function(response) {
+                                console.log("Результат компиляции:", response);
+                                displayCompileResult(response);
+
+                                if (response.returnCode === 0) {
+                                    showMessage("Компиляция завершена успешно.", "success");
+                                } else {
+                                    showMessage("Произошла ошибка при компиляции.", "error");
+                                }
+                            })
+                            .fail(function(xhr, status, error) {
+                                console.error("Ошибка при отправке запроса на компиляцию:", error);
+                                showMessage("Ошибка при отправке запроса на компиляцию.", "error");
+                            })
+                            .always(function() {
+                                compileButton.prop('disabled', false);
+                                compileButton.css('opacity', '1');
+                                startAutoSave();
+                            });
+                    };
+
                     startAutoSave();
-                });
-        };
 
-        startAutoSave();
-
-        $('#compile-button').on('click', function() {
-            compileCode();
-        });
-
-
-    const displayCompileResult = (result) => {
-        console.log("Display compile result:", result);
-        $('#compile-output').show();
-
-        let outputHtml = "";
-
-        if (Array.isArray(result.stderr) && result.stderr.length > 0) {
-            result.stderr.forEach((error, index) => {
-                const errorId = `compile-error-${index}`;
-
-                outputHtml += `<div class="compile-error" data-error-id="${errorId}" data-file="${error.file}" data-line="${error.line}" data-column="${error.column}">`;
-                outputHtml += `<span class="error-message">${error.message}</span><br>`;
-                if (error.file) {
-                    outputHtml += `<span class="error-file">File: ${error.file}</span><br>`;
-                }
-                if (error.line && error.line > 0) {
-                    outputHtml += `<span class="error-line">Line: ${error.line}</span><br>`;
-                }
-                if (error.column && error.column > 0) {
-                    outputHtml += `<span class="error-column">Column: ${error.column}</span><br>`;
-                }
-                outputHtml += `</div><br>`;
-            });
-        } else if (result.stderr && typeof result.stderr === 'string' && result.stderr.trim() !== '') {
-            outputHtml += `<pre>${result.stderr}</pre>`;
-        }
-
-        if (result.stdout && result.stdout.trim() !== "") {
-            outputHtml += `<pre>${result.stdout}</pre>`;
-        }
-
-        if (outputHtml.trim() === "") {
-            outputHtml = "Нет вывода.";
-        }
-
-        outputHtml += `<div>Программа завершилась с кодом ${result.returnCode}.</div>`;
-
-        $('#compile-result').html(outputHtml);
-
-        $('.compile-error').on('click', function() {
-            const filePath = $(this).data('file');
-            const lineNumber = parseInt($(this).data('line'));
-            const columnNumber = parseInt($(this).data('column'));
-
-            console.log(`Clicked on error: file=${filePath}, line=${lineNumber}, column=${columnNumber}`);
-
-            if (filePath) {
-                navigateToError(filePath, lineNumber, columnNumber);
-            }
-        });
-    };
-
-        const showMessage = (msg, type = 'error') => {
-            const messageDiv = $('#message');
-            messageDiv.text(msg);
-            messageDiv.removeClass('message-success message-error');
-            if (type === 'success') {
-                messageDiv.addClass('message-success');
-            } else {
-                messageDiv.addClass('message-error');
-            }
-            messageDiv.fadeIn(500).delay(2000).fadeOut(500);
-        };
-        const isValidName = (name) => {
-            if (!name || typeof name !== 'string') {
-                return false;
-            }
-            const trimmedName = name.trim();
-            if (trimmedName.length === 0) {
-                return false;
-            }
-            const invalidPatterns = ['/', '\\', '..'];
-            for (const pattern of invalidPatterns) {
-                if (trimmedName.startsWith(pattern) || trimmedName.includes(pattern)) {
-                    return false;
-                }
-            }
-            const prohibitedChars = ['<', '>', ':', '"', '|', '?', '*', '\0'];
-            for (const char of prohibitedChars) {
-                if (trimmedName.includes(char)) {
-                    return false;
-                }
-            }
-            return true;
-        };
-        const saveCurrentFile = () => {
-            if (currentFile && editor) {
-                const newContent = editor.getValue();
-                if (currentFile.data.content !== newContent) {
-                    currentFile.data.content = newContent;
-                    console.log(`Содержимое файла "${currentFile.text}" сохранено.`);
-                }
-            }
-        };
-
-    const navigateToError = (filePath, lineNumber, columnNumber) => {
-        const tree = $('#jstree').jstree(true);
-        console.log(`Navigating to error: filePath=${filePath}, lineNumber=${lineNumber}, columnNumber=${columnNumber}`);
-
-        if (filePath.startsWith('/')) {
-            filePath = filePath.substring(1);
-        }
-
-        const findNodeByPath = (path, parentId = 'root') => {
-            const segments = path.split('/');
-            let currentId = parentId;
-
-            for (let i = 0; i < segments.length; i++) {
-                const children = tree.get_node(currentId).children;
-                let found = false;
-
-                for (let childId of children) {
-                    const childNode = tree.get_node(childId);
-                    if (childNode.text === segments[i]) {
-                        currentId = childId;
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found) {
-                    return null;
-                }
-            }
-
-            return tree.get_node(currentId);
-        };
-
-        const node = findNodeByPath(filePath);
-
-        if (node) {
-            saveCurrentFile();
-            // Снимаем выделение со всех ранее выделенных узлов, чтобы не было нескольких выделенных файлов
-            tree.deselect_all(true);
-            tree.select_node(node);
-
-            setTimeout(() => {
-                if (editor && lineNumber) {
-                      editor.revealPositionInCenter({ lineNumber: lineNumber, column: columnNumber });
-                editor.setPosition({ lineNumber: lineNumber, column: columnNumber });
-                editor.focus();
-                }
-            }, 100);
-        } else {
-            showMessage(`Не удалось найти файл: ${filePath}`, "error");
-        }
-
-    };
-
-
-        const clearEditorIfDeleted = (node) => {
-            if (currentFile && node.id === currentFile.id) {
-                editor.setValue('');
-                currentFile = null;
-                console.log(`Файл "${node.text}" удалён. Редактор очищен.`);
-                return;
-            }
-            if (node.type === 'folder' && node.children && node.children.length > 0) {
-                const tree = $('#jstree').jstree(true);
-                node.children.forEach(childId => {
-                    const child = tree.get_node(childId);
-                    clearEditorIfDeleted(child);
-                });
-            }
-        };
-        function fetchClassesWithMainAfterSave() {
-            return saveProject(false).then(function() {
-                return $.ajax({
-                    url: `/projects/${projectId}/classes-with-main`,
-                    type: 'GET',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    }
-                });
-            });
-        }
-
-        function showMainClassModal(mainClasses) {
-            const classesList = $('#classesList');
-            classesList.empty();
-            if (mainClasses.length === 0) {
-                classesList.append('<li>Классы с main методом не найдены</li>');
-            } else {
-                mainClasses.forEach(function(classItem) {
-                    const path = classItem.path;
-                    let mainClassName;
-                    if (projectLanguage === 'java') {
-                        mainClassName = normalizeJavaMainClass(path);
-                    } else {
-                        mainClassName = path;
-                    }
-                    classesList.append(`<li data-class-name="${mainClassName}">${path}</li>`);
-                });
-            }
-
-            $('#classesList li').on('click', function() {
-                const selectedClass = $(this).data('class-name');
-                if (selectedClass) {
-                    setMainClass(selectedClass);
-                    $('#selectMainClassModal').hide();
-                }
-            });
-            $('#selectMainClassModal').show();
-        }
-
-        const checkUniqueName = (node, name, type, excludeId = null) => {
-            const tree = $('#jstree').jstree(true);
-            const childIds = tree.get_node(node.id).children;
-            let isUnique = true;
-            childIds.forEach(function(childId) {
-                const childNode = tree.get_node(childId);
-                const childText = childNode.text.trim();
-                const childType = childNode.type;
-                if (childText.toLowerCase() === name.trim().toLowerCase() && childType === type) {
-                    if (excludeId && childId === excludeId) {
-                        return;
-                    }
-                    isUnique = false;
-                    return false;
-                }
-            });
-            return isUnique;
-        };
-        const getFullPath = (node) => {
-            const tree = $('#jstree').jstree(true);
-            const path = [];
-            let current = node;
-            while (current && current.id !== "#") {
-                path.unshift(current.text);
-                current = tree.get_node(current.parent);
-            }
-            path.shift();
-            return path.join('/');
-        };
-        const gatherFiles = (node) => {
-            const tree = $('#jstree').jstree(true);
-            const files = [];
-            node.children.forEach(childId => {
-                const child = tree.get_node(childId);
-                const fileObj = {
-                    id: child.id,
-                    text: child.text,
-                    path: getFullPath(child),
-                    type: child.type,
-                    data: child.type === 'file' ? { content: child.data.content || "" } : undefined,
-                    state: child.state,
-                    files: child.type === 'folder' ? gatherFiles(child) : undefined
-                };
-                files.push(fileObj);
-            });
-            return files;
-        };
-        const mapToBackendFormat = (gatheredFiles) => {
-            return gatheredFiles.map(fileObj => {
-                const mappedObj = {
-                    path: fileObj.path,
-                    content: fileObj.type === 'file' ? fileObj.data.content : null,
-                    type: fileObj.type === 'folder' ? 'folder' : null
-                };
-                if (fileObj.type === 'folder') {
-                    mappedObj.files = fileObj.files && fileObj.files.length > 0 ? mapToBackendFormat(fileObj.files) : [];
-                }
-                return mappedObj;
-            });
-        };
-        const getProjectJSON = () => {
-            const tree = $('#jstree').jstree(true);
-            const root = tree.get_node("root");
-            const gatheredFiles = gatherFiles(root);
-            const mappedFiles = mapToBackendFormat(gatheredFiles);
-            const project = {
-                files: mappedFiles
-            };
-            return project;
-        };
-        const saveProject = (showSuccessMessage = true) => {
-            if (isSaving) {
-                console.log("Сохранение уже выполняется, пропуск текущего цикла автосохранения.");
-                return $.Deferred().resolve().promise();
-            }
-            isSaving = true;
-            saveCurrentFile();
-            const projectJSON = getProjectJSON();
-            console.log("Сформированный JSON проекта:", JSON.stringify(projectJSON, null, 2));
-            if (!projectJSON.files || projectJSON.files.length === 0) {
-                console.log("Проект пустой, сохранение не требуется.");
-                isSaving = false;
-                return $.Deferred().resolve().promise();
-            }
-            return $.ajax({
-                url: `/projects/${projectId}/save`,
-                type: 'POST',
-                contentType: 'application/json',
-                headers: {
-                    [csrfHeader]: csrfToken
-                },
-                data: JSON.stringify(projectJSON),
-            })
-            .done(function(response) {
-                console.log("Проект успешно сохранён!");
-                if (showSuccessMessage) {
-                    showMessage("Проект успешно сохранён!", "success");
-                }
-            })
-            .fail(function(xhr, status, error) {
-                console.error("Ошибка при сохранении проекта:", error);
-                showMessage("Ошибка при сохранении проекта.", "error");
-            })
-            .always(function() {
-                isSaving = false;
-            });
-        };
-
-        const createNodeRecursively = (parent, nodeData, position) => {
-            const tree = $('#jstree').jstree(true);
-            position = (typeof position === 'number' && position < 0) ? 'last' : position;
-            pendingCreations++;
-            console.log(`Восстанавливаем узел: ${nodeData.text}, Тип: ${nodeData.type}, ID: ${nodeData.id}`);
-            tree.create_node(parent, {
-                id: nodeData.id,
-                text: nodeData.text,
-                type: nodeData.type,
-                data: nodeData.type === 'file' ? { content: nodeData.data.content || "" } : {},
-                state: nodeData.state
-            }, position, function(new_node) {
-                console.log(`Узел "${new_node.text}" восстановлен.`);
-                if (nodeData.files && nodeData.files.length > 0) {
-                    nodeData.files.forEach(child => {
-                        createNodeRecursively(new_node.id, child, 'last');
+                    $('#compile-button').on('click', function() {
+                        compileCode();
                     });
-                }
-                pendingCreations--;
-                if (pendingCreations === 0) {
-                    isUndoing = false;
-                    console.log("Восстановление всех узлов завершено.");
-                }
-            });
-        };
-        const loadFile = (node) => {
-            if (node.type === 'file') {
-                const content = node.data && node.data.content ? node.data.content : "";
-                const language = getLanguageFromFilename(node.text);
-                if (editor) {
-                    isUndoing = true;
-                    const currentModel = editor.getModel();
-                    if (currentModel) {
-                        monaco.editor.setModelLanguage(currentModel, language);
-                        editor.setValue(content);
+
+
+                const displayCompileResult = (result) => {
+                    console.log("Display compile result:", result);
+                    $('#compile-output').show();
+
+                    let outputHtml = "";
+
+                    if (Array.isArray(result.stderr) && result.stderr.length > 0) {
+                        result.stderr.forEach((error, index) => {
+                            const errorId = `compile-error-${index}`;
+
+                            outputHtml += `<div class="compile-error" data-error-id="${errorId}" data-file="${error.file}" data-line="${error.line}" data-column="${error.column}">`;
+                            outputHtml += `<span class="error-message">${error.message}</span><br>`;
+                            if (error.file) {
+                                outputHtml += `<span class="error-file">File: ${error.file}</span><br>`;
+                            }
+                            if (error.line && error.line > 0) {
+                                outputHtml += `<span class="error-line">Line: ${error.line}</span><br>`;
+                            }
+                            if (error.column && error.column > 0) {
+                                outputHtml += `<span class="error-column">Column: ${error.column}</span><br>`;
+                            }
+                            outputHtml += `</div><br>`;
+                        });
+                    } else if (result.stderr && typeof result.stderr === 'string' && result.stderr.trim() !== '') {
+                        outputHtml += `<pre>${result.stderr}</pre>`;
                     }
-                    isUndoing = false;
-                    console.log(`Файл "${node.text}" загружен в редактор с языком "${language}".`);
-                }
-                currentFile = node;
-            }
-        };
-        const undo = () => {
-            if (undoStack.length === 0) {
-                console.log("Undo Stack пуст.");
-                return;
-            }
-            const lastAction = undoStack.pop();
-            console.log("Undoing Action:", lastAction);
-            isUndoing = true;
-            const tree = $('#jstree').jstree(true);
-            switch(lastAction.action) {
-                case 'delete':
-                    tree.delete_node(lastAction.node);
-                    break;
-                case 'create':
-                    createNodeRecursively(lastAction.parent, lastAction.node, lastAction.position);
-                    break;
-                case 'rename':
-                    tree.rename_node(lastAction.node, lastAction.old_text);
-                    break;
-                case 'move':
-                    tree.move_node(lastAction.node, lastAction.old_parent, lastAction.old_position);
-                    break;
-                default:
-                    console.warn('Неизвестное действие для отмены:', lastAction.action);
-            }
-        };
-        const handleRename = (data) => {
-            console.log(`handleRename вызван для узла: ${data.node.id}, Тип: ${data.node.type}, Старое имя: ${data.old}, Новое имя: ${data.text}`);
-            if (!isUndoing) {
-                if (data.node.id === "root") {
-                    showMessage("Нельзя переименовывать корневую папку!");
-                    const tree = $('#jstree').jstree(true);
-                    tree.rename_node(data.node, data.old);
-                    return;
-                }
-                if (!isValidName(data.text)) {
-                    showMessage("Недопустимое имя.");
-                    const tree = $('#jstree').jstree(true);
-                    tree.rename_node(data.node, data.old);
-                    return;
-                }
-                const parent = data.node.parent;
-                const tree = $('#jstree').jstree(true);
-                const siblings = tree.get_node(parent).children;
-                let isUnique = true;
-                siblings.forEach(function(childId) {
-                    const childNode = tree.get_node(childId);
-                    const childText = childNode.text.trim();
-                    const childType = childNode.type;
-                    if (childText.toLowerCase() === data.text.trim().toLowerCase() && childType === data.node.type && childId !== data.node.id) {
-                        isUnique = false;
-                        return false;
+
+                    if (result.stdout && result.stdout.trim() !== "") {
+                        outputHtml += `<pre>${result.stdout}</pre>`;
                     }
-                });
-                if (!isUnique) {
-                    showMessage("Узел с таким именем уже существует в этой папке.");
-                    tree.rename_node(data.node, data.old);
-                    return;
-                }
-                undoStack.push({
-                    action: 'rename',
-                    node: data.node.id,
-                    old_text: data.old,
-                    new_text: data.text
-                });
-                console.log("Action Recorded to Undo Stack:", { action: 'rename', node: data.node.id, old_text: data.old, new_text: data.text });
-            }
-            if (currentFile && data.node.id === currentFile.id && currentFile.type === 'file') {
-                const newLanguage = getLanguageFromFilename(data.text);
-                monaco.editor.setModelLanguage(editor.getModel(), newLanguage);
-                console.log(`Язык синтаксиса обновлён на "${newLanguage}" для файла "${data.text}".`);
-            }
-        };
-        const isMoveNameUnique = (targetNode, node) => {
-            const tree = $('#jstree').jstree(true);
-            const childIds = tree.get_node(targetNode.id).children;
-            let isUnique = true;
-            childIds.forEach(function(childId) {
-                const childNode = tree.get_node(childId);
-                const childText = childNode.text.trim();
-                const childType = childNode.type;
-                if (childText.toLowerCase() === node.text.trim().toLowerCase() && childType === node.type) {
-                    if (childId === node.id) {
-                        return;
+
+                    if (outputHtml.trim() === "") {
+                        outputHtml = "Нет вывода.";
                     }
-                    isUnique = false;
-                    return false;
-                }
-            });
-            return isUnique;
-        };
-        const initializeJsTree = () => {
-            const fileStructureJson = document.querySelector('meta[name="fileStructure"]').getAttribute('content');
-             const projectName = $('#jstree').data('project-name');
-            let fileTreeData = [];
-            if (fileStructureJson) {
-                try {
-                    fileTreeData = JSON.parse(fileStructureJson);
-                } catch (e) {
-                    console.error("Ошибка при парсинге JSON для fileStructure:", e);
-                }
-            }
-            if (!fileTreeData || fileTreeData.length === 0) {
-                fileTreeData = [{
-                    id: "root",
-                    text: projectName ||"Проект",
-                    type: "folder",
-                    children: [],
-                    state: { opened: true }
-                }];
-            }
-            $('#jstree').jstree({
-                core: {
-                    check_callback: function (operation, node, parent, position, more) {
-                        const tree = $('#jstree').jstree(true);
-                        if (operation === "move_node") {
-                            const movingNode = node;
-                            const targetParentNode = tree.get_node(parent);
-                            if (movingNode.id === "root") {
+
+                    outputHtml += `<div>Программа завершилась с кодом ${result.returnCode}.</div>`;
+
+                    $('#compile-result').html(outputHtml);
+
+                    $('.compile-error').on('click', function() {
+                        const filePath = $(this).data('file');
+                        const lineNumber = parseInt($(this).data('line'));
+                        const columnNumber = parseInt($(this).data('column'));
+
+                        console.log(`Clicked on error: file=${filePath}, line=${lineNumber}, column=${columnNumber}`);
+
+                        if (filePath) {
+                            navigateToError(filePath, lineNumber, columnNumber);
+                        }
+                    });
+                };
+
+                    const showMessage = (msg, type = 'error') => {
+                        const messageDiv = $('#message');
+                        messageDiv.text(msg);
+                        messageDiv.removeClass('message-success message-error');
+                        if (type === 'success') {
+                            messageDiv.addClass('message-success');
+                        } else {
+                            messageDiv.addClass('message-error');
+                        }
+                        messageDiv.fadeIn(500).delay(2000).fadeOut(500);
+                    };
+                    const isValidName = (name) => {
+                        if (!name || typeof name !== 'string') {
+                            return false;
+                        }
+                        const trimmedName = name.trim();
+                        if (trimmedName.length === 0) {
+                            return false;
+                        }
+                        const invalidPatterns = ['/', '\\', '..'];
+                        for (const pattern of invalidPatterns) {
+                            if (trimmedName.startsWith(pattern) || trimmedName.includes(pattern)) {
                                 return false;
                             }
-                            if (targetParentNode.type !== "folder") {
-                                return false;
-                            }
-                            if (parent === "#") {
-                                return false;
-                            }
-                            if (!isMoveNameUnique(targetParentNode, movingNode)) {
+                        }
+                        const prohibitedChars = ['<', '>', ':', '"', '|', '?', '*', '\0'];
+                        for (const char of prohibitedChars) {
+                            if (trimmedName.includes(char)) {
                                 return false;
                             }
                         }
                         return true;
-                    },
-                    data: fileTreeData
-                },
-                plugins: ['contextmenu', 'dnd', 'types'],
-                types: {
-                    folder: { icon: 'jstree-folder' },
-                    file: { icon: 'jstree-file' }
-                },
-                contextmenu: {
-                    items: function(node) {
-                        const tree = $("#jstree").jstree(true);
-                        const menuItems = {};
-                        if (node.type !== 'folder') {
-                            menuItems.Rename = {
-                                separator_before: false,
-                                separator_after: false,
-                                label: "Переименовать",
-                                action: function () { tree.edit(node); }
-                            };
-                            menuItems.Remove = {
-                                separator_before: false,
-                                separator_after: false,
-                                label: "Удалить",
-                                action: function () {
-                                    if (node.id === "root") {
-                                        return;
-                                    }
-                                    const parent = node.parent;
-                                    const parentNode = tree.get_node(parent);
-                                    const position = parentNode.children.indexOf(node.id) !== -1 ? parentNode.children.indexOf(node.id) : 'last';
-                                    if (!isUndoing) {
-                                        const fullNodeData = {
-                                            id: node.id,
-                                            text: node.text,
-                                            type: node.type,
-                                            data: node.type === 'file' ? { content: node.data.content || "" } : undefined,
-                                            state: node.state,
-                                            files: node.type === 'folder' ? gatherFiles(node) : undefined
-                                        };
-                                        undoStack.push({
-                                            action: 'create',
-                                            node: fullNodeData,
-                                            parent: parent,
-                                            position: position
-                                        });
-                                        console.log("Action Recorded to Undo Stack:", { action: 'create', node: fullNodeData, parent: parent, position: position });
-                                    }
-                                    clearEditorIfDeleted(node);
-                                    tree.delete_node(node);
-                                }
-                            };
-                        } else {
-                            menuItems.Create = {
-                                separator_before: false,
-                                separator_after: false,
-                                label: "Создать",
-                                action: false,
-                                submenu: {
-                                    CreateFile: {
-                                        label: "Файл",
-                                        action: function () {
-                                            const newFileName = prompt("Введите имя нового файла:", "Новый файл.js");
-                                            if (!newFileName) {
-                                                return;
-                                            }
-                                            if (!isValidName(newFileName)) {
-                                                showMessage("Недопустимое имя файла.");
-                                                return;
-                                            }
-                                            if (!checkUniqueName(node, newFileName, 'file')) {
-                                                showMessage("Файл с таким именем уже существует в этой папке.");
-                                                return;
-                                            }
-                                            const newId = 'file_' + Date.now();
-                                            tree.create_node(node, {
-                                                id: newId,
-                                                text: newFileName,
-                                                type: "file",
-                                                data: { content: "" },
-                                                state: { opened: true }
-                                            }, "last", function(new_node) {
-                                                setTimeout(function() {
-                                                    tree.select_node(new_node);
-                                                }, 0);
-                                            });
-                                        }
-                                    },
-                                    CreateFolder: {
-                                        label: "Папка",
-                                        action: function () {
-                                            const newFolderName = prompt("Введите имя новой папки:", "Новая папка");
-                                            if (!newFolderName) {
-                                                return;
-                                            }
-                                            if (!isValidName(newFolderName)) {
-                                                showMessage("Недопустимое имя папки.");
-                                                return;
-                                            }
-                                            if (!checkUniqueName(node, newFolderName, 'folder')) {
-                                                showMessage("Папка с таким именем уже существует в этой папке.");
-                                                return;
-                                            }
-                                            const newId = 'folder_' + Date.now();
-                                            tree.create_node(node, {
-                                                id: newId,
-                                                text: newFolderName,
-                                                type: "folder",
-                                                state: { opened: true }
-                                            }, "last", function(new_node) {
-                                                setTimeout(function() {
-                                                    tree.select_node(new_node);
-                                                }, 0);
-                                            });
-                                        }
-                                    }
-                                }
-                            };
-                            if (node.id !== "root") {
-                                menuItems.Rename = {
-                                    separator_before: false,
-                                    separator_after: false,
-                                    label: "Переименовать",
-                                    action: function () {
-                                        tree.edit(node);
-                                    }
-                                };
-                                menuItems.Remove = {
-                                    separator_before: false,
-                                    separator_after: false,
-                                    label: "Удалить",
-                                    action: function () {
-                                        if (node.id === "root") {
-                                            return;
-                                        }
-                                        const parent = node.parent;
-                                        const parentNode = tree.get_node(parent);
-                                        const position = parentNode.children.indexOf(node.id) !== -1 ? parentNode.children.indexOf(node.id) : 'last';
-                                        if (!isUndoing) {
-                                            const fullNodeData = {
-                                                id: node.id,
-                                                text: node.text,
-                                                type: node.type,
-                                                data: node.type === 'file' ? { content: node.data.content || "" } : undefined,
-                                                state: node.state,
-                                                files: node.type === 'folder' ? gatherFiles(node) : undefined
-                                            };
-                                            undoStack.push({
-                                                action: 'create',
-                                                node: fullNodeData,
-                                                parent: parent,
-                                                position: position
-                                            });
-                                            console.log("Action Recorded to Undo Stack:", { action: 'create', node: fullNodeData, parent: parent, position: position });
-                                        }
-                                        clearEditorIfDeleted(node);
-                                        tree.delete_node(node);
-                                    }
-                                };
+                    };
+                    const saveCurrentFile = () => {
+                        if (currentFile && editor) {
+                            const newContent = editor.getValue();
+                            if (currentFile.data.content !== newContent) {
+                                currentFile.data.content = newContent;
+                                console.log(`Содержимое файла "${currentFile.text}" сохранено.`);
                             }
                         }
-                        return menuItems;
-                    }
-                }
-            })
-            .on('create_node.jstree', function (e, data) {
-                if (data.node.type === 'file' && !isUndoing) {
-                    data.node.data = { "content": "" };
-                }
-                if (!isUndoing) {
-                    undoStack.push({
-                        action: 'delete',
-                        node: data.node.id
-                    });
-                    console.log("Action Recorded to Undo Stack:", { action: 'delete', node: data.node.id });
-                }
-            })
-            .on('rename_node.jstree', function (e, data) {
-                handleRename(data);
-            })
-            .on('delete_node.jstree', function (e, data) {
-                clearEditorIfDeleted(data.node);
-            })
-            .on('move_node.jstree', function (e, data) {
-                if (!isUndoing) {
-                    undoStack.push({
-                        action: 'move',
-                        node: data.node.id,
-                        old_parent: data.old_parent,
-                        old_position: data.old_position
-                    });
-                    console.log("Action Recorded to Undo Stack:", { action: 'move', node: data.node.id, old_parent: data.old_parent, old_position: data.old_position });
-                }
-            })
-            .on('dnd_stop.vakata', function (e, data) {
-                if (duplicateNameError) {
-                    showMessage("В целевой папке уже существует узел с таким именем.");
-                    duplicateNameError = false;
-                }
-            })
-            .on('select_node.jstree', function (e, data) {
-                saveCurrentFile();
-                if (data.node.type === 'file') {
-                    loadFile(data.node);
-                    if (analysisEnabled && data.node.text.endsWith('.java')) {           // 👈
-                        sendAnalyze();                                // анализ сразу
-                    }
-                }
-            });
-            $(document).on('keydown', function(e) {
-                if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
-                    e.preventDefault();
-                    console.log("Ctrl+Z нажато");
-                    undo();
-                }
-            });
-            $('#save-button').on('click', function() {
-                saveProject();
-            });
-            require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs' }});
-            require(['vs/editor/editor.main'], function() {
-                editor = monaco.editor.create(document.getElementById('editor'), {
-                    value: '',
-                    language: 'plaintext',
-                    theme: localStorage.getItem('theme') === 'light' ? 'vs' : 'vs-dark',
-                    automaticLayout: true
-                });
+                    };
 
-                document.getElementById('theme-button').addEventListener('click', () => {
-                    const newTheme = body.classList.contains('light-mode') ? 'vs' : 'vs-dark';
-                    monaco.editor.setTheme(newTheme);
-                });
+                const navigateToError = (filePath, lineNumber, columnNumber) => {
+                    const tree = $('#jstree').jstree(true);
+                    console.log(`Navigating to error: filePath=${filePath}, lineNumber=${lineNumber}, columnNumber=${columnNumber}`);
 
-                editor.onDidChangeModelContent(function() {
-                    if (isUndoing) {
-                        return;
+                    if (filePath.startsWith('/')) {
+                        filePath = filePath.substring(1);
                     }
-                    if (currentFile) {
-                        currentFile.data.content = editor.getValue();
-                        if (analysisEnabled && currentFile?.text.endsWith('.java')) {
-                            scheduleAnalyze();
+
+                    const findNodeByPath = (path, parentId = 'root') => {
+                        const segments = path.split('/');
+                        let currentId = parentId;
+
+                        for (let i = 0; i < segments.length; i++) {
+                            const children = tree.get_node(currentId).children;
+                            let found = false;
+
+                            for (let childId of children) {
+                                const childNode = tree.get_node(childId);
+                                if (childNode.text === segments[i]) {
+                                    currentId = childId;
+                                    found = true;
+                                    break;
+                                }
+                            }
+
+                            if (!found) {
+                                return null;
+                            }
                         }
-                        console.log(`Содержимое файла "${currentFile.text}" обновлено.`);
+
+                        return tree.get_node(currentId);
+                    };
+
+                    const node = findNodeByPath(filePath);
+
+                    if (node) {
+                        saveCurrentFile();
+                        // Снимаем выделение со всех ранее выделенных узлов, чтобы не было нескольких выделенных файлов
+                        tree.deselect_all(true);
+                        tree.select_node(node);
+
+                        setTimeout(() => {
+                            if (editor && lineNumber) {
+                                  editor.revealPositionInCenter({ lineNumber: lineNumber, column: columnNumber });
+                            editor.setPosition({ lineNumber: lineNumber, column: columnNumber });
+                            editor.focus();
+                            }
+                        }, 100);
+                    } else {
+                        showMessage(`Не удалось найти файл: ${filePath}`, "error");
                     }
-                });
+
+                };
+
+
+                    const clearEditorIfDeleted = (node) => {
+                        if (currentFile && node.id === currentFile.id) {
+                            editor.setValue('');
+                            currentFile = null;
+                            console.log(`Файл "${node.text}" удалён. Редактор очищен.`);
+                            return;
+                        }
+                        if (node.type === 'folder' && node.children && node.children.length > 0) {
+                            const tree = $('#jstree').jstree(true);
+                            node.children.forEach(childId => {
+                                const child = tree.get_node(childId);
+                                clearEditorIfDeleted(child);
+                            });
+                        }
+                    };
+                    function fetchClassesWithMainAfterSave() {
+                        return saveProject(false).then(function() {
+                            return $.ajax({
+                                url: `/projects/${projectId}/classes-with-main`,
+                                type: 'GET',
+                                headers: {
+                                    [csrfHeader]: csrfToken
+                                }
+                            });
+                        });
+                    }
+
+                    function showMainClassModal(mainClasses) {
+                        const classesList = $('#classesList');
+                        classesList.empty();
+                        if (mainClasses.length === 0) {
+                            classesList.append('<li>Классы с main методом не найдены</li>');
+                        } else {
+                            mainClasses.forEach(function(classItem) {
+                                const path = classItem.path;
+                                let mainClassName;
+                                if (projectLanguage === 'java') {
+                                    mainClassName = normalizeJavaMainClass(path);
+                                } else {
+                                    mainClassName = path;
+                                }
+                                classesList.append(`<li data-class-name="${mainClassName}">${path}</li>`);
+                            });
+                        }
+
+                        $('#classesList li').on('click', function() {
+                            const selectedClass = $(this).data('class-name');
+                            if (selectedClass) {
+                                setMainClass(selectedClass);
+                                $('#selectMainClassModal').hide();
+                            }
+                        });
+                        $('#selectMainClassModal').show();
+                    }
+
+                    const checkUniqueName = (node, name, type, excludeId = null) => {
+                        const tree = $('#jstree').jstree(true);
+                        const childIds = tree.get_node(node.id).children;
+                        let isUnique = true;
+                        childIds.forEach(function(childId) {
+                            const childNode = tree.get_node(childId);
+                            const childText = childNode.text.trim();
+                            const childType = childNode.type;
+                            if (childText.toLowerCase() === name.trim().toLowerCase() && childType === type) {
+                                if (excludeId && childId === excludeId) {
+                                    return;
+                                }
+                                isUnique = false;
+                                return false;
+                            }
+                        });
+                        return isUnique;
+                    };
+                    const getFullPath = (node) => {
+                        const tree = $('#jstree').jstree(true);
+                        const path = [];
+                        let current = node;
+                        while (current && current.id !== "#") {
+                            path.unshift(current.text);
+                            current = tree.get_node(current.parent);
+                        }
+                        path.shift();
+                        return path.join('/');
+                    };
+                    const gatherFiles = (node) => {
+                        const tree = $('#jstree').jstree(true);
+                        const files = [];
+                        node.children.forEach(childId => {
+                            const child = tree.get_node(childId);
+                            const fileObj = {
+                                id: child.id,
+                                text: child.text,
+                                path: getFullPath(child),
+                                type: child.type,
+                                data: child.type === 'file' ? { content: child.data.content || "" } : undefined,
+                                state: child.state,
+                                files: child.type === 'folder' ? gatherFiles(child) : undefined
+                            };
+                            files.push(fileObj);
+                        });
+                        return files;
+                    };
+                    const mapToBackendFormat = (gatheredFiles) => {
+                        return gatheredFiles.map(fileObj => {
+                            const mappedObj = {
+                                path: fileObj.path,
+                                content: fileObj.type === 'file' ? fileObj.data.content : null,
+                                type: fileObj.type === 'folder' ? 'folder' : null
+                            };
+                            if (fileObj.type === 'folder') {
+                                mappedObj.files = fileObj.files && fileObj.files.length > 0 ? mapToBackendFormat(fileObj.files) : [];
+                            }
+                            return mappedObj;
+                        });
+                    };
+                    const getProjectJSON = () => {
+                        const tree = $('#jstree').jstree(true);
+                        const root = tree.get_node("root");
+                        const gatheredFiles = gatherFiles(root);
+                        const mappedFiles = mapToBackendFormat(gatheredFiles);
+                        const project = {
+                            files: mappedFiles
+                        };
+                        return project;
+                    };
+                    const saveProject = (showSuccessMessage = true) => {
+                        if (isSaving) {
+                            console.log("Сохранение уже выполняется, пропуск текущего цикла автосохранения.");
+                            return $.Deferred().resolve().promise();
+                        }
+                        isSaving = true;
+                        saveCurrentFile();
+                        const projectJSON = getProjectJSON();
+                        console.log("Сформированный JSON проекта:", JSON.stringify(projectJSON, null, 2));
+                        if (!projectJSON.files || projectJSON.files.length === 0) {
+                            console.log("Проект пустой, сохранение не требуется.");
+                            isSaving = false;
+                            return $.Deferred().resolve().promise();
+                        }
+                        return $.ajax({
+                            url: `/projects/${projectId}/save`,
+                            type: 'POST',
+                            contentType: 'application/json',
+                            headers: {
+                                [csrfHeader]: csrfToken
+                            },
+                            data: JSON.stringify(projectJSON),
+                        })
+                        .done(function(response) {
+                            console.log("Проект успешно сохранён!");
+                            if (showSuccessMessage) {
+                                showMessage("Проект успешно сохранён!", "success");
+                            }
+                        })
+                        .fail(function(xhr, status, error) {
+                            console.error("Ошибка при сохранении проекта:", error);
+                            showMessage("Ошибка при сохранении проекта.", "error");
+                        })
+                        .always(function() {
+                            isSaving = false;
+                        });
+                    };
+
+                    const createNodeRecursively = (parent, nodeData, position) => {
+                        const tree = $('#jstree').jstree(true);
+                        position = (typeof position === 'number' && position < 0) ? 'last' : position;
+                        pendingCreations++;
+                        console.log(`Восстанавливаем узел: ${nodeData.text}, Тип: ${nodeData.type}, ID: ${nodeData.id}`);
+                        tree.create_node(parent, {
+                            id: nodeData.id,
+                            text: nodeData.text,
+                            type: nodeData.type,
+                            data: nodeData.type === 'file' ? { content: nodeData.data.content || "" } : {},
+                            state: nodeData.state
+                        }, position, function(new_node) {
+                            console.log(`Узел "${new_node.text}" восстановлен.`);
+                            if (nodeData.files && nodeData.files.length > 0) {
+                                nodeData.files.forEach(child => {
+                                    createNodeRecursively(new_node.id, child, 'last');
+                                });
+                            }
+                            pendingCreations--;
+                            if (pendingCreations === 0) {
+                                isUndoing = false;
+                                console.log("Восстановление всех узлов завершено.");
+                            }
+                        });
+                    };
+                    const loadFile = (node) => {
+                        if (node.type === 'file') {
+                            const content = node.data && node.data.content ? node.data.content : "";
+                            const language = getLanguageFromFilename(node.text);
+                            if (editor) {
+                                isUndoing = true;
+                                const currentModel = editor.getModel();
+                                if (currentModel) {
+                                    monaco.editor.setModelLanguage(currentModel, language);
+                                    editor.setValue(content);
+                                }
+                                isUndoing = false;
+                                console.log(`Файл "${node.text}" загружен в редактор с языком "${language}".`);
+                            }
+                            currentFile = node;
+                        }
+                    };
+                    const undo = () => {
+                        if (undoStack.length === 0) {
+                            console.log("Undo Stack пуст.");
+                            return;
+                        }
+                        const lastAction = undoStack.pop();
+                        console.log("Undoing Action:", lastAction);
+                        isUndoing = true;
+                        const tree = $('#jstree').jstree(true);
+                        switch(lastAction.action) {
+                            case 'delete':
+                                tree.delete_node(lastAction.node);
+                                break;
+                            case 'create':
+                                createNodeRecursively(lastAction.parent, lastAction.node, lastAction.position);
+                                break;
+                            case 'rename':
+                                tree.rename_node(lastAction.node, lastAction.old_text);
+                                break;
+                            case 'move':
+                                tree.move_node(lastAction.node, lastAction.old_parent, lastAction.old_position);
+                                break;
+                            default:
+                                console.warn('Неизвестное действие для отмены:', lastAction.action);
+                        }
+                    };
+                    const handleRename = (data) => {
+                        console.log(`handleRename вызван для узла: ${data.node.id}, Тип: ${data.node.type}, Старое имя: ${data.old}, Новое имя: ${data.text}`);
+                        if (!isUndoing) {
+                            if (data.node.id === "root") {
+                                showMessage("Нельзя переименовывать корневую папку!");
+                                const tree = $('#jstree').jstree(true);
+                                tree.rename_node(data.node, data.old);
+                                return;
+                            }
+                            if (!isValidName(data.text)) {
+                                showMessage("Недопустимое имя.");
+                                const tree = $('#jstree').jstree(true);
+                                tree.rename_node(data.node, data.old);
+                                return;
+                            }
+                            const parent = data.node.parent;
+                            const tree = $('#jstree').jstree(true);
+                            const siblings = tree.get_node(parent).children;
+                            let isUnique = true;
+                            siblings.forEach(function(childId) {
+                                const childNode = tree.get_node(childId);
+                                const childText = childNode.text.trim();
+                                const childType = childNode.type;
+                                if (childText.toLowerCase() === data.text.trim().toLowerCase() && childType === data.node.type && childId !== data.node.id) {
+                                    isUnique = false;
+                                    return false;
+                                }
+                            });
+                            if (!isUnique) {
+                                showMessage("Узел с таким именем уже существует в этой папке.");
+                                tree.rename_node(data.node, data.old);
+                                return;
+                            }
+                            undoStack.push({
+                                action: 'rename',
+                                node: data.node.id,
+                                old_text: data.old,
+                                new_text: data.text
+                            });
+                            console.log("Action Recorded to Undo Stack:", { action: 'rename', node: data.node.id, old_text: data.old, new_text: data.text });
+                        }
+                        if (currentFile && data.node.id === currentFile.id && currentFile.type === 'file') {
+                            const newLanguage = getLanguageFromFilename(data.text);
+                            monaco.editor.setModelLanguage(editor.getModel(), newLanguage);
+                            console.log(`Язык синтаксиса обновлён на "${newLanguage}" для файла "${data.text}".`);
+                        }
+                    };
+                    const isMoveNameUnique = (targetNode, node) => {
+                        const tree = $('#jstree').jstree(true);
+                        const childIds = tree.get_node(targetNode.id).children;
+                        let isUnique = true;
+                        childIds.forEach(function(childId) {
+                            const childNode = tree.get_node(childId);
+                            const childText = childNode.text.trim();
+                            const childType = childNode.type;
+                            if (childText.toLowerCase() === node.text.trim().toLowerCase() && childType === node.type) {
+                                if (childId === node.id) {
+                                    return;
+                                }
+                                isUnique = false;
+                                return false;
+                            }
+                        });
+                        return isUnique;
+                    };
+                    const initializeJsTree = () => {
+                        const fileStructureJson = document.querySelector('meta[name="fileStructure"]').getAttribute('content');
+                         const projectName = $('#jstree').data('project-name');
+                        let fileTreeData = [];
+                        if (fileStructureJson) {
+                            try {
+                                fileTreeData = JSON.parse(fileStructureJson);
+                            } catch (e) {
+                                console.error("Ошибка при парсинге JSON для fileStructure:", e);
+                            }
+                        }
+                        if (!fileTreeData || fileTreeData.length === 0) {
+                            fileTreeData = [{
+                                id: "root",
+                                text: projectName ||"Проект",
+                                type: "folder",
+                                children: [],
+                                state: { opened: true }
+                            }];
+                        }
+                        $('#jstree').jstree({
+                            core: {
+                                check_callback: function (operation, node, parent, position, more) {
+                                    const tree = $('#jstree').jstree(true);
+                                    if (operation === "move_node") {
+                                        const movingNode = node;
+                                        const targetParentNode = tree.get_node(parent);
+                                        if (movingNode.id === "root") {
+                                            return false;
+                                        }
+                                        if (targetParentNode.type !== "folder") {
+                                            return false;
+                                        }
+                                        if (parent === "#") {
+                                            return false;
+                                        }
+                                        if (!isMoveNameUnique(targetParentNode, movingNode)) {
+                                            return false;
+                                        }
+                                    }
+                                    return true;
+                                },
+                                data: fileTreeData
+                            },
+                            plugins: ['contextmenu', 'dnd', 'types'],
+                            types: {
+                                folder: { icon: 'jstree-folder' },
+                                file: { icon: 'jstree-file' }
+                            },
+                            contextmenu: {
+                                items: function(node) {
+                                    const tree = $("#jstree").jstree(true);
+                                    const menuItems = {};
+                                    if (node.type !== 'folder') {
+                                        menuItems.Rename = {
+                                            separator_before: false,
+                                            separator_after: false,
+                                            label: "Переименовать",
+                                            action: function () { tree.edit(node); }
+                                        };
+                                        menuItems.Remove = {
+                                            separator_before: false,
+                                            separator_after: false,
+                                            label: "Удалить",
+                                            action: function () {
+                                                if (node.id === "root") {
+                                                    return;
+                                                }
+                                                const parent = node.parent;
+                                                const parentNode = tree.get_node(parent);
+                                                const position = parentNode.children.indexOf(node.id) !== -1 ? parentNode.children.indexOf(node.id) : 'last';
+                                                if (!isUndoing) {
+                                                    const fullNodeData = {
+                                                        id: node.id,
+                                                        text: node.text,
+                                                        type: node.type,
+                                                        data: node.type === 'file' ? { content: node.data.content || "" } : undefined,
+                                                        state: node.state,
+                                                        files: node.type === 'folder' ? gatherFiles(node) : undefined
+                                                    };
+                                                    undoStack.push({
+                                                        action: 'create',
+                                                        node: fullNodeData,
+                                                        parent: parent,
+                                                        position: position
+                                                    });
+                                                    console.log("Action Recorded to Undo Stack:", { action: 'create', node: fullNodeData, parent: parent, position: position });
+                                                }
+                                                clearEditorIfDeleted(node);
+                                                tree.delete_node(node);
+                                            }
+                                        };
+                                    } else {
+                                        menuItems.Create = {
+                                            separator_before: false,
+                                            separator_after: false,
+                                            label: "Создать",
+                                            action: false,
+                                            submenu: {
+                                                CreateFile: {
+                                                    label: "Файл",
+                                                    action: function () {
+                                                        const newFileName = prompt("Введите имя нового файла:", "Новый файл.js");
+                                                        if (!newFileName) {
+                                                            return;
+                                                        }
+                                                        if (!isValidName(newFileName)) {
+                                                            showMessage("Недопустимое имя файла.");
+                                                            return;
+                                                        }
+                                                        if (!checkUniqueName(node, newFileName, 'file')) {
+                                                            showMessage("Файл с таким именем уже существует в этой папке.");
+                                                            return;
+                                                        }
+                                                        const newId = 'file_' + Date.now();
+                                                        tree.create_node(node, {
+                                                            id: newId,
+                                                            text: newFileName,
+                                                            type: "file",
+                                                            data: { content: "" },
+                                                            state: { opened: true }
+                                                        }, "last", function(new_node) {
+                                                            setTimeout(function() {
+                                                                tree.select_node(new_node);
+                                                            }, 0);
+                                                        });
+                                                    }
+                                                },
+                                                CreateFolder: {
+                                                    label: "Папка",
+                                                    action: function () {
+                                                        const newFolderName = prompt("Введите имя новой папки:", "Новая папка");
+                                                        if (!newFolderName) {
+                                                            return;
+                                                        }
+                                                        if (!isValidName(newFolderName)) {
+                                                            showMessage("Недопустимое имя папки.");
+                                                            return;
+                                                        }
+                                                        if (!checkUniqueName(node, newFolderName, 'folder')) {
+                                                            showMessage("Папка с таким именем уже существует в этой папке.");
+                                                            return;
+                                                        }
+                                                        const newId = 'folder_' + Date.now();
+                                                        tree.create_node(node, {
+                                                            id: newId,
+                                                            text: newFolderName,
+                                                            type: "folder",
+                                                            state: { opened: true }
+                                                        }, "last", function(new_node) {
+                                                            setTimeout(function() {
+                                                                tree.select_node(new_node);
+                                                            }, 0);
+                                                        });
+                                                    }
+                                                }
+                                            }
+                                        };
+                                        if (node.id !== "root") {
+                                            menuItems.Rename = {
+                                                separator_before: false,
+                                                separator_after: false,
+                                                label: "Переименовать",
+                                                action: function () {
+                                                    tree.edit(node);
+                                                }
+                                            };
+                                            menuItems.Remove = {
+                                                separator_before: false,
+                                                separator_after: false,
+                                                label: "Удалить",
+                                                action: function () {
+                                                    if (node.id === "root") {
+                                                        return;
+                                                    }
+                                                    const parent = node.parent;
+                                                    const parentNode = tree.get_node(parent);
+                                                    const position = parentNode.children.indexOf(node.id) !== -1 ? parentNode.children.indexOf(node.id) : 'last';
+                                                    if (!isUndoing) {
+                                                        const fullNodeData = {
+                                                            id: node.id,
+                                                            text: node.text,
+                                                            type: node.type,
+                                                            data: node.type === 'file' ? { content: node.data.content || "" } : undefined,
+                                                            state: node.state,
+                                                            files: node.type === 'folder' ? gatherFiles(node) : undefined
+                                                        };
+                                                        undoStack.push({
+                                                            action: 'create',
+                                                            node: fullNodeData,
+                                                            parent: parent,
+                                                            position: position
+                                                        });
+                                                        console.log("Action Recorded to Undo Stack:", { action: 'create', node: fullNodeData, parent: parent, position: position });
+                                                    }
+                                                    clearEditorIfDeleted(node);
+                                                    tree.delete_node(node);
+                                                }
+                                            };
+                                        }
+                                    }
+                                    return menuItems;
+                                }
+                            }
+                        })
+                        .on('create_node.jstree', function (e, data) {
+                            if (data.node.type === 'file' && !isUndoing) {
+                                data.node.data = { "content": "" };
+                            }
+                            if (!isUndoing) {
+                                undoStack.push({
+                                    action: 'delete',
+                                    node: data.node.id
+                                });
+                                console.log("Action Recorded to Undo Stack:", { action: 'delete', node: data.node.id });
+                            }
+                        })
+                        .on('rename_node.jstree', function (e, data) {
+                            handleRename(data);
+                        })
+                        .on('delete_node.jstree', function (e, data) {
+                            clearEditorIfDeleted(data.node);
+                        })
+                        .on('move_node.jstree', function (e, data) {
+                            if (!isUndoing) {
+                                undoStack.push({
+                                    action: 'move',
+                                    node: data.node.id,
+                                    old_parent: data.old_parent,
+                                    old_position: data.old_position
+                                });
+                                console.log("Action Recorded to Undo Stack:", { action: 'move', node: data.node.id, old_parent: data.old_parent, old_position: data.old_position });
+                            }
+                        })
+                        .on('dnd_stop.vakata', function (e, data) {
+                            if (duplicateNameError) {
+                                showMessage("В целевой папке уже существует узел с таким именем.");
+                                duplicateNameError = false;
+                            }
+                        })
+                        .on('select_node.jstree', function (e, data) {
+                            saveCurrentFile();
+                            if (data.node.type === 'file') {
+                                loadFile(data.node);
+                                if (analysisEnabled && data.node.text.endsWith('.java')) {           // 👈
+                                    sendAnalyze();                                // анализ сразу
+                                }
+                            }
+                        });
+                        $(document).on('keydown', function(e) {
+                            if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+                                e.preventDefault();
+                                console.log("Ctrl+Z нажато");
+                                undo();
+                            }
+                        });
+                        $('#save-button').on('click', function() {
+                            saveProject();
+                        });
+            const body = document.body;
+            document.getElementById('theme-button').addEventListener('click', () => {
+              const newTheme = body.classList.contains('light-mode') ? 'vs' : 'vs-dark';
+              monaco.editor.setTheme(newTheme);
             });
-        };
-        initializeSelectMainClassModal();
-        initializeJsTree();
-    });
+
+                            editor.onDidChangeModelContent(function() {
+                                if (isUndoing) {
+                                    return;
+                                }
+                                if (currentFile) {
+                                    currentFile.data.content = editor.getValue();
+                                    if (analysisEnabled && currentFile?.text.endsWith('.java')) {
+                                        scheduleAnalyze();
+                                    }
+                                    console.log(`Содержимое файла "${currentFile.text}" обновлено.`);
+                                }
+                            });
+                    initializeSelectMainClassModal();
+                    initializeJsTree();
+
 </script>
 </body>
 </html>

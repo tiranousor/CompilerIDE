@@ -1,5 +1,4 @@
 services:
-
   # ==== статический анализ ====
   analyze-worker-1:
     build:
