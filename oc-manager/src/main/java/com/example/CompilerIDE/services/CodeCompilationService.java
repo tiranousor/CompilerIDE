@@ -50,8 +50,11 @@ public class CodeCompilationService {
             result.setStderr(Collections.emptyList());
         }
 
-        // Обработка returnCode
-        Object returnCodeObj = responseBody.getOrDefault("returnCode", 0);
+        // Обработка returncode (на стороне агентов используется именно такое имя)
+        Object returnCodeObj = responseBody.get("returnCode");
+        if (returnCodeObj == null) {
+            returnCodeObj = responseBody.getOrDefault("returncode", 0);
+        }
         if (returnCodeObj instanceof Integer) {
             result.setReturnCode((Integer) returnCodeObj);
         } else if (returnCodeObj instanceof String) {
